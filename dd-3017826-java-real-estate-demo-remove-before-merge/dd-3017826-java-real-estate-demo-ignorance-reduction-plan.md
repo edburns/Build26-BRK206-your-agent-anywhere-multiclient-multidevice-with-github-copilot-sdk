@@ -124,7 +124,18 @@ The C# demo creates `CopilotClient` as a singleton field in `AppState`. In Java,
 
 **Spike needed:** Verify `CopilotClient` constructor options in 1.0.7-SNAPSHOT support `Empty` mode and `baseDirectory`.
 
-**Action:** Read `CopilotClient` and `CopilotClientOptions` source to confirm API.
+**Resolution:**
+
+**✅ RESOLVED (2026-07-06):** Confirmed. The Java API uses `setCopilotHome(String)` (not `baseDirectory`). In `EMPTY` mode the constructor requires either `copilotHome` or `cliUrl`, otherwise it throws `IllegalArgumentException`. Existing test: `copilot-sdk/java/src/test/java/com/github/copilot/CopilotClientModeTest.java` (`testEmptyModeRequiresCopilotHome`, `testEmptyModeWithCopilotHome`).
+
+Java construction pattern for the demo:
+```java
+CopilotClient client = new CopilotClient(
+    new CopilotClientOptions()
+        .setMode(CopilotClientMode.EMPTY)
+        .setCopilotHome(Path.of(System.getProperty("user.home"), ".copilot").toString())
+);
+```
 
 ### 2.2 — `sendAndWait` blocking semantics on virtual threads
 
@@ -132,7 +143,16 @@ The C# demo creates `CopilotClient` as a singleton field in `AppState`. In Java,
 
 The C# demo uses `await Session.SendAndWaitAsync(...)`. In Java, if the method returns `CompletableFuture`, we can call `.join()` on a virtual thread. If it's already synchronous, we can call it directly.
 
-**Action:** Read the Java SDK `CopilotSession` API to determine the method signature.
+
+
+**Resolution:**
+**✅ RESOLVED (2026-07-06):** `sendAndWait` returns `CompletableFuture<AssistantMessageEvent>` (async). Three overloads exist:
+```java
+CompletableFuture<AssistantMessageEvent> sendAndWait(String prompt)           // 60s default timeout
+CompletableFuture<AssistantMessageEvent> sendAndWait(MessageOptions options)  // 60s default timeout
+CompletableFuture<AssistantMessageEvent> sendAndWait(MessageOptions options, long timeoutMs)
+```
+Tests uniformly block via `.get(60, TimeUnit.SECONDS)`. For the demo on virtual threads, use `.get()` or `.join()` — both are safe since virtual threads don't pin platform threads on blocking calls. Existing tests confirming this pattern: `CopilotRequestHandlerE2ETest`, `CompactionTest`, `EventFidelityTest`, `McpAndAgentsTest` (all in `copilot-sdk/java/src/test/java/com/github/copilot/e2e/`).
 
 ### 2.3 — Session event subscription in Java SDK
 
@@ -143,7 +163,21 @@ Need to confirm:
 - Whether it accepts a `Class<T>` event type filter
 - Whether the handler receives events on the calling thread or a callback thread
 
-**Action:** Read `CopilotSession` event API.
+**Resolution:**
+
+**✅ RESOLVED (2026-07-06):** Two overloads on `CopilotSession`:
+```java
+Closeable on(Consumer<SessionEvent> handler)                          // all events
+<T extends SessionEvent> Closeable on(Class<T> eventType, Consumer<T> handler)  // typed filter
+```
+- Yes, accepts `Class<T>` filter (matches via `eventType.isInstance(event)`)
+- Returns `Closeable` — call `.close()` to unsubscribe
+- Handlers invoked **synchronously on the JSON-RPC reader/dispatch thread** (no separate callback executor)
+- Demo pattern: `session.on(AssistantMessageEvent.class, msg -> { /* push to WebSocket */ })`
+- README Quick Start shows this exact usage
+- Tests: `SessionEventHandlingTest.java` (`testTypedEventHandler`, `testUnsubscribe`), `SessionEventsE2ETest.java`, `StreamingFidelityTest.java`
+
+**Threading implication for the demo:** Since handlers run on the dispatch thread, any expensive work (like WebSocket push) should be offloaded or kept lightweight. For this demo the WebSocket push is trivial so inline is fine.
 
 ### 2.4 — WebSocket push from CDI to JSF
 
@@ -158,49 +192,108 @@ Options:
 
 **Recommendation:** Option A (`f:websocket`) — standard, no PrimeFaces-specific coupling for push.
 
-**Spike needed:** Confirm OpenLiberty 26.0.0.5 `faces-4.0` feature supports `f:websocket` with CDI push.
+**Resolution:**
+**✅ RESOLVED (2026-07-06):** Spike confirmed. OpenLiberty 26.0.0.5 with `faces-4.0`, `cdi-4.0`, and `websocket-2.1` features fully supports `f:websocket` with `@Push PushContext` CDI injection. Tested in `dd-3017826-java-real-estate-demo-remove-before-merge/phase-02-2.4-cdi-and-websocket-push/`. Key requirements:
+- `web.xml` must set `jakarta.faces.ENABLE_WEBSOCKET_ENDPOINT` = `true`
+- `server.xml` needs features: `faces-4.1`, `cdi-4.1`, `websocket-2.1` (EE 11 level required for compatibility with `data-1.0`)
+- CDI bean injects `@Inject @Push(channel="name") PushContext pushContext;` and calls `pushContext.send(data)`
+- XHTML uses `<f:websocket channel="name" onmessage="jsCallback" />`
 
-### 2.5 — Property database: JPA on H2 with OpenLiberty
+### 2.5 — Property database: Jakarta Data + H2 in-memory on OpenLiberty
 
 **Question:** Does OpenLiberty support H2 in-memory via its `persistence-3.2` feature (EclipseLink)?
 
 H2 is well-supported by EclipseLink and avoids native library concerns that SQLite would introduce.
 
-**Action:** Confirm H2 in-memory works with Liberty `persistence-3.2` and document `persistence.xml` configuration.
+**Resolution:**
+**✅ RESOLVED (2026-07-06):** Confirmed. Jakarta Data 1.0 + H2 in-memory works on OpenLiberty 26.0.0.5. **Decision: Use Jakarta Data (`@Repository`) instead of raw JPA for the demo** — it's a cleaner, more modern API and a better showcase of Jakarta EE 11.
+
+Spike app: `dd-3017826-java-real-estate-demo-remove-before-merge/phase-02-2.5-h2-in-memory-jpa-open-liberty/`
+
+Key findings and gotchas:
+1. **Feature versions must be EE 11 level** — `data-1.0` requires `cdi-4.1`, `faces-4.1`, `persistence-3.2` (NOT `cdi-4.0`/`faces-4.0` which are EE 10)
+2. **Jakarta Data API not in the EE 11 umbrella jar** — add explicit `jakarta.data:jakarta.data-api:1.0.1` (scope: provided)
+3. **persistence.xml namespace** — Liberty 26.0.0.5's parser requires `xmlns="http://xmlns.jcp.org/xml/ns/persistence"` (not the `jakarta.ee` namespace)
+4. **H2 datasource config** — use `<properties URL="jdbc:h2:mem:name;DB_CLOSE_DELAY=-1" />` (capital `URL`)
+5. **EclipseLink H2 platform** — must set `eclipselink.target-database` to `org.eclipse.persistence.platform.database.H2Platform` for correct DDL generation with H2 2.x
+6. **`@Find` parameter binding** — requires either `-parameters` compiler flag OR `@By("attributeName")` annotations. The `@By` approach is more explicit and reliable.
+7. **`@Query` for range queries** — `@Find` only does equality; use `@Query("WHERE attr >= ?1")` for comparisons
+8. **`GenerationType.AUTO`** — use instead of `IDENTITY` for H2 2.x compatibility
+
+server.xml features for the real demo:
+```xml
+<feature>data-1.0</feature>
+<feature>persistence-3.2</feature>
+<feature>faces-4.1</feature>
+<feature>cdi-4.1</feature>
+<feature>websocket-2.2</feature>
+```
+
+Note: The 2.4 spike used `faces-4.0`/`cdi-4.0` — those worked alone but are **incompatible** with `data-1.0`. The real demo must use EE 11 level (`faces-4.1`/`cdi-4.1`) throughout.
 
 ### 2.6 — PrimeFaces real-time UI update pattern
 
 **Question:** What is the exact client-side pattern for updating the pipeline UI when a WebSocket message arrives?
 
-Expected flow:
-1. Agent moves to new phase → `PushContext.send(agentId, "phase-changed")`
-2. Client receives WebSocket message
-3. Client-side JS triggers FLIP animation (capture old position, update DOM, animate)
-4. After animation, call `PrimeFaces.ajax.update('pipeline-panel')` for server-side re-render
+**Resolution:**
 
-**Spike needed:** Build a minimal prototype with `f:websocket` + `p:outputPanel` + `p:remoteCommand` to validate this pattern.
+**✅ RESOLVED (2026-07-06):** Confirmed. The pattern works on OpenLiberty 26.0.0.5 with PrimeFaces 15.0.16 (jakarta classifier).
+
+Spike app: `dd-3017826-java-real-estate-demo-remove-before-merge/phase-02-2.6-update-pipeline-ui-primefaces/`
+
+Validated flow:
+1. Server CDI bean calls `pushContext.send("phase-changed:PHASE_NAME")` — works from any thread including virtual threads
+2. Client receives WebSocket message via `<f:websocket channel="pipelineChannel" onmessage="handlePipelinePush" />`
+3. Client JS calls `refreshPipeline()` — a `<p:remoteCommand>` that triggers server-side re-render
+4. PrimeFaces partial update re-renders `<p:outputPanel id="pipelinePanel">` and `<p:outputPanel id="statusPanel">`
+5. CSS transitions (`transition: border-color 0.5s, background-color 0.5s, transform 0.3s`) animate the phase change smoothly
+
+Key configuration:
+- **`websocket-2.2`** (NOT 2.1) required with EE 11 features — `faces-4.1` pulls in `servlet-6.1` which conflicts with `websocket-2.1`
+- PrimeFaces `<p:remoteCommand name="refreshPipeline" update="pipelinePanel statusPanel" oncomplete="animationComplete()" />` bridges the websocket event to a JSF ajax lifecycle
+- `web.xml` must set `jakarta.faces.ENABLE_WEBSOCKET_ENDPOINT=true`
+- Background threads (virtual threads) can call `PushContext.send()` without being in a JSF request context — CDI `@ApplicationScoped` handles this correctly
+
+server.xml features for the real demo (corrected from earlier spikes):
+```xml
+<feature>faces-4.1</feature>
+<feature>cdi-4.1</feature>
+<feature>websocket-2.2</feature>
+```
+
+Note: No FLIP animation needed — CSS `transition` on the phase cards handles the visual movement when classes change between `active`/`completed` states during the PrimeFaces partial update.
 
 ### 2.7 — Copilot SDK dependency resolution
 
-**Question:** Is the 1.0.7-SNAPSHOT available in the local Maven repository, and what are its coordinates?
-
-Expected GAV: `com.github:copilot-sdk-java:1.0.7-SNAPSHOT`
-
-**Action:** Verify with `mvn dependency:resolve` or check `~/.m2/repository/com/github/copilot-sdk-java/`.
+Removed. User guarantees this is satisfied.
 
 ### 2.8 — Tool definition approach for this demo
 
 **Question:** Should the demo use `@CopilotTool` annotations (ADR-005) or inline `ToolDefinition.from(...)` lambdas (ADR-006)?
 
-The C# demo uses `CopilotTool.DefineTool(MethodGroup)` which maps to the annotation approach. For a demo that showcases the Java SDK ergonomics:
 
-| Tool | Approach | Rationale |
-|------|----------|-----------|
-| `set_current_phase` | `@CopilotTool` on method in `Agent` | Shows annotation ergonomics (headline feature) |
-| `report_intent` | `@CopilotTool` with `overridesBuiltInTool=true` | Shows tool override via annotation attribute |
-| `search_properties` | `@CopilotTool` on method in `PropertyDatabase` | Shows multi-parameter schema generation |
+**Resolution:**
+**✅ RESOLVED (2026-07-06):** Use a **mix of both styles** to showcase the full breadth of the Java SDK's tool ergonomics. The C# demo's `ReportIntent` is a trivial 2-line method with `OverridesBuiltInTool = true` — it's a natural fit for the inline lambda API.
 
-**Recommendation:** Use annotations for all three — this is the closest Java analog to C#'s attribute-driven approach and the primary feature to demonstrate.
+| Tool | Style | Rationale |
+|------|-------|-----------|
+| `set_current_phase` | `@CopilotTool` annotation on method in `Agent` | Shows headline annotation ergonomics |
+| `report_intent` | `ToolDefinition.from(...)` lambda + `.overridesBuiltInTool(true)` | Shows lightweight inline tools + fluent option modifiers |
+| `search_properties` | `@CopilotTool` annotation on method in `PropertyDatabase` | Shows multi-parameter schema generation + cross-class tools |
+
+Example `report_intent` as lambda:
+
+```java
+ToolDefinition reportIntent = ToolDefinition
+    .from(
+        "report_intent",
+        "Reports the current intent of the agent",
+        Param.of(String.class, "intent", "Intent in max 4 words"),
+        intent -> { currentIntent = intent; updateUi(); return "ok"; })
+    .overridesBuiltInTool(true);
+```
+
+This gives the demo three distinct styles, making it a better showcase than using only annotations.
 
 ### 2.9 — OpenLiberty Maven plugin configuration
 

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence xmlns="http://xmlns.jcp.org/xml/ns/persistence"
+             version="2.2">
+
+    <persistence-unit name="spikeUnit" transaction-type="JTA">
+        <jta-data-source>jdbc/defaultDS</jta-data-source>
+        <class>com.microsoft.build.spike.Property</class>
+        <properties>
+            <property name="jakarta.persistence.schema-generation.database.action" value="create" />
+            <property name="eclipselink.target-database" value="org.eclipse.persistence.platform.database.H2Platform" />
+        </properties>
+    </persistence-unit>
+
+</persistence>

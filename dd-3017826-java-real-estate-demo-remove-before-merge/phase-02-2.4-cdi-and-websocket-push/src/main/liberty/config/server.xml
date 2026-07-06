@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<server description="Spike: f:websocket CDI push on Liberty 26.0.0.5">
+
+    <featureManager>
+        <feature>faces-4.0</feature>
+        <feature>cdi-4.0</feature>
+        <feature>websocket-2.1</feature>
+    </featureManager>
+
+    <httpEndpoint id="defaultHttpEndpoint"
+                  httpPort="${default.http.port}"
+                  httpsPort="9443" />
+
+    <webApplication location="phase-02-2.4-cdi-and-websocket-push.war" contextRoot="/" />
+
+</server>

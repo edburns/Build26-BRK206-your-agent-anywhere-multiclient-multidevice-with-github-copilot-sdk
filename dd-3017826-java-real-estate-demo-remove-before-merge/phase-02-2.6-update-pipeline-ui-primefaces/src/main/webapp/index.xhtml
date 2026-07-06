@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="jakarta.faces.html"
+      xmlns:f="jakarta.faces.core"
+      xmlns:p="http://primefaces.org/ui">
+<h:head>
+    <title>Spike 2.6: PrimeFaces Real-Time Pipeline UI</title>
+    <style>
+        body { font-family: sans-serif; max-width: 900px; margin: 2em auto; padding: 0 1em; }
+        .pipeline-container { display: flex; gap: 8px; margin: 2em 0; position: relative; }
+        .phase-card {
+            flex: 1;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 1em;
+            text-align: center;
+            transition: border-color 0.5s ease, background-color 0.5s ease, transform 0.3s ease;
+            position: relative;
+            min-height: 80px;
+        }
+        .phase-card.active {
+            border-color: #0078d4;
+            background-color: #e6f2ff;
+            transform: scale(1.05);
+        }
+        .phase-card.completed {
+            border-color: #28a745;
+            background-color: #e6ffe6;
+        }
+        .phase-label { font-weight: bold; margin-bottom: 0.5em; }
+        .agent-chip {
+            display: inline-block;
+            background: #0078d4;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            transition: opacity 0.4s ease;
+            opacity: 0;
+        }
+        .phase-card.active .agent-chip { opacity: 1; }
+        .connector {
+            position: absolute;
+            top: 50%;
+            width: 8px;
+            height: 2px;
+            background: #ccc;
+        }
+        .controls { margin: 1.5em 0; }
+        .controls button { margin-right: 0.5em; }
+        #status { margin-top: 1em; padding: 1em; border: 1px solid #ccc; border-radius: 4px; min-height: 2em; }
+        .success { border-color: green; background: #e6ffe6; }
+    </style>
+</h:head>
+<h:body>
+    <h1>Spike 2.6 — PrimeFaces Real-Time Pipeline UI</h1>
+    <p>Validates: <code>f:websocket</code> push → client JS → <code>p:remoteCommand</code> ajax update → CSS transition animation.</p>
+
+    <h:form id="mainForm">
+        <!-- p:remoteCommand: called by client JS when websocket message arrives -->
+        <p:remoteCommand name="refreshPipeline"
+                         update="pipelinePanel statusPanel"
+                         oncomplete="animationComplete()" />
+
+        <div class="controls">
+            <p:commandButton value="Advance Phase"
+                             action="#{pipelineBean.advancePhase}"
+                             update="@none" />
+            <p:commandButton value="Simulate Agent (auto-advance)"
+                             action="#{pipelineBean.simulateAgent}"
+                             update="@none" />
+            <p:commandButton value="Reset"
+                             action="#{pipelineBean.reset}"
+                             update="pipelinePanel statusPanel" />
+        </div>
+
+        <!-- Pipeline visualization -->
+        <p:outputPanel id="pipelinePanel">
+            <div class="pipeline-container">
+                <ui:repeat xmlns:ui="jakarta.faces.facelets"
+                           value="#{pipelineBean.allPhases}" var="phase">
+                    <div class="phase-card #{phase == pipelineBean.currentPhase ? 'active' : ''}
+                                           #{phase.ordinal() lt pipelineBean.currentPhaseIndex ? 'completed' : ''}">
+                        <div class="phase-label">#{phase.label}</div>
+                        <div class="agent-chip">Agent 1</div>
+                    </div>
+                </ui:repeat>
+            </div>
+        </p:outputPanel>
+
+        <p:outputPanel id="statusPanel">
+            <div id="status">
+                Current phase: <strong>#{pipelineBean.currentPhaseLabel}</strong>
+                (index #{pipelineBean.currentPhaseIndex})
+            </div>
+        </p:outputPanel>
+    </h:form>
+
+    <!-- f:websocket receives server push and triggers p:remoteCommand -->
+    <f:websocket channel="pipelineChannel" onmessage="handlePipelinePush" />
+
+    <script>
+        //<![CDATA[
+        function handlePipelinePush(message) {
+            console.log('[Pipeline] WebSocket message received:', message);
+            // Trigger server-side re-render via PrimeFaces remoteCommand
+            refreshPipeline();
+        }
+
+        function animationComplete() {
+            console.log('[Pipeline] Ajax update complete, CSS transitions active.');
+        }
+        //]]>
+    </script>
+</h:body>
+</html>

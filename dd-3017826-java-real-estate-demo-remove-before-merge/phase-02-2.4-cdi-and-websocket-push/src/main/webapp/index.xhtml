@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="jakarta.faces.html"
+      xmlns:f="jakarta.faces.core">
+<h:head>
+    <title>Spike 2.4: f:websocket CDI Push</title>
+    <style>
+        body { font-family: sans-serif; max-width: 700px; margin: 2em auto; }
+        #result { margin-top: 1em; padding: 1em; border: 2px solid #ccc; min-height: 3em; }
+        .success { border-color: green; background: #e6ffe6; }
+    </style>
+</h:head>
+<h:body>
+    <h1>Spike 2.4 — f:websocket CDI Push on Liberty 26.0.0.5</h1>
+    <p>Press the button to trigger a server-side <code>PushContext.send()</code> via CDI injection.
+       If the message appears below without a full page reload, the spike is confirmed.</p>
+
+    <h:form id="spikeForm">
+        <h:commandButton value="Test CDI Push" action="#{pushBean.triggerPush}">
+            <f:ajax execute="@form" />
+        </h:commandButton>
+    </h:form>
+
+    <f:websocket channel="spikeChannel" onmessage="handlePush" />
+
+    <div id="result">Waiting for push message...</div>
+
+    <script>
+        function handlePush(message) {
+            var el = document.getElementById('result');
+            el.textContent = message;
+            el.classList.add('success');
+        }
+    </script>
+</h:body>
+</html>
