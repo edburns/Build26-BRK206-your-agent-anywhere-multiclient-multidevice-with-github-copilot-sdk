@@ -39,11 +39,12 @@ Create a Java analog of the C# Blazor AgentOrchestrator demo that showcases the 
 
 ## Completed phases
 
-(None yet.)
+- Phase 1.
+- Phase 2.
 
 ---
 
-## Phase 1 — Define the architecture mapping (C# → Java)
+## ✅ **Completed** Phase 1 — Define the architecture mapping (C# → Java)
 
 ### 1.1 — Component mapping
 
@@ -111,7 +112,7 @@ BRK206-00/src/java-agent-orchestrator/
 
 ---
 
-## Phase 2 — Ignorance reduction: questions to answer before writing code
+## ✅ **Completed** Phase 2 — Ignorance reduction: questions to answer before writing code
 
 ### 2.1 — CopilotClient lifecycle in Jakarta CDI
 
