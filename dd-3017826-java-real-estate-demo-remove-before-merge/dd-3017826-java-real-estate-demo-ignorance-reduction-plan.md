@@ -468,15 +468,13 @@ List<Property> searchProperties(
 
 ### 4.1 — Alternative: inline lambda tools
 
-Add a second code path that demonstrates `ToolDefinition.from(...)` lambda style alongside the annotation approach, showing both APIs. Could be a toggle or a separate agent variant.
+This was already added to the plan as of `e9c438a114e30d040ca871480af39a856ccb9fd3`.
 
 ### 4.2 — Docker / devcontainer support
 
 Package the demo for easy reproduction with `Dockerfile` and `.devcontainer/devcontainer.json`.
 
-### 4.3 — Slide deck integration
 
-Add links to slides and recording in README once session is delivered.
 
 ---
 
