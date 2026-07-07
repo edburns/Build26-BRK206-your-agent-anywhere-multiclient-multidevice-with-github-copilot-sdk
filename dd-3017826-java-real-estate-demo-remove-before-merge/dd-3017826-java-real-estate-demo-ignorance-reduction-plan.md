@@ -299,7 +299,35 @@ This gives the demo three distinct styles, making it a better showcase than usin
 
 **Question:** What is the correct Liberty Maven Plugin configuration for Jakarta EE 11 with Faces 4.0?
 
-**Action:** Look up `liberty-maven-plugin` latest version and `server.xml` feature list for faces + websocket + cdi + jpa.
+**Resolution:**
+**✅ RESOLVED (2026-07-06):** Proven across spikes 2.4, 2.5, and 2.6. The correct configuration:
+
+**liberty-maven-plugin:** `3.12.0` (3.12.2 does not exist)
+
+**pom.xml properties:**
+```xml
+<liberty.var.default.http.port>9080</liberty.var.default.http.port>
+<liberty.runtime.groupId>io.openliberty</liberty.runtime.groupId>
+<liberty.runtime.artifactId>openliberty-runtime</liberty.runtime.artifactId>
+<liberty.runtime.version>26.0.0.5</liberty.runtime.version>
+```
+
+**server.xml features (full demo set):**
+```xml
+<featureManager>
+    <feature>data-1.0</feature>
+    <feature>persistence-3.2</feature>
+    <feature>faces-4.1</feature>
+    <feature>cdi-4.1</feature>
+    <feature>websocket-2.2</feature>
+</featureManager>
+```
+
+**Key constraints:**
+- All features must be EE 11 level — mixing EE 10 (`faces-4.0`/`cdi-4.0`/`websocket-2.1`) with EE 11 (`data-1.0`) causes `CWWKF1405E` singleton conflicts
+- H2 driver deployed via `copyDependencies` to `jdbc/` folder (not bundled in WAR)
+- DataSource configured in `server.xml` with `<properties URL="jdbc:h2:mem:...;DB_CLOSE_DELAY=-1" />`
+- `persistence.xml` must use `xmlns="http://xmlns.jcp.org/xml/ns/persistence"` (Liberty rejects the `jakarta.ee` namespace)
 
 ---
 
