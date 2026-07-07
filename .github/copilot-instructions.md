@@ -10,11 +10,11 @@ This repo contains:
 ## Java demo technology stack
 
 - **Runtime:** OpenLiberty 26.0.0.5
-- **Platform:** Jakarta EE 11 (Faces 4.0, CDI 4.0, WebSocket 2.1, JSON-B 3.0, Persistence 3.2)
+- **Platform:** Jakarta EE 11 (Faces 4.1, CDI 4.1, WebSocket 2.2, Data 1.0, Persistence 3.2)
 - **UI:** PrimeFaces 15.0.16 (jakarta classifier)
 - **AI:** Copilot SDK for Java 1.0.7-SNAPSHOT (`com.github:copilot-sdk-java`)
-- **Database:** H2 in-memory
-- **Build:** Maven, Liberty Maven Plugin
+- **Database:** H2 in-memory (with EclipseLink H2Platform)
+- **Build:** Maven, Liberty Maven Plugin 3.12.0
 - **JDK:** 25+
 
 ## Key constraints
@@ -25,6 +25,8 @@ This repo contains:
 - The `dd-3017826-java-real-estate-demo-remove-before-merge/` folder contains planning docs and notes. Reference them for context.
 - Favor Jakarta EE open standards over proprietary frameworks (e.g., prefer CDI over Spring, JPA over Hibernate-specific APIs).
 - Use the `@CopilotTool` annotation API (ADR-005) for tool definitions — this is the headline Java SDK feature to demonstrate.
+- Also demonstrate `ToolDefinition.from(...)` lambda style for the `report_intent` tool (with `.overridesBuiltInTool(true)`).
+- Use Jakarta Data `@Repository` (not raw JPA EntityManager) for database access.
 
 ## Working with the Java demo
 
