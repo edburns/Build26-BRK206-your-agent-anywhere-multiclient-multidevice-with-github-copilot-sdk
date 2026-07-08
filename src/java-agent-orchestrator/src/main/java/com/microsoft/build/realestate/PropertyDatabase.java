@@ -84,11 +84,8 @@ public class PropertyDatabase {
 
     private List<String> listSeedResourceNames() {
         URL directoryUrl = currentClassLoader().getResource(PROPERTIES_RESOURCE_PATH);
-        if (directoryUrl == null) {
-            return List.of();
-        }
 
-        if ("file".equals(directoryUrl.getProtocol())) {
+        if (directoryUrl != null && "file".equals(directoryUrl.getProtocol())) {
             try (Stream<Path> paths = Files.list(Path.of(directoryUrl.toURI()))) {
                 return paths
                         .filter(Files::isRegularFile)
@@ -104,7 +101,8 @@ public class PropertyDatabase {
             }
         }
 
-        // Fallback for packaged resources (WAR/JAR): probe numbered corpus files
+        // Fallback for packaged resources (WAR/JAR) or when the directory entry is not
+        // resolvable: probe numbered corpus files directly via ClassLoader.
         List<String> names = new java.util.ArrayList<>();
         for (int i = 1; ; i++) {
             String name = String.format("%05d.json", i);
