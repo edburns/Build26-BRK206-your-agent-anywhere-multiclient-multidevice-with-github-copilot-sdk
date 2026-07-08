@@ -111,6 +111,10 @@ public class Agent {
 
             LOGGER.info("Agent " + id + ": session created with id=" + session.getSessionId());
 
+            // Set initial phase deterministically so the UI always sees VALIDATING from the start,
+            // independent of when the model first calls set_current_phase.
+            setCurrentPhase(Phase.VALIDATING);
+
             session.on(SessionEvent.class, evt -> {
                 synchronized (sessionEvents) {
                     sessionEvents.add(evt);

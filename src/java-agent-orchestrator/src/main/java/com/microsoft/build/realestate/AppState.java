@@ -46,12 +46,17 @@ public class AppState {
 
         Thread.ofVirtual().start(() -> {
             LOGGER.info("AppState: virtual thread started for agent " + agent.getId());
+            boolean permitReleased = false;
             try {
                 agent.run(copilotClient, propertyDatabase);
                 if (!agent.isRejected()) {
                     // Non-rejected agents remain visible
                     return;
                 }
+                // Release the semaphore permit before the cosmetic linger so that the slot
+                // is immediately available for new enquiries.
+                sessionSemaphore.release();
+                permitReleased = true;
                 // Rejected agents linger for 15 seconds then are removed
                 Thread.sleep(Duration.ofSeconds(15));
                 removeAgent(agent.getId());
@@ -64,7 +69,9 @@ public class AppState {
                 removeAgent(agent.getId());
                 notifyUi();
             } finally {
-                sessionSemaphore.release();
+                if (!permitReleased) {
+                    sessionSemaphore.release();
+                }
             }
         });
     }
