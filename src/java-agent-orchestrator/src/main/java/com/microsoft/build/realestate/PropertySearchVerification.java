@@ -2,7 +2,6 @@ package com.microsoft.build.realestate;
 
 import java.util.logging.Logger;
 
-import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -13,11 +12,6 @@ public class PropertySearchVerification {
 
     @Inject
     PropertyDatabase propertyDatabase;
-
-    @PostConstruct
-    void verifySearch() {
-        logVerification();
-    }
 
     public void logVerification() {
         var results = propertyDatabase.search("House", null, 0, Integer.MAX_VALUE, 0, 0);

@@ -89,19 +89,32 @@ public class PropertyDatabase {
             return List.of();
         }
 
-        try (Stream<Path> paths = Files.list(Path.of(new URI(directoryUrl.toString())))) {
-            return paths
-                    .filter(Files::isRegularFile)
-                    .map(Path::getFileName)
-                    .map(Path::toString)
-                    .filter(name -> name.endsWith(".json"))
-                    .sorted(Comparator.naturalOrder())
-                    .toList();
-        } catch (IOException e) {
-            throw new UncheckedIOException("Unable to read property seed directory", e);
-        } catch (URISyntaxException e) {
-            throw new IllegalStateException("Invalid property seed directory URI", e);
+        if ("file".equals(directoryUrl.getProtocol())) {
+            try (Stream<Path> paths = Files.list(Path.of(directoryUrl.toURI()))) {
+                return paths
+                        .filter(Files::isRegularFile)
+                        .map(Path::getFileName)
+                        .map(Path::toString)
+                        .filter(name -> name.endsWith(".json"))
+                        .sorted(Comparator.naturalOrder())
+                        .toList();
+            } catch (IOException e) {
+                throw new UncheckedIOException("Unable to read property seed directory", e);
+            } catch (URISyntaxException e) {
+                throw new IllegalStateException("Invalid property seed directory URI", e);
+            }
         }
+
+        // Fallback for packaged resources (WAR/JAR): probe numbered corpus files
+        List<String> names = new java.util.ArrayList<>();
+        for (int i = 1; ; i++) {
+            String name = String.format("%05d.json", i);
+            if (currentClassLoader().getResource(PROPERTIES_RESOURCE_PATH + "/" + name) == null) {
+                break;
+            }
+            names.add(name);
+        }
+        return names;
     }
 
     private ClassLoader currentClassLoader() {

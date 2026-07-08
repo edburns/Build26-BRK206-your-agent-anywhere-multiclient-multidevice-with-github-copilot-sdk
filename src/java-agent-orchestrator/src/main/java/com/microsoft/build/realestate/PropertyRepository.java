@@ -2,7 +2,6 @@ package com.microsoft.build.realestate;
 
 import java.util.List;
 
-import jakarta.data.repository.By;
 import jakarta.data.repository.Insert;
 import jakarta.data.repository.Query;
 import jakarta.data.repository.Repository;
@@ -14,19 +13,20 @@ public interface PropertyRepository {
     void save(Property property);
 
     @Query("""
-            WHERE (?1 IS NULL OR type = ?1)
-              AND (?2 IS NULL OR address.city = ?2)
-              AND price >= ?3
-              AND price <= ?4
-              AND bedrooms >= ?5
-              AND bathrooms >= ?6
-            ORDER BY id
+            SELECT p FROM Property p
+            WHERE (?1 IS NULL OR p.type = ?1)
+              AND (?2 IS NULL OR p.address.city = ?2)
+              AND p.price >= ?3
+              AND p.price <= ?4
+              AND p.bedrooms >= ?5
+              AND p.bathrooms >= ?6
+            ORDER BY p.id
             """)
     List<Property> search(
-            @By("type") String type,
-            @By("address.city") String city,
-            @By("price") int minPrice,
-            @By("price") int maxPrice,
-            @By("bedrooms") int minBedrooms,
-            @By("bathrooms") int minBathrooms);
+            String type,
+            String city,
+            int minPrice,
+            int maxPrice,
+            int minBedrooms,
+            int minBathrooms);
 }
