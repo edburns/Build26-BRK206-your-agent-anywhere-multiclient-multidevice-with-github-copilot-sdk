@@ -51,8 +51,8 @@
                                     <div id="agent-#{agent.id}" class="agent-card in-progress">
                                         <span class="status-dot queued"></span>
                                         <span class="agent-id">#{agent.id}</span>
-                                        <div class="agent-enquiry" title="#{agent.enquiryText}">#{agent.enquiryText}</div>
-                                        <div class="agent-intent">#{agent.currentIntent}</div>
+                                        <h:panelGroup layout="block" styleClass="agent-enquiry" title="#{agent.enquiryText}"><h:outputText value="#{agent.enquiryText}" /></h:panelGroup>
+                                        <h:panelGroup layout="block" styleClass="agent-intent"><h:outputText value="#{agent.currentIntent}" /></h:panelGroup>
                                     </div>
                                 </ui:repeat>
                                 <ui:fragment rendered="#{empty appState.getAgentsByPhase('QUEUED')}">
@@ -69,8 +69,8 @@
                                     <div id="agent-#{agent.id}" class="agent-card in-progress">
                                         <span class="status-dot"></span>
                                         <span class="agent-id">#{agent.id}</span>
-                                        <div class="agent-enquiry" title="#{agent.enquiryText}">#{agent.enquiryText}</div>
-                                        <div class="agent-intent">#{agent.currentIntent}</div>
+                                        <h:panelGroup layout="block" styleClass="agent-enquiry" title="#{agent.enquiryText}"><h:outputText value="#{agent.enquiryText}" /></h:panelGroup>
+                                        <h:panelGroup layout="block" styleClass="agent-intent"><h:outputText value="#{agent.currentIntent}" /></h:panelGroup>
                                     </div>
                                 </ui:repeat>
                                 <ui:fragment rendered="#{empty appState.getAgentsByPhase('VALIDATING')}">
@@ -87,8 +87,8 @@
                                     <div id="agent-#{agent.id}" class="agent-card in-progress">
                                         <span class="status-dot"></span>
                                         <span class="agent-id">#{agent.id}</span>
-                                        <div class="agent-enquiry" title="#{agent.enquiryText}">#{agent.enquiryText}</div>
-                                        <div class="agent-intent">#{agent.currentIntent}</div>
+                                        <h:panelGroup layout="block" styleClass="agent-enquiry" title="#{agent.enquiryText}"><h:outputText value="#{agent.enquiryText}" /></h:panelGroup>
+                                        <h:panelGroup layout="block" styleClass="agent-intent"><h:outputText value="#{agent.currentIntent}" /></h:panelGroup>
                                     </div>
                                 </ui:repeat>
                                 <ui:fragment rendered="#{empty appState.getAgentsByPhase('SEARCHING')}">
@@ -105,8 +105,8 @@
                                     <div id="agent-#{agent.id}" class="agent-card in-progress">
                                         <span class="status-dot"></span>
                                         <span class="agent-id">#{agent.id}</span>
-                                        <div class="agent-enquiry" title="#{agent.enquiryText}">#{agent.enquiryText}</div>
-                                        <div class="agent-intent">#{agent.currentIntent}</div>
+                                        <h:panelGroup layout="block" styleClass="agent-enquiry" title="#{agent.enquiryText}"><h:outputText value="#{agent.enquiryText}" /></h:panelGroup>
+                                        <h:panelGroup layout="block" styleClass="agent-intent"><h:outputText value="#{agent.currentIntent}" /></h:panelGroup>
                                     </div>
                                 </ui:repeat>
                                 <ui:fragment rendered="#{empty appState.getAgentsByPhase('WRITING_REPORT')}">
@@ -123,8 +123,8 @@
                                     <div id="agent-#{agent.id}" class="agent-card phase-done">
                                         <span class="status-dot done"></span>
                                         <span class="agent-id">#{agent.id}</span>
-                                        <div class="agent-enquiry" title="#{agent.enquiryText}">#{agent.enquiryText}</div>
-                                        <div class="agent-intent">#{agent.currentIntent}</div>
+                                        <h:panelGroup layout="block" styleClass="agent-enquiry" title="#{agent.enquiryText}"><h:outputText value="#{agent.enquiryText}" /></h:panelGroup>
+                                        <h:panelGroup layout="block" styleClass="agent-intent"><h:outputText value="#{agent.currentIntent}" /></h:panelGroup>
                                     </div>
                                 </ui:repeat>
                                 <ui:fragment rendered="#{empty appState.getAgentsByPhase('DONE')}">
@@ -141,8 +141,8 @@
                                     <div id="agent-#{agent.id}" class="agent-card phase-rejected">
                                         <span class="status-dot rejected"></span>
                                         <span class="agent-id">#{agent.id}</span>
-                                        <div class="agent-enquiry" title="#{agent.enquiryText}">#{agent.enquiryText}</div>
-                                        <div class="agent-intent">#{agent.currentIntent}</div>
+                                        <h:panelGroup layout="block" styleClass="agent-enquiry" title="#{agent.enquiryText}"><h:outputText value="#{agent.enquiryText}" /></h:panelGroup>
+                                        <h:panelGroup layout="block" styleClass="agent-intent"><h:outputText value="#{agent.currentIntent}" /></h:panelGroup>
                                     </div>
                                 </ui:repeat>
                                 <ui:fragment rendered="#{empty appState.getAgentsByPhase('REJECTED')}">
@@ -176,7 +176,7 @@
 
                     <p:commandButton value="Submit"
                                      action="#{appState.submitDraftEnquiry}"
-                                     update=":pipelineGrid"
+                                     update=":pipelineGrid @form"
                                      oncomplete="PF('dlgAddEnquiry').hide()"
                                      styleClass="ui-button" />
 
@@ -186,55 +186,55 @@
                         <p:commandButton value="Looking for a 3-bed family home near good schools in the suburbs, budget around $500k"
                                          styleClass="sample-btn"
                                          action="#{appState.submitEnquiry('Looking for a 3-bed family home near good schools in the suburbs, budget around $500k')}"
-                                         update=":pipelineGrid"
+                                         update=":pipelineGrid @form"
                                          oncomplete="PF('dlgAddEnquiry').hide()" />
 
                         <p:commandButton value="Need a downtown condo with parking, 1-2 bedrooms, under $350k"
                                          styleClass="sample-btn"
                                          action="#{appState.submitEnquiry('Need a downtown condo with parking, 1-2 bedrooms, under $350k')}"
-                                         update=":pipelineGrid"
+                                         update=":pipelineGrid @form"
                                          oncomplete="PF('dlgAddEnquiry').hide()" />
 
                         <p:commandButton value="Seeking waterfront property with at least 4 bedrooms for retirement"
                                          styleClass="sample-btn"
                                          action="#{appState.submitEnquiry('Seeking waterfront property with at least 4 bedrooms for retirement')}"
-                                         update=":pipelineGrid"
+                                         update=":pipelineGrid @form"
                                          oncomplete="PF('dlgAddEnquiry').hide()" />
 
                         <p:commandButton value="Want a rural property with land, at least 5 acres, horse-friendly"
                                          styleClass="sample-btn"
                                          action="#{appState.submitEnquiry('Want a rural property with land, at least 5 acres, horse-friendly')}"
-                                         update=":pipelineGrid"
+                                         update=":pipelineGrid @form"
                                          oncomplete="PF('dlgAddEnquiry').hide()" />
 
                         <p:commandButton value="asdkjh asdkjhasd this is spam garbage text!!!"
                                          styleClass="sample-btn"
                                          action="#{appState.submitEnquiry('asdkjh asdkjhasd this is spam garbage text!!!')}"
-                                         update=":pipelineGrid"
+                                         update=":pipelineGrid @form"
                                          oncomplete="PF('dlgAddEnquiry').hide()" />
 
                         <p:commandButton value="Looking for an affordable studio apartment near a university campus"
                                          styleClass="sample-btn"
                                          action="#{appState.submitEnquiry('Looking for an affordable studio apartment near a university campus')}"
-                                         update=":pipelineGrid"
+                                         update=":pipelineGrid @form"
                                          oncomplete="PF('dlgAddEnquiry').hide()" />
 
                         <p:commandButton value="Need a 4-bedroom house with a large garden, pet-friendly neighbourhood, under $750k"
                                          styleClass="sample-btn"
                                          action="#{appState.submitEnquiry('Need a 4-bedroom house with a large garden, pet-friendly neighbourhood, under $750k')}"
-                                         update=":pipelineGrid"
+                                         update=":pipelineGrid @form"
                                          oncomplete="PF('dlgAddEnquiry').hide()" />
 
                         <p:commandButton value="BUY CRYPTO NOW!!! Not actually looking for property lol"
                                          styleClass="sample-btn"
                                          action="#{appState.submitEnquiry('BUY CRYPTO NOW!!! Not actually looking for property lol')}"
-                                         update=":pipelineGrid"
+                                         update=":pipelineGrid @form"
                                          oncomplete="PF('dlgAddEnquiry').hide()" />
 
                         <p:commandButton value="Investor looking for multi-unit rental property near a major hospital"
                                          styleClass="sample-btn"
                                          action="#{appState.submitEnquiry('Investor looking for multi-unit rental property near a major hospital')}"
-                                         update=":pipelineGrid"
+                                         update=":pipelineGrid @form"
                                          oncomplete="PF('dlgAddEnquiry').hide()" />
 
                     </div>
