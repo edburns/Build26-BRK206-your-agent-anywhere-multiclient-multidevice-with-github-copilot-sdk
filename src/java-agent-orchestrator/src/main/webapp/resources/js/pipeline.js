@@ -1,6 +1,7 @@
 /* pipeline.js — websocket-driven partial refresh + lightweight card transitions */
 
 let previousAgentPhaseMap = {};
+const TRANSITION_DURATION_MS = 300;
 
 function captureAgentPhaseMap() {
     const phaseMap = {};
@@ -50,7 +51,9 @@ function animateMovedCards(newPhaseMap) {
             if (card) {
                 card.classList.add('transitioning');
                 requestAnimationFrame(() => {
-                    card.classList.remove('transitioning');
+                    requestAnimationFrame(() => {
+                        card.classList.remove('transitioning');
+                    });
                 });
             }
         }
@@ -77,7 +80,7 @@ function handlePipelinePush(message) {
         const removedCard = document.getElementById(`agent-${agentId}`);
         if (removedCard) {
             removedCard.classList.add('transitioning', 'rejected');
-            setTimeout(() => refreshPipeline(), 300);
+            setTimeout(() => refreshPipeline(), TRANSITION_DURATION_MS);
             return;
         }
     }
