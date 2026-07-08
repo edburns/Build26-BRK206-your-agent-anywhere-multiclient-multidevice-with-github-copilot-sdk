@@ -10,9 +10,12 @@
 
 set -euo pipefail
 
-TASK_ISSUE="${1:?Usage: $0 <TASK_ISSUE> <BASE_BRANCH> <REPO>}"
-BASE_BRANCH="${2:?Usage: $0 <TASK_ISSUE> <BASE_BRANCH> <REPO>}"
-REPO="${3:?Usage: $0 <TASK_ISSUE> <BASE_BRANCH> <REPO>}"
+TASK_ISSUE="${1:?Usage: $0 <TASK_ISSUE> <BASE_BRANCH> <REPO> [LOG_DIR]}"
+BASE_BRANCH="${2:?Usage: $0 <TASK_ISSUE> <BASE_BRANCH> <REPO> [LOG_DIR]}"
+REPO="${3:?Usage: $0 <TASK_ISSUE> <BASE_BRANCH> <REPO> [LOG_DIR]}"
+LOG_DIR="${4:-shepherd-tasks-$(date +%Y%m%d-%H%M)}"
+
+mkdir -p "$LOG_DIR"
 
 # --- Helpers ---
 
@@ -89,8 +92,9 @@ PHASE1_PROMPT="Invoke skill \`shepherd-task-to-ready\` with these inputs:
 
 status "Phase 1 prompt:"
 echo "$PHASE1_PROMPT"
-PHASE1_SHARE="./phase1-task-$(date +%Y%m%d-%H%M)-$TASK_ISSUE.md"
-echo "$PHASE1_PROMPT" | copilot --yolo --output-format json --share "$PHASE1_SHARE"
+PHASE1_SHARE="$LOG_DIR/phase1-task-$(date +%Y%m%d-%H%M)-$TASK_ISSUE.md"
+PHASE1_JSON="$LOG_DIR/phase1-task-$(date +%Y%m%d-%H%M)-$TASK_ISSUE.json"
+echo "$PHASE1_PROMPT" | copilot --yolo --output-format json --share "$PHASE1_SHARE" > "$PHASE1_JSON"
 
 status "Phase 1: copilot exited. Verifying state..."
 
@@ -128,8 +132,9 @@ PHASE2_PROMPT="Invoke skill \`shepherd-task-from-ready-to-merged-to-base\` with 
 
 status "Phase 2 prompt:"
 echo "$PHASE2_PROMPT"
-PHASE2_SHARE="./phase2-task-$(date +%Y%m%d-%H%M)-$TASK_ISSUE.md"
-echo "$PHASE2_PROMPT" | copilot --yolo --output-format json --share "$PHASE2_SHARE"
+PHASE2_SHARE="$LOG_DIR/phase2-task-$(date +%Y%m%d-%H%M)-$TASK_ISSUE.md"
+PHASE2_JSON="$LOG_DIR/phase2-task-$(date +%Y%m%d-%H%M)-$TASK_ISSUE.json"
+echo "$PHASE2_PROMPT" | copilot --yolo --output-format json --share "$PHASE2_SHARE" > "$PHASE2_JSON"
 
 status "Phase 2: copilot exited. Verifying state..."
 
