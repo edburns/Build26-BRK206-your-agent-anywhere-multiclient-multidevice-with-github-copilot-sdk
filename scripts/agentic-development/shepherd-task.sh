@@ -16,9 +16,9 @@ REPO="${3:?Usage: $0 <TASK_ISSUE> <BASE_BRANCH> <REPO>}"
 
 # --- Helpers ---
 
-status()  { echo -e "\033[36m[shepherd-task] $*\033[0m"; }
-fail()    { echo -e "\033[31m[shepherd-task] FAILED: $*\033[0m"; exit 1; }
-ok()      { echo -e "\033[32m[shepherd-task] $*\033[0m"; }
+status()  { echo "[shepherd-task] $*"; }
+fail()    { echo "[shepherd-task] FAILED: $*"; exit 1; }
+ok()      { echo "[shepherd-task] $*"; }
 
 # Find the PR linked to the task issue using three strategies.
 find_linked_pr() {
@@ -87,7 +87,8 @@ PHASE1_PROMPT="Invoke skill \`shepherd-task-to-ready\` with these inputs:
 
 status "Phase 1 prompt:"
 echo "$PHASE1_PROMPT"
-echo "$PHASE1_PROMPT" | copilot --yolo
+PHASE1_SHARE="./phase1-task-$(date +%Y%m%d-%H%M)-$TASK_ISSUE.md"
+echo "$PHASE1_PROMPT" | copilot --yolo --output-format json --share "$PHASE1_SHARE"
 
 status "Phase 1: copilot exited. Verifying state..."
 
@@ -125,7 +126,8 @@ PHASE2_PROMPT="Invoke skill \`shepherd-task-from-ready-to-merged-to-base\` with 
 
 status "Phase 2 prompt:"
 echo "$PHASE2_PROMPT"
-echo "$PHASE2_PROMPT" | copilot --yolo
+PHASE2_SHARE="./phase2-task-$(date +%Y%m%d-%H%M)-$TASK_ISSUE.md"
+echo "$PHASE2_PROMPT" | copilot --yolo --output-format json --share "$PHASE2_SHARE"
 
 status "Phase 2: copilot exited. Verifying state..."
 

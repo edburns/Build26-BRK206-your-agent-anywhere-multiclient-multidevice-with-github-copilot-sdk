@@ -33,15 +33,15 @@ param(
 $ErrorActionPreference = "Stop"
 
 function Write-Status($msg) {
-    Write-Host "[shepherd-task] $msg" -ForegroundColor Cyan
+    Write-Output "[shepherd-task] $msg"
 }
 
 function Write-Fail($msg) {
-    Write-Host "[shepherd-task] FAILED: $msg" -ForegroundColor Red
+    Write-Output "[shepherd-task] FAILED: $msg"
 }
 
 function Write-Ok($msg) {
-    Write-Host "[shepherd-task] $msg" -ForegroundColor Green
+    Write-Output "[shepherd-task] $msg"
 }
 
 # --- Helper: Find the PR linked to the task issue ---
@@ -113,7 +113,8 @@ Invoke skill ``shepherd-task-to-ready`` with these inputs:
 "@
 
 Write-Status "Phase 1 prompt: $phase1Prompt"
-$phase1Prompt | copilot --yolo
+$phase1Share = "./phase1-task-$(Get-Date -Format 'yyyyMMdd-HHmm')-$TaskIssue.md"
+$phase1Prompt | copilot --yolo --output-format json --share $phase1Share
 
 Write-Status "Phase 1: copilot exited. Verifying state..."
 
@@ -162,7 +163,8 @@ Invoke skill ``shepherd-task-from-ready-to-merged-to-base`` with these inputs:
 "@
 
 Write-Status "Phase 2 prompt: $phase2Prompt"
-$phase2Prompt | copilot --yolo
+$phase2Share = "./phase2-task-$(Get-Date -Format 'yyyyMMdd-HHmm')-$TaskIssue.md"
+$phase2Prompt | copilot --yolo --output-format json --share $phase2Share
 
 Write-Status "Phase 2: copilot exited. Verifying state..."
 
