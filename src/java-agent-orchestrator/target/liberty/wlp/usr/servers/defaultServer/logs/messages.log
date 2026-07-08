@@ -1,0 +1,29 @@
+********************************************************************************
+product = Open Liberty 26.0.0.5 (wlp-1.0.113.cl260520260430-1602)
+wlp.install.dir = /home/runner/work/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/src/java-agent-orchestrator/target/liberty/wlp/
+java.home = /opt/hostedtoolcache/Java_Microsoft_jdk/25.0.0/x64
+java.version = 25
+java.runtime = OpenJDK Runtime Environment (25+36-LTS)
+os = Linux (6.17.0-1018-azure; amd64) (en)
+process = 4721@runnervm5mmn9
+Classpath = /home/runner/work/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/src/java-agent-orchestrator/target/liberty/wlp/bin/tools/ws-server.jar
+Java Library path = /usr/java/packages/lib:/usr/lib64:/lib64:/lib:/usr/lib
+********************************************************************************
+[7/8/26, 0:30:07:553 UTC] 00000003 com.ibm.ws.kernel.launch.internal.FrameworkManager           A CWWKE0001I: The server defaultServer has been launched.
+[7/8/26, 0:30:08:144 UTC] 00000029 com.ibm.ws.config.xml.internal.ServerXMLConfiguration        A CWWKG0093A: Processing configuration drop-ins resource: /home/runner/work/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/src/java-agent-orchestrator/target/liberty/wlp/usr/servers/defaultServer/configDropins/defaults/install_apps_configuration_1491924271.xml
+[7/8/26, 0:30:08:158 UTC] 00000029 com.ibm.ws.config.xml.internal.ServerXMLConfiguration        A CWWKG0093A: Processing configuration drop-ins resource: /home/runner/work/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/src/java-agent-orchestrator/target/liberty/wlp/usr/servers/defaultServer/configDropins/overrides/liberty-plugin-variable-config.xml
+[7/8/26, 0:30:08:374 UTC] 00000003 com.ibm.ws.kernel.launch.internal.FrameworkManager           I CWWKE0002I: The kernel started after 1.027 seconds
+[7/8/26, 0:30:08:493 UTC] 00000031 com.ibm.ws.kernel.feature.internal.FeatureManager            I CWWKF0007I: Feature update started.
+[7/8/26, 0:30:09:488 UTC] 00000029 com.ibm.ws.app.manager.internal.monitor.DropinMonitor        A CWWKZ0058I: Monitoring dropins for applications.
+[7/8/26, 0:30:09:532 UTC] 0000002d com.ibm.ws.app.manager.AppMessageHelper                      E CWWKZ0013E: It is not possible to start two applications called java-agent-orchestrator.
+[7/8/26, 0:30:09:923 UTC] 00000026 org.jboss.weld.Version                                       I WELD-000900: 6.0.2 (Final)
+[7/8/26, 0:30:10:058 UTC] 00000036 com.ibm.ws.app.manager.AppMessageHelper                      W CWWKZ0014W: The application java-agent-orchestrator could not be started as it could not be found at location java-agent-orchestrator.war.
+[7/8/26, 0:30:10:071 UTC] 00000031 com.ibm.ws.tcpchannel.internal.TCPPort                       I CWWKO0219I: TCP Channel defaultHttpEndpoint has been started and is now listening for requests on host localhost  (IPv4: 127.0.0.1) port 9080.
+[7/8/26, 0:30:10:113 UTC] 00000031 com.ibm.ws.kernel.feature.internal.FeatureManager            A CWWKF0012I: The server installed the following features: [cdi-4.1, data-1.0, expressionLanguage-6.0, faces-4.1, jdbc-4.2, jndi-1.0, jsonp-2.1, persistence-3.2, persistenceContainer-3.2, servlet-6.1, websocket-2.2].
+[7/8/26, 0:30:10:113 UTC] 00000031 com.ibm.ws.kernel.feature.internal.FeatureManager            I CWWKF0008I: Feature update completed in 1.740 seconds.
+[7/8/26, 0:30:10:114 UTC] 00000031 com.ibm.ws.kernel.feature.internal.FeatureManager            A CWWKF0011I: The defaultServer server is ready to run a smarter planet. The defaultServer server started in 2.767 seconds.
+[7/8/26, 0:31:21:905 UTC] 0000001f com.ibm.ws.kernel.launch.internal.ServerCommandListener      A CWWKE0055I: Server shutdown requested on Wednesday, July 8, 2026 at 12:31 AM. The server defaultServer is shutting down.
+[7/8/26, 0:31:21:910 UTC] 0000005f com.ibm.ws.runtime.update.internal.RuntimeUpdateManagerImpl  A CWWKE1100I: Waiting for up to 30 seconds for the server to quiesce.
+[7/8/26, 0:31:21:916 UTC] 0000005c com.ibm.ws.tcpchannel.internal.TCPChannel                    I CWWKO0220I: TCP Channel defaultHttpEndpoint has stopped listening for requests on host localhost  (IPv4: 127.0.0.1) port 9080.
+[7/8/26, 0:31:22:918 UTC] 0000005f com.ibm.ws.runtime.update.internal.RuntimeUpdateManagerImpl  I CWWKE1101I: Server quiesce complete.
+[7/8/26, 0:31:23:074 UTC] 00000003 com.ibm.ws.kernel.launch.internal.FrameworkManager           A CWWKE0036I: The server defaultServer stopped after 1 minutes, 15.727 seconds.
