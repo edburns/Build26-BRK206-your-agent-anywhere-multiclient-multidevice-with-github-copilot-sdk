@@ -53,19 +53,19 @@ public class AppState implements Serializable {
     public String getSessionId() {
         if (sessionId == null) {
             sessionId = FacesContext.getCurrentInstance()
-                    .getExternalContext().getSessionId(false);
+                    .getExternalContext().getSessionId(true);
         }
         return sessionId;
     }
 
-    private ConcurrentHashMap<String, Agent> agents() {
+    private synchronized ConcurrentHashMap<String, Agent> agents() {
         if (agents == null) {
             agents = new ConcurrentHashMap<>();
         }
         return agents;
     }
 
-    private Semaphore semaphore() {
+    private synchronized Semaphore semaphore() {
         if (sessionSemaphore == null) {
             sessionSemaphore = new Semaphore(MAX_CONCURRENT_SESSIONS);
         }
