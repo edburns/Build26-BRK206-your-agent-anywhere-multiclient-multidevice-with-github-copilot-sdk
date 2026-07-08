@@ -140,6 +140,9 @@ public class Agent {
 
     @CopilotTool(name = "set_current_phase", value = "Sets the current phase of the agent. Use this to report progress through the pipeline.")
     void setCurrentPhase(@CopilotToolParam("The phase to transition to") Phase phase) {
+        if (this.phase == phase) {
+            return;
+        }
         this.phase = phase;
         notifyUi("phase-changed");
     }
