@@ -1,5 +1,7 @@
 package com.microsoft.build.realestate;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
@@ -10,13 +12,16 @@ import java.util.logging.Logger;
 import com.github.copilot.CopilotClient;
 
 import jakarta.annotation.PostConstruct;
-import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.SessionScoped;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 
 @Named
-@ApplicationScoped
-public class AppState {
+@SessionScoped
+public class AppState implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = 1L;
 
     private static final Logger LOGGER = Logger.getLogger(AppState.class.getName());
 

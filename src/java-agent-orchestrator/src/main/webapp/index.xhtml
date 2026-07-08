@@ -10,7 +10,9 @@
     <p>Active agents: #{appState.agents.size()}</p>
 
     <h:form>
-        <h:commandButton value="Submit sample enquiry" action="#{appState.submitSampleEnquiry}" />
+        <h:commandButton value="Submit sample enquiry" action="#{appState.submitSampleEnquiry}">
+            <f:ajax execute="@form" render="@none" />
+        </h:commandButton>
     </h:form>
 
     <f:websocket channel="pipelineChannel" onmessage="handlePipelinePush" />
