@@ -41,8 +41,8 @@ public class AppState {
             LOGGER.info("AppState: virtual thread started for agent " + agent.getId());
             try {
                 agent.run(copilotClient, propertyDatabase);
-                if (agent.isDone() || !agent.isRejected()) {
-                    // Done agents and non-rejected agents remain visible
+                if (!agent.isRejected()) {
+                    // Non-rejected agents remain visible
                     return;
                 }
                 // Rejected agents linger for 15 seconds then are removed

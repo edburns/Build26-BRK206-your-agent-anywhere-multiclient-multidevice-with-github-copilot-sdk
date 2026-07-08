@@ -86,7 +86,7 @@ public class PropertyDatabase {
                 minBathrooms);
     }
 
-    @CopilotTool("Searches the real estate listings database for properties matching the given criteria. Returns matching listings with full details.")
+    @CopilotTool(name = "search_properties", value = "Searches the real estate listings database for properties matching the given criteria. Returns matching listings with full details.")
     public List<Property> searchProperties(
             @CopilotToolParam("Property type substring to filter by (e.g. House, Apartment, Condo)") String type,
             @CopilotToolParam("City substring to filter by") String city,
