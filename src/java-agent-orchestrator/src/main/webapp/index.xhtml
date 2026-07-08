@@ -173,7 +173,7 @@
                     <h:inputTextarea id="enquiryText"
                                      value="#{appState.enquiryDraft}"
                                      rows="4"
-                                     style="width:100%;background:#27272a;border:1px solid #52525b;border-radius:0.375rem;color:#e4e4e7;padding:0.5rem;font-family:inherit;font-size:0.9rem;" />
+                                     styleClass="enquiry-textarea" />
 
                     <p:commandButton value="Submit"
                                      action="#{appState.submitDraftEnquiry}"
@@ -242,16 +242,6 @@
                 </div>
             </h:form>
         </p:dialog>
-
-        <!-- WebSocket bridge: receives push and triggers server-side re-render -->
-        <script>
-            //<![CDATA[
-            function handlePipelinePush(message) {
-                console.log('[Pipeline] WebSocket push received:', message);
-                refreshPipeline();
-            }
-            //]]>
-        </script>
 
     </ui:define>
 </ui:composition>
