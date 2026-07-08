@@ -36,6 +36,9 @@ function handlePipelinePush(message) {
         setTimeout(function () {
             if (typeof refreshPipeline === 'function') {
                 refreshPipeline();
+            } else {
+                console.error('[Pipeline] refreshPipeline() still unavailable after retry. ' +
+                    'Check that p:remoteCommand name="refreshPipeline" is present in the form.');
             }
         }, 250);
     }
