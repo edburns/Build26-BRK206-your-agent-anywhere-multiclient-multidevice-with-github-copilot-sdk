@@ -3,6 +3,7 @@
                 xmlns:f="jakarta.faces.core"
                 xmlns:ui="jakarta.faces.facelets"
                 xmlns:p="http://primefaces.org/ui"
+                xmlns:c="jakarta.tags.core"
                 template="/templates/layout.xhtml">
     <ui:define name="content">
 
@@ -47,7 +48,8 @@
                         <div class="phase-column phase-queued">
                             <div class="phase-header">Queued</div>
                             <div class="phase-body">
-                                <ui:repeat value="#{appState.getAgentsByPhase('QUEUED')}" var="agent">
+                                <c:set var="queuedAgents" value="#{appState.getAgentsByPhase('QUEUED')}" />
+                                <ui:repeat value="#{queuedAgents}" var="agent">
                                     <div id="agent-#{agent.id}" class="agent-card in-progress">
                                         <span class="status-dot queued"></span>
                                         <span class="agent-id">#{agent.id}</span>
@@ -55,7 +57,7 @@
                                         <h:panelGroup layout="block" styleClass="agent-intent"><h:outputText value="#{agent.currentIntent}" /></h:panelGroup>
                                     </div>
                                 </ui:repeat>
-                                <ui:fragment rendered="#{empty appState.getAgentsByPhase('QUEUED')}">
+                                <ui:fragment rendered="#{empty queuedAgents}">
                                     <div class="phase-empty">—</div>
                                 </ui:fragment>
                             </div>
@@ -65,7 +67,8 @@
                         <div class="phase-column phase-validating">
                             <div class="phase-header">Validating</div>
                             <div class="phase-body">
-                                <ui:repeat value="#{appState.getAgentsByPhase('VALIDATING')}" var="agent">
+                                <c:set var="validatingAgents" value="#{appState.getAgentsByPhase('VALIDATING')}" />
+                                <ui:repeat value="#{validatingAgents}" var="agent">
                                     <div id="agent-#{agent.id}" class="agent-card in-progress">
                                         <span class="status-dot"></span>
                                         <span class="agent-id">#{agent.id}</span>
@@ -73,7 +76,7 @@
                                         <h:panelGroup layout="block" styleClass="agent-intent"><h:outputText value="#{agent.currentIntent}" /></h:panelGroup>
                                     </div>
                                 </ui:repeat>
-                                <ui:fragment rendered="#{empty appState.getAgentsByPhase('VALIDATING')}">
+                                <ui:fragment rendered="#{empty validatingAgents}">
                                     <div class="phase-empty">—</div>
                                 </ui:fragment>
                             </div>
@@ -83,7 +86,8 @@
                         <div class="phase-column phase-searching">
                             <div class="phase-header">Searching</div>
                             <div class="phase-body">
-                                <ui:repeat value="#{appState.getAgentsByPhase('SEARCHING')}" var="agent">
+                                <c:set var="searchingAgents" value="#{appState.getAgentsByPhase('SEARCHING')}" />
+                                <ui:repeat value="#{searchingAgents}" var="agent">
                                     <div id="agent-#{agent.id}" class="agent-card in-progress">
                                         <span class="status-dot"></span>
                                         <span class="agent-id">#{agent.id}</span>
@@ -91,7 +95,7 @@
                                         <h:panelGroup layout="block" styleClass="agent-intent"><h:outputText value="#{agent.currentIntent}" /></h:panelGroup>
                                     </div>
                                 </ui:repeat>
-                                <ui:fragment rendered="#{empty appState.getAgentsByPhase('SEARCHING')}">
+                                <ui:fragment rendered="#{empty searchingAgents}">
                                     <div class="phase-empty">—</div>
                                 </ui:fragment>
                             </div>
@@ -101,7 +105,8 @@
                         <div class="phase-column phase-writing-report">
                             <div class="phase-header">Writing Report</div>
                             <div class="phase-body">
-                                <ui:repeat value="#{appState.getAgentsByPhase('WRITING_REPORT')}" var="agent">
+                                <c:set var="writing_reportAgents" value="#{appState.getAgentsByPhase('WRITING_REPORT')}" />
+                                <ui:repeat value="#{writing_reportAgents}" var="agent">
                                     <div id="agent-#{agent.id}" class="agent-card in-progress">
                                         <span class="status-dot"></span>
                                         <span class="agent-id">#{agent.id}</span>
@@ -109,7 +114,7 @@
                                         <h:panelGroup layout="block" styleClass="agent-intent"><h:outputText value="#{agent.currentIntent}" /></h:panelGroup>
                                     </div>
                                 </ui:repeat>
-                                <ui:fragment rendered="#{empty appState.getAgentsByPhase('WRITING_REPORT')}">
+                                <ui:fragment rendered="#{empty writing_reportAgents}">
                                     <div class="phase-empty">—</div>
                                 </ui:fragment>
                             </div>
@@ -119,7 +124,8 @@
                         <div class="phase-column phase-done">
                             <div class="phase-header">Done</div>
                             <div class="phase-body">
-                                <ui:repeat value="#{appState.getAgentsByPhase('DONE')}" var="agent">
+                                <c:set var="doneAgents" value="#{appState.getAgentsByPhase('DONE')}" />
+                                <ui:repeat value="#{doneAgents}" var="agent">
                                     <div id="agent-#{agent.id}" class="agent-card phase-done">
                                         <span class="status-dot done"></span>
                                         <span class="agent-id">#{agent.id}</span>
@@ -127,7 +133,7 @@
                                         <h:panelGroup layout="block" styleClass="agent-intent"><h:outputText value="#{agent.currentIntent}" /></h:panelGroup>
                                     </div>
                                 </ui:repeat>
-                                <ui:fragment rendered="#{empty appState.getAgentsByPhase('DONE')}">
+                                <ui:fragment rendered="#{empty doneAgents}">
                                     <div class="phase-empty">—</div>
                                 </ui:fragment>
                             </div>
@@ -137,7 +143,8 @@
                         <div class="phase-column phase-rejected">
                             <div class="phase-header">Rejected</div>
                             <div class="phase-body">
-                                <ui:repeat value="#{appState.getAgentsByPhase('REJECTED')}" var="agent">
+                                <c:set var="rejectedAgents" value="#{appState.getAgentsByPhase('REJECTED')}" />
+                                <ui:repeat value="#{rejectedAgents}" var="agent">
                                     <div id="agent-#{agent.id}" class="agent-card phase-rejected">
                                         <span class="status-dot rejected"></span>
                                         <span class="agent-id">#{agent.id}</span>
@@ -145,7 +152,7 @@
                                         <h:panelGroup layout="block" styleClass="agent-intent"><h:outputText value="#{agent.currentIntent}" /></h:panelGroup>
                                     </div>
                                 </ui:repeat>
-                                <ui:fragment rendered="#{empty appState.getAgentsByPhase('REJECTED')}">
+                                <ui:fragment rendered="#{empty rejectedAgents}">
                                     <div class="phase-empty">—</div>
                                 </ui:fragment>
                             </div>
@@ -172,12 +179,14 @@
                     <h:inputTextarea id="enquiryText"
                                      value="#{appState.enquiryDraft}"
                                      rows="4"
+                                     required="true"
+                                     label="Enquiry"
                                      styleClass="enquiry-textarea" />
 
                     <p:commandButton value="Submit"
                                      action="#{appState.submitDraftEnquiry}"
                                      update=":pipelineGrid @form"
-                                     oncomplete="PF('dlgAddEnquiry').hide()"
+                                     oncomplete="if(!args.validationFailed) PF('dlgAddEnquiry').hide()"
                                      styleClass="ui-button" />
 
                     <div class="sample-enquiries-label">Or choose a sample enquiry:</div>

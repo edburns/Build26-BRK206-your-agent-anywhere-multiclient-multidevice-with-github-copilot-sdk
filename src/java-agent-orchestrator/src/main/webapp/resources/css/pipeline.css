@@ -274,13 +274,13 @@ html, body {
     border-color: #3f3f46 !important;
 }
 
-.ui-button {
+.enquiry-dialog .ui-button:not(.sample-btn) {
     background: #4f46e5 !important;
     border-color: #4f46e5 !important;
     color: #fff !important;
 }
 
-.ui-button:hover {
+.enquiry-dialog .ui-button:not(.sample-btn):hover {
     background: #4338ca !important;
     border-color: #4338ca !important;
 }
