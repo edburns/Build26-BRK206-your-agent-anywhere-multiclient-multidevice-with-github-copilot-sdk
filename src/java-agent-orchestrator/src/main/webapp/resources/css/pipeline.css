@@ -1,0 +1,262 @@
+/*
+ * pipeline.css — Real Estate Agent Pipeline UI
+ * Dark theme, grid layout mirroring the C# Blazor demo.
+ * CSS transitions animate agent card state changes (issue 3.6).
+ */
+
+/* ── Page & layout ───────────────────────────────────────────────── */
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #111113;
+    color: #e4e4e7;
+    margin: 0;
+    padding: 1.5rem;
+}
+
+h1 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #f4f4f5;
+    margin-bottom: 0.25rem;
+}
+
+.subtitle {
+    font-size: 0.875rem;
+    color: #71717a;
+    margin-bottom: 1.5rem;
+}
+
+/* ── Enquiry submission form ─────────────────────────────────────── */
+
+.submit-form {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+    max-width: 700px;
+}
+
+.enquiry-input {
+    flex: 1;
+    padding: 0.625rem 0.875rem;
+    background: #27272a;
+    border: 1px solid #3f3f46;
+    border-radius: 0.5rem;
+    color: #f4f4f5;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.enquiry-input:focus {
+    border-color: #6366f1;
+}
+
+.submit-btn {
+    padding: 0.625rem 1.25rem;
+    background: #6366f1;
+    border: none;
+    border-radius: 0.5rem;
+    color: white;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.submit-btn:hover {
+    background: #4f46e5;
+}
+
+/* ── Pipeline grid ───────────────────────────────────────────────── */
+
+.pipeline-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 1rem;
+    align-items: start;
+}
+
+/* ── Phase column ────────────────────────────────────────────────── */
+
+.phase-column {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-width: 160px;
+}
+
+.phase-header {
+    padding: 0.5rem 0.75rem;
+    background: #18181b;
+    border: 1px solid #3f3f46;
+    border-radius: 0.5rem 0.5rem 0 0;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #a1a1aa;
+}
+
+.phase-header.done {
+    color: #34d399;
+    border-color: #065f46;
+}
+
+.phase-header.rejected {
+    color: #f87171;
+    border-color: #7f1d1d;
+}
+
+.phase-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-height: 80px;
+    padding: 0.5rem;
+    background: #18181b;
+    border: 1px solid #27272a;
+    border-top: none;
+    border-radius: 0 0 0.5rem 0.5rem;
+}
+
+/* ── Agent card — main deliverable for issue 3.6 ─────────────────── */
+
+.agent-card {
+    position: relative;
+    padding: 0.625rem 0.75rem;
+    background: #27272a;
+    border: 1.5px solid #3f3f46;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    user-select: none;
+
+    /* CSS transitions — key deliverable for 3.6 */
+    transition: border-color 0.5s, background-color 0.5s, transform 0.3s;
+}
+
+.agent-card:hover {
+    background: #2d2d30;
+}
+
+/* Active state: agent is currently processing */
+.agent-card.active {
+    border-color: #f59e0b;
+    box-shadow: 0 0 12px rgba(245, 158, 11, 0.3);
+}
+
+/* Completed state: agent has finished successfully */
+.agent-card.completed {
+    border-color: #10b981;
+}
+
+/* Rejected state: agent was rejected */
+.agent-card.rejected {
+    border-color: #ef4444;
+    opacity: 0.7;
+}
+
+/* Transitioning: applied briefly when a card changes state */
+.agent-card.transitioning {
+    transform: scale(1.03);
+}
+
+/* ── Agent card content ──────────────────────────────────────────── */
+
+.agent-id {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #71717a;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.25rem;
+}
+
+.agent-enquiry {
+    font-size: 0.8rem;
+    color: #d4d4d8;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 150px;
+}
+
+.agent-intent {
+    font-size: 0.75rem;
+    color: #71717a;
+    margin-top: 0.25rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ── Status dot + pulse indicator (key deliverable for 3.6) ─────── */
+
+.status-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #52525b;
+    margin-right: 0.4rem;
+    vertical-align: middle;
+    flex-shrink: 0;
+}
+
+.status-dot.active-dot {
+    background: #f59e0b;
+}
+
+.status-dot.done-dot {
+    background: #10b981;
+}
+
+.status-dot.rejected-dot {
+    background: #ef4444;
+}
+
+/* Pulse animation for the active agent's status indicator */
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.6; }
+}
+
+.pulse-indicator {
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* ── Empty column placeholder ────────────────────────────────────── */
+
+.empty-column-hint {
+    font-size: 0.75rem;
+    color: #3f3f46;
+    text-align: center;
+    padding: 0.5rem 0;
+    font-style: italic;
+}
+
+/* ── Stats bar ───────────────────────────────────────────────────── */
+
+.stats-bar {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+    padding: 1rem;
+    background: #18181b;
+    border: 1px solid #27272a;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    color: #a1a1aa;
+}
+
+.stats-bar .stat {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.stats-bar .stat .count {
+    font-weight: 700;
+    font-size: 1.25rem;
+    color: #f4f4f5;
+}
