@@ -4,15 +4,18 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.time.Duration;
 import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import com.github.copilot.CopilotClient;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.SessionScoped;
+import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
@@ -37,6 +40,9 @@ public class AppState implements Serializable {
 
     // Captured once per session from FacesContext; String is serializable.
     private String sessionId;
+
+    // Draft enquiry text bound to the add-enquiry dialog textarea.
+    private String enquiryDraft;
 
     // Live agent state: not passivation-safe, marked transient.
     // An activated (deserialized) session will start with an empty agent map
@@ -72,10 +78,11 @@ public class AppState implements Serializable {
         return sessionSemaphore;
     }
 
-    public void submitEnquiry(String enquiryText) {
+    public boolean submitEnquiry(String enquiryText) {
         if (!semaphore().tryAcquire()) {
             LOGGER.warning("AppState: at capacity (" + MAX_CONCURRENT_ENQUIRIES + " concurrent enquiries); rejecting enquiry");
-            return;
+            signalFailure("Pipeline is at capacity. Please wait for a slot to free up before submitting again.");
+            return false;
         }
         Agent agent;
         try {
@@ -84,7 +91,8 @@ public class AppState implements Serializable {
         } catch (Exception e) {
             semaphore().release();
             LOGGER.log(Level.WARNING, "AppState: failed to create agent, permit released", e);
-            return;
+            signalFailure("Failed to start enquiry processing. Please try again.");
+            return false;
         }
         LOGGER.info("AppState: created agent " + agent.getId() + ", total agents=" + agents().size());
         notifyUi(agent.getId(), "agent-added");
@@ -118,14 +126,47 @@ public class AppState implements Serializable {
                 }
             }
         });
+        return true;
     }
 
     public void submitSampleEnquiry() {
         submitEnquiry("Looking for a three-bedroom home near good schools in Seattle for under $900000.");
     }
 
+    public void submitDraftEnquiry() {
+        if (enquiryDraft != null && !enquiryDraft.isBlank()) {
+            if (submitEnquiry(enquiryDraft)) {
+                enquiryDraft = null;
+            }
+        }
+    }
+
+    public String getEnquiryDraft() {
+        return enquiryDraft;
+    }
+
+    public void setEnquiryDraft(String enquiryDraft) {
+        this.enquiryDraft = enquiryDraft;
+    }
+
     public Collection<Agent> getAgents() {
         return agents().values();
+    }
+
+    public List<Agent> getAgentsByPhase(String phaseName) {
+        if (phaseName == null || phaseName.isBlank()) {
+            return List.of();
+        }
+        Phase target;
+        try {
+            target = Phase.valueOf(phaseName);
+        } catch (IllegalArgumentException e) {
+            return List.of();
+        }
+        return agents().values().stream()
+                .filter(a -> a.getPhase() == target)
+                .sorted(java.util.Comparator.comparing(Agent::getStartedAt).thenComparing(Agent::getId))
+                .collect(Collectors.toList());
     }
 
     public Agent getAgent(String id) {
@@ -142,5 +183,13 @@ public class AppState implements Serializable {
 
     public void notifyUi(String agentId, String eventType) {
         uiUpdateSocket.sendUpdate(agentId, eventType, getSessionId());
+    }
+
+    private void signalFailure(String message) {
+        FacesContext ctx = FacesContext.getCurrentInstance();
+        if (ctx != null) {
+            ctx.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_WARN, message, null));
+            ctx.validationFailed();
+        }
     }
 }
