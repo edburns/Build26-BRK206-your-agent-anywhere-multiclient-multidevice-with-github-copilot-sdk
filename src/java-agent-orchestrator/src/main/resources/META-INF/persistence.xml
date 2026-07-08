@@ -5,6 +5,7 @@
              version="2.2">
     <persistence-unit name="realEstatePU" transaction-type="JTA">
         <jta-data-source>jdbc/realEstateDS</jta-data-source>
+        <class>com.microsoft.build.realestate.Property</class>
         <properties>
             <property name="jakarta.persistence.schema-generation.database.action" value="create" />
             <property name="eclipselink.target-database" value="org.eclipse.persistence.platform.database.H2Platform" />
