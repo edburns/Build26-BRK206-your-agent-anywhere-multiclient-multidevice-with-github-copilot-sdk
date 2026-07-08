@@ -15,6 +15,7 @@ import com.github.copilot.CopilotClient;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.SessionScoped;
+import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
@@ -80,6 +81,7 @@ public class AppState implements Serializable {
     public boolean submitEnquiry(String enquiryText) {
         if (!semaphore().tryAcquire()) {
             LOGGER.warning("AppState: at capacity (" + MAX_CONCURRENT_ENQUIRIES + " concurrent enquiries); rejecting enquiry");
+            signalFailure("Pipeline is at capacity. Please wait for a slot to free up before submitting again.");
             return false;
         }
         Agent agent;
@@ -89,6 +91,7 @@ public class AppState implements Serializable {
         } catch (Exception e) {
             semaphore().release();
             LOGGER.log(Level.WARNING, "AppState: failed to create agent, permit released", e);
+            signalFailure("Failed to start enquiry processing. Please try again.");
             return false;
         }
         LOGGER.info("AppState: created agent " + agent.getId() + ", total agents=" + agents().size());
@@ -180,5 +183,13 @@ public class AppState implements Serializable {
 
     public void notifyUi(String agentId, String eventType) {
         uiUpdateSocket.sendUpdate(agentId, eventType, getSessionId());
+    }
+
+    private void signalFailure(String message) {
+        FacesContext ctx = FacesContext.getCurrentInstance();
+        if (ctx != null) {
+            ctx.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_WARN, message, null));
+            ctx.validationFailed();
+        }
     }
 }
