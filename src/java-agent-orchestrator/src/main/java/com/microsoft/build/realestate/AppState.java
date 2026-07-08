@@ -77,10 +77,10 @@ public class AppState implements Serializable {
         return sessionSemaphore;
     }
 
-    public void submitEnquiry(String enquiryText) {
+    public boolean submitEnquiry(String enquiryText) {
         if (!semaphore().tryAcquire()) {
             LOGGER.warning("AppState: at capacity (" + MAX_CONCURRENT_ENQUIRIES + " concurrent enquiries); rejecting enquiry");
-            return;
+            return false;
         }
         Agent agent;
         try {
@@ -89,7 +89,7 @@ public class AppState implements Serializable {
         } catch (Exception e) {
             semaphore().release();
             LOGGER.log(Level.WARNING, "AppState: failed to create agent, permit released", e);
-            return;
+            return false;
         }
         LOGGER.info("AppState: created agent " + agent.getId() + ", total agents=" + agents().size());
         notifyUi(agent.getId(), "agent-added");
@@ -123,6 +123,7 @@ public class AppState implements Serializable {
                 }
             }
         });
+        return true;
     }
 
     public void submitSampleEnquiry() {
@@ -131,8 +132,9 @@ public class AppState implements Serializable {
 
     public void submitDraftEnquiry() {
         if (enquiryDraft != null && !enquiryDraft.isBlank()) {
-            submitEnquiry(enquiryDraft);
-            enquiryDraft = null;
+            if (submitEnquiry(enquiryDraft)) {
+                enquiryDraft = null;
+            }
         }
     }
 
