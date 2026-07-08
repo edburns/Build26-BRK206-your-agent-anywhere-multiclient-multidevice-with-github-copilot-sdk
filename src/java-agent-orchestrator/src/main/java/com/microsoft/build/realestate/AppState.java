@@ -74,11 +74,18 @@ public class AppState implements Serializable {
 
     public void submitEnquiry(String enquiryText) {
         if (!semaphore().tryAcquire()) {
-            LOGGER.warning("AppState: at capacity (" + MAX_CONCURRENT_SESSIONS + " concurrent sessions); rejecting enquiry");
+            LOGGER.warning("AppState: at capacity (" + MAX_CONCURRENT_SESSIONS + " concurrent enquiries); rejecting enquiry");
             return;
         }
-        var agent = new Agent(enquiryText, uiUpdateSocket, getSessionId());
-        agents().put(agent.getId(), agent);
+        Agent agent;
+        try {
+            agent = new Agent(enquiryText, uiUpdateSocket, getSessionId());
+            agents().put(agent.getId(), agent);
+        } catch (Exception e) {
+            semaphore().release();
+            LOGGER.log(Level.WARNING, "AppState: failed to create agent, permit released", e);
+            return;
+        }
         LOGGER.info("AppState: created agent " + agent.getId() + ", total agents=" + agents().size());
         notifyUi(agent.getId(), "agent-added");
 
@@ -101,6 +108,7 @@ public class AppState implements Serializable {
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 LOGGER.warning("AppState: virtual thread interrupted for agent " + agent.getId());
+                removeAgent(agent.getId());
             } catch (Exception e) {
                 LOGGER.log(Level.WARNING, "AppState: agent " + agent.getId() + " failed: " + e.getMessage(), e);
                 removeAgent(agent.getId());
