@@ -1,0 +1,69 @@
+Created-By: 17.0.17 (IBM Corporation)
+IBM-API-Package: io.opentelemetry.api.baggage; type=stable,
+ io.opentelemetry.api.baggage.propagation; type=stable,
+ io.opentelemetry.api; type=stable,
+ io.opentelemetry.api.trace; type=stable,
+ io.opentelemetry.api.trace.propagation; type=stable,
+ io.opentelemetry.api.common; type=stable,
+ io.opentelemetry.api.metrics; type=stable,
+ io.opentelemetry.api.logs; type=stable,
+ io.opentelemetry.context; type=stable,
+ io.opentelemetry.context.propagation; type=stable,
+ io.opentelemetry.extension.incubator.metrics; type=stable,
+ io.opentelemetry.sdk.trace; type=stable,
+ io.opentelemetry.sdk.trace.export; type=stable,
+ io.opentelemetry.sdk.trace.data; type=stable,
+ io.opentelemetry.sdk.trace.samplers; type=stable,
+ io.opentelemetry.sdk.metrics; type=stable,
+ io.opentelemetry.sdk.metrics.export; type=stable,
+ io.opentelemetry.sdk.metrics.data; type=stable,
+ io.opentelemetry.sdk.logs.export; type=stable,
+ io.opentelemetry.sdk.logs.data; type=stable,
+ io.opentelemetry.sdk.common; type=stable,
+ io.opentelemetry.sdk.autoconfigure.spi.logs; type=stable,
+ io.opentelemetry.sdk.autoconfigure.spi.metrics; type=stable,
+ io.opentelemetry.sdk.autoconfigure.spi.traces; type=stable,
+ io.opentelemetry.sdk.autoconfigure.spi; type=stable,
+ io.opentelemetry.semconv; type=stable,
+ io.opentelemetry.sdk.resources; type=stable,
+ io.opentelemetry.instrumentation.annotations; type=stable,
+ io.opentelemetry.exporter.logging; type=stable,
+ io.opentelemetry.exporter.otlp.logs; type=stable,
+ io.opentelemetry.exporter.otlp; type=stable
+IBM-App-ForceRestart: install,
+ uninstall
+IBM-AppliesTo: io.openliberty;productVersion="26.0.0.5"
+IBM-Feature-Version: 2
+IBM-InstallTo: core
+IBM-License-Agreement: wlp/lafiles/LA
+IBM-ProductID: io.openliberty
+IBM-SPI-Package: io.openliberty.microprofile.telemetry.spi
+IBM-ShortName: mpTelemetry-2.1
+Subsystem-Content: io.openliberty.microprofile.telemetry.spi_1.0-javadoc.zip; type=file; location:="dev/spi/ibm/javadoc/io.openliberty.microprofile.telemetry.spi_1.0-javadoc.zip",
+ io.openliberty.mpTelemetry2.1.ee-10.0; ibm.tolerates:="11.0, 9.0, 8.0, 7.0"; type="osgi.subsystem.feature",
+ com.ibm.websphere.appserver.monitor-1.0; type="osgi.subsystem.feature",
+ io.openliberty.io.opentelemetry.2.1; location:="dev/api/stable/,lib/"; type=jar; version="[1.0.0,1.1.0)",
+ io.openliberty.microprofile.telemetry.spi; location:="dev/spi/ibm/,lib/"; type=jar; version="[1.0.0,1.1.0)",
+ com.ibm.ws.collector; version="[1.0.0,1.1.0)",
+ io.openliberty.com.squareup.okhttp; version="[1.0.0,1.1.0)",
+ io.openliberty.com.squareup.okio-jvm; version="[1.0.0,1.1.0)",
+ io.openliberty.org.jetbrains.kotlin; version="[1.0.0,1.1.0)",
+ io.openliberty.org.jetbrains.annotation; version="[1.0.0,1.1.0)",
+ io.openliberty.io.zipkin.zipkin2.2.0; version="[1.0.0,1.1.0)",
+ io.openliberty.microprofile.telemetry.2.1.logging.internal; version="[1.0.0,1.1.0)",
+ io.openliberty.microprofile.telemetry.logging.internal.common; version="[1.0.0,1.1.0)",
+ io.openliberty.microprofile.telemetry.monitor.internal; version="[1.0.0,1.1.0)"
+Subsystem-Description: %description
+Subsystem-License: https://www.eclipse.org/legal/epl-2.0/
+Subsystem-Localization: OSGI-INF/l10n/io.openliberty.mpTelemetry-2.1
+Subsystem-ManifestVersion: 1
+Subsystem-Name: MicroProfile Telemetry 2.1
+Subsystem-SymbolicName: io.openliberty.mpTelemetry-2.1; visibility:=public; singleton:=true
+Subsystem-Type: osgi.subsystem.feature
+Subsystem-Vendor: IBM Corp.
+Subsystem-Version: 1.0.0
+Tool: Bnd-7.0.0.202310060912
+WLP-Activation-Type: parallel
+WLP-DisableAllFeatures-OnConflict: true
+WLP-InstantOn-Enabled: true
+WLP-Platform: microProfile-7.1

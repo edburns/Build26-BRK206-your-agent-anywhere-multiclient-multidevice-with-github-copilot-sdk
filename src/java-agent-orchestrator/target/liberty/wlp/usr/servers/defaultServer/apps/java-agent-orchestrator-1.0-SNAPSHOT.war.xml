@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<archive>
+    <dir sourceOnDisk="/home/runner/work/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/src/java-agent-orchestrator/src/main/webapp" targetInArchive="/"/>
+    <dir sourceOnDisk="/home/runner/work/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/src/java-agent-orchestrator/target/classes" targetInArchive="/WEB-INF/classes"/>
+    <file sourceOnDisk="/home/runner/.m2/repository/org/primefaces/primefaces/15.0.16/primefaces-15.0.16-jakarta.jar" targetInArchive="/WEB-INF/lib/primefaces-15.0.16-jakarta.jar"/>
+    <file sourceOnDisk="/home/runner/.m2/repository/com/h2database/h2/2.3.232/h2-2.3.232.jar" targetInArchive="/WEB-INF/lib/h2-2.3.232.jar"/>
+    <file sourceOnDisk="/home/runner/work/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/src/java-agent-orchestrator/target/tmp/META-INF/MANIFEST.MF" targetInArchive="/META-INF/MANIFEST.MF"/>
+</archive>

@@ -1,0 +1,36 @@
+Created-By: 17.0.17 (IBM Corporation)
+IBM-API-Package: org.eclipse.microprofile.health; type=stable,
+ org.eclipse.microprofile.health.spi; type=stable
+IBM-App-ForceRestart: install,
+ uninstall
+IBM-AppliesTo: io.openliberty;productVersion="26.0.0.5"
+IBM-Feature-Version: 2
+IBM-InstallTo: core
+IBM-License-Agreement: wlp/lafiles/LA
+IBM-ProductID: io.openliberty
+IBM-ShortName: mpHealth-4.0
+Subsystem-Content: io.openliberty.mpHealth.4.0.ee-9.0; ibm.tolerates:="10.0, 11.0, 8.0, 7.0"; type="osgi.subsystem.feature",
+ com.ibm.websphere.appserver.jndi-1.0; type="osgi.subsystem.feature",
+ com.ibm.websphere.appserver.json-1.0; type="osgi.subsystem.feature",
+ io.openliberty.webBundle.internal-1.0; type="osgi.subsystem.feature",
+ io.openliberty.mpHealthCompatible-4.0; type="osgi.subsystem.feature",
+ com.ibm.ws.org.joda.time.1.6.2; version="[1.0.0,1.1.0)",
+ io.openliberty.microprofile.health.internal.common; version="[1.0.0,1.1.0)"
+Subsystem-Description: %description
+Subsystem-License: https://www.eclipse.org/legal/epl-2.0/
+Subsystem-Localization: OSGI-INF/l10n/io.openliberty.mpHealth-4.0
+Subsystem-ManifestVersion: 1
+Subsystem-Name: MicroProfile Health 4.0
+Subsystem-SymbolicName: io.openliberty.mpHealth-4.0; visibility:=public; singleton:=true
+Subsystem-Type: osgi.subsystem.feature
+Subsystem-Vendor: IBM Corp.
+Subsystem-Version: 1.0.0
+Tool: Bnd-7.0.0.202310060912
+WLP-Activation-Type: parallel
+WLP-DisableAllFeatures-OnConflict: true
+WLP-InstantOn-Enabled: true
+WLP-Platform: microProfile-5.0,
+ microProfile-6.0,
+ microProfile-6.1,
+ microProfile-7.0,
+ microProfile-7.1
