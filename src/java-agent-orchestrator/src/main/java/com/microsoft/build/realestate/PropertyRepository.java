@@ -12,6 +12,8 @@ public interface PropertyRepository {
     @Insert
     void save(Property property);
 
+    // Jakarta Data 1.0 partial query: the WHERE-only fragment is valid JDQL —
+    // the runtime auto-prepends "SELECT p FROM Property p" per the spec.
     @Query("""
             WHERE (?1 IS NULL OR type = ?1)
               AND (?2 IS NULL OR address.city = ?2)
