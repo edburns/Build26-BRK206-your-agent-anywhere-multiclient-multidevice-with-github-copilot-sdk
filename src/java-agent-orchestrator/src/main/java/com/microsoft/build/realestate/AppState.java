@@ -29,8 +29,6 @@ public class AppState {
     @PostConstruct
     void init() {
         LOGGER.info("AppState: initialized, CopilotClient injected: " + (copilotClient != null));
-        // Smoke test: create and start a test agent to validate wiring
-        submitEnquiry("I am looking for a 3-bedroom house in Austin under $500000");
     }
 
     public void submitEnquiry(String enquiryText) {
@@ -44,8 +42,8 @@ public class AppState {
             LOGGER.info("AppState: virtual thread started for agent " + agent.getId());
             try {
                 agent.run(copilotClient, propertyDatabase);
-                if (agent.isDone()) {
-                    // Done agents remain visible
+                if (agent.isDone() || !agent.isRejected()) {
+                    // Done agents and non-rejected agents remain visible
                     return;
                 }
                 // Rejected agents linger for 15 seconds then are removed

@@ -20,6 +20,13 @@
     </properties>
 
     <repositories>
+        <!--
+          GitHub Packages requires authentication even for read access.
+          Contributors need a GitHub PAT with read:packages scope configured in
+          ~/.m2/settings.xml under a <server id="github"> entry, or set via the
+          GITHUB_TOKEN / GITHUB_ACTOR environment variables in CI.
+          See: https://docs.github.com/en/packages/working-with-github-packages-registry/working-with-the-apache-maven-registry
+        -->
         <repository>
             <id>github</id>
             <name>GitHub Packages — copilot-sdk-java</name>

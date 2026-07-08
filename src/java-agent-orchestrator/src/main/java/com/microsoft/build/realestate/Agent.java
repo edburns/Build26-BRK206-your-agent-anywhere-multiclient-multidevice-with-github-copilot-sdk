@@ -103,6 +103,8 @@ public class Agent {
         LOGGER.info("Agent " + id + ": registering tools: " + agentTools.size() + " agent tools, " + dbTools.size() + " db tools");
 
         try {
+            // APPROVE_ALL is intentional: this demo agent runs autonomously and requires
+            // web_fetch for neighbourhood lookups as directed by the system prompt.
             session = client.createSession(new SessionConfig()
                 .setOnPermissionRequest(PermissionHandler.APPROVE_ALL)
                 .setSystemMessage(systemMessageConfig)
@@ -120,7 +122,7 @@ public class Agent {
             });
 
             AssistantMessageEvent response = session.sendAndWait(
-                new MessageOptions().setContent("<enquiry>" + enquiryText + "</enquiry>")
+                new MessageOptions().setContent(enquiryText)
             ).join();
 
             this.report = response.getData().content();
