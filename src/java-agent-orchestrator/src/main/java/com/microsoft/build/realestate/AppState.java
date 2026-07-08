@@ -13,9 +13,9 @@ import com.github.copilot.CopilotClient;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.SessionScoped;
+import jakarta.faces.context.FacesContext;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
-import jakarta.servlet.http.HttpSession;
 
 @Named
 @SessionScoped
@@ -35,26 +35,51 @@ public class AppState implements Serializable {
     @Inject
     UiUpdateSocket uiUpdateSocket;
 
-    @Inject
-    HttpSession httpSession;
+    // Captured once per session from FacesContext; String is serializable.
+    private String sessionId;
 
-    private final ConcurrentHashMap<String, Agent> agents = new ConcurrentHashMap<>();
+    // Live agent state: not passivation-safe, marked transient.
+    // An activated (deserialized) session will start with an empty agent map
+    // and full semaphore, which is acceptable for this demo.
+    private transient ConcurrentHashMap<String, Agent> agents;
     private static final int MAX_CONCURRENT_SESSIONS = 5;
-    private final Semaphore sessionSemaphore = new Semaphore(MAX_CONCURRENT_SESSIONS);
+    private transient Semaphore sessionSemaphore;
 
     @PostConstruct
     void init() {
         LOGGER.info("AppState: initialized, CopilotClient injected: " + (copilotClient != null));
     }
 
+    public String getSessionId() {
+        if (sessionId == null) {
+            sessionId = FacesContext.getCurrentInstance()
+                    .getExternalContext().getSessionId(false);
+        }
+        return sessionId;
+    }
+
+    private ConcurrentHashMap<String, Agent> agents() {
+        if (agents == null) {
+            agents = new ConcurrentHashMap<>();
+        }
+        return agents;
+    }
+
+    private Semaphore semaphore() {
+        if (sessionSemaphore == null) {
+            sessionSemaphore = new Semaphore(MAX_CONCURRENT_SESSIONS);
+        }
+        return sessionSemaphore;
+    }
+
     public void submitEnquiry(String enquiryText) {
-        if (!sessionSemaphore.tryAcquire()) {
+        if (!semaphore().tryAcquire()) {
             LOGGER.warning("AppState: at capacity (" + MAX_CONCURRENT_SESSIONS + " concurrent sessions); rejecting enquiry");
             return;
         }
-        var agent = new Agent(enquiryText, uiUpdateSocket, httpSession.getId());
-        agents.put(agent.getId(), agent);
-        LOGGER.info("AppState: created agent " + agent.getId() + ", total agents=" + agents.size());
+        var agent = new Agent(enquiryText, uiUpdateSocket, getSessionId());
+        agents().put(agent.getId(), agent);
+        LOGGER.info("AppState: created agent " + agent.getId() + ", total agents=" + agents().size());
         notifyUi(agent.getId(), "agent-added");
 
         Thread.ofVirtual().start(() -> {
@@ -68,7 +93,7 @@ public class AppState implements Serializable {
                 }
                 // Release the semaphore permit before the cosmetic linger so that the slot
                 // is immediately available for new enquiries.
-                sessionSemaphore.release();
+                semaphore().release();
                 permitReleased = true;
                 // Rejected agents linger for 15 seconds then are removed
                 Thread.sleep(Duration.ofSeconds(15));
@@ -81,7 +106,7 @@ public class AppState implements Serializable {
                 removeAgent(agent.getId());
             } finally {
                 if (!permitReleased) {
-                    sessionSemaphore.release();
+                    semaphore().release();
                 }
             }
         });
@@ -92,15 +117,15 @@ public class AppState implements Serializable {
     }
 
     public Collection<Agent> getAgents() {
-        return agents.values();
+        return agents().values();
     }
 
     public Agent getAgent(String id) {
-        return agents.get(id);
+        return agents().get(id);
     }
 
     public void removeAgent(String id) {
-        Agent removed = agents.remove(id);
+        Agent removed = agents().remove(id);
         if (removed != null) {
             LOGGER.info("AppState: removed agent " + id);
             notifyUi(id, "agent-removed");
@@ -108,6 +133,6 @@ public class AppState implements Serializable {
     }
 
     public void notifyUi(String agentId, String eventType) {
-        uiUpdateSocket.sendUpdate(agentId, eventType, httpSession.getId());
+        uiUpdateSocket.sendUpdate(agentId, eventType, getSessionId());
     }
 }
