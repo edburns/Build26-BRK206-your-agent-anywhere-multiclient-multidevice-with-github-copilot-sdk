@@ -13,14 +13,13 @@ public interface PropertyRepository {
     void save(Property property);
 
     @Query("""
-            SELECT p FROM Property p
-            WHERE (?1 IS NULL OR p.type = ?1)
-              AND (?2 IS NULL OR p.address.city = ?2)
-              AND p.price >= ?3
-              AND p.price <= ?4
-              AND p.bedrooms >= ?5
-              AND p.bathrooms >= ?6
-            ORDER BY p.id
+            WHERE (?1 IS NULL OR type = ?1)
+              AND (?2 IS NULL OR address.city = ?2)
+              AND price >= ?3
+              AND price <= ?4
+              AND bedrooms >= ?5
+              AND bathrooms >= ?6
+            ORDER BY id
             """)
     List<Property> search(
             String type,
