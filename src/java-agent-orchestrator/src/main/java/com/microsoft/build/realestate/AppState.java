@@ -42,7 +42,7 @@ public class AppState implements Serializable {
     // An activated (deserialized) session will start with an empty agent map
     // and full semaphore, which is acceptable for this demo.
     private transient ConcurrentHashMap<String, Agent> agents;
-    private static final int MAX_CONCURRENT_SESSIONS = 5;
+    private static final int MAX_CONCURRENT_ENQUIRIES = 5;
     private transient Semaphore sessionSemaphore;
 
     @PostConstruct
@@ -67,14 +67,14 @@ public class AppState implements Serializable {
 
     private synchronized Semaphore semaphore() {
         if (sessionSemaphore == null) {
-            sessionSemaphore = new Semaphore(MAX_CONCURRENT_SESSIONS);
+            sessionSemaphore = new Semaphore(MAX_CONCURRENT_ENQUIRIES);
         }
         return sessionSemaphore;
     }
 
     public void submitEnquiry(String enquiryText) {
         if (!semaphore().tryAcquire()) {
-            LOGGER.warning("AppState: at capacity (" + MAX_CONCURRENT_SESSIONS + " concurrent enquiries); rejecting enquiry");
+            LOGGER.warning("AppState: at capacity (" + MAX_CONCURRENT_ENQUIRIES + " concurrent enquiries); rejecting enquiry");
             return;
         }
         Agent agent;
