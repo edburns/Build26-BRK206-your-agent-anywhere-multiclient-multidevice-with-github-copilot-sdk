@@ -19,6 +19,28 @@
         <liberty.runtime.version>26.0.0.5</liberty.runtime.version>
     </properties>
 
+    <repositories>
+        <!--
+          GitHub Packages requires authentication even for read access.
+          Contributors need a GitHub PAT with read:packages scope configured in
+          ~/.m2/settings.xml under a <server id="github"> entry with their username and PAT.
+          In CI, use actions/setup-java with server-id: github, which generates this entry
+          automatically from the GITHUB_TOKEN and GITHUB_ACTOR environment variables.
+          See: https://docs.github.com/en/packages/working-with-github-packages-registry/working-with-the-apache-maven-registry
+        -->
+        <repository>
+            <id>github</id>
+            <name>GitHub Packages — copilot-sdk-java</name>
+            <url>https://maven.pkg.github.com/github/copilot-sdk-java</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+
     <dependencies>
         <dependency>
             <groupId>jakarta.platform</groupId>
