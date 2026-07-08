@@ -1,6 +1,5 @@
 package com.microsoft.build.realestate;
 
-import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -66,7 +65,6 @@ public class Agent {
     private final List<SessionEvent> sessionEvents = new ArrayList<>();
     private final Instant startedAt = Instant.now();
     private volatile Instant finishedAt;
-    private CopilotSession session;
     private Runnable notifyUiCallback;
 
     public Agent(String enquiryText) {
@@ -102,15 +100,14 @@ public class Agent {
 
         LOGGER.info("Agent " + id + ": registering tools: " + agentTools.size() + " agent tools, " + dbTools.size() + " db tools");
 
-        try {
-            // APPROVE_ALL is intentional: this demo agent runs autonomously and requires
-            // web_fetch for neighbourhood lookups as directed by the system prompt.
-            session = client.createSession(new SessionConfig()
+        try (CopilotSession session = client.createSession(new SessionConfig()
+                // APPROVE_ALL is intentional: this demo agent runs autonomously and requires
+                // web_fetch for neighbourhood lookups as directed by the system prompt.
                 .setOnPermissionRequest(PermissionHandler.APPROVE_ALL)
                 .setSystemMessage(systemMessageConfig)
                 .setAvailableTools(new AvailableTools().addCustom("*").addBuiltIn("web_fetch"))
                 .setTools(concat(agentTools, List.of(reportIntent), dbTools))
-            ).get();
+            ).get()) {
 
             LOGGER.info("Agent " + id + ": session created with id=" + session.getSessionId());
 
