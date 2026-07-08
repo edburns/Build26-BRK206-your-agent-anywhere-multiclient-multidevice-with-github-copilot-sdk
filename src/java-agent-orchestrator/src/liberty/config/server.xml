@@ -6,7 +6,6 @@
         <feature>persistence-3.2</feature>
         <feature>faces-4.1</feature>
         <feature>cdi-4.1</feature>
-        <feature>jsonb-3.0</feature>
         <feature>websocket-2.2</feature>
     </featureManager>
 
