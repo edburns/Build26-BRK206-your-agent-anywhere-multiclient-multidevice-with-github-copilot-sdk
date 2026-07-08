@@ -17,7 +17,7 @@
         <fileset dir="${server.config.dir}/jdbc" includes="h2*.jar" />
     </library>
 
-    <dataSource id="RealEstateDataSource" jndiName="jdbc/realEstateDS">
+    <dataSource id="DefaultDataSource" jndiName="jdbc/realEstateDS">
         <jdbcDriver libraryRef="h2Lib" />
         <properties URL="jdbc:h2:mem:realestatedb;DB_CLOSE_DELAY=-1" />
     </dataSource>
