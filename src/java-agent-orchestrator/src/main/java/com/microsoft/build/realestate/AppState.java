@@ -3,6 +3,7 @@ package com.microsoft.build.realestate;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Semaphore;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -24,6 +25,8 @@ public class AppState {
     PropertyDatabase propertyDatabase;
 
     private final ConcurrentHashMap<String, Agent> agents = new ConcurrentHashMap<>();
+    private static final int MAX_CONCURRENT_SESSIONS = 5;
+    private final Semaphore sessionSemaphore = new Semaphore(MAX_CONCURRENT_SESSIONS);
 
     @PostConstruct
     void init() {
@@ -31,6 +34,10 @@ public class AppState {
     }
 
     public void submitEnquiry(String enquiryText) {
+        if (!sessionSemaphore.tryAcquire()) {
+            LOGGER.warning("AppState: at capacity (" + MAX_CONCURRENT_SESSIONS + " concurrent sessions); rejecting enquiry");
+            return;
+        }
         var agent = new Agent(enquiryText);
         agent.setNotifyUiCallback(this::notifyUi);
         agents.put(agent.getId(), agent);
@@ -56,6 +63,8 @@ public class AppState {
                 LOGGER.log(Level.WARNING, "AppState: agent " + agent.getId() + " failed: " + e.getMessage(), e);
                 removeAgent(agent.getId());
                 notifyUi();
+            } finally {
+                sessionSemaphore.release();
             }
         });
     }

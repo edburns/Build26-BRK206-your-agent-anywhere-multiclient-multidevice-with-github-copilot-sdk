@@ -20,10 +20,11 @@ public class CopilotClientProducer {
     @ApplicationScoped
     CopilotClient createClient() {
         LOGGER.info("CopilotClientProducer: creating CopilotClient in EMPTY mode");
+        String userHome = System.getProperty("user.home", System.getProperty("user.dir", "."));
         return new CopilotClient(
             new CopilotClientOptions()
                 .setMode(CopilotClientMode.EMPTY)
-                .setCopilotHome(Path.of(System.getProperty("user.home"), ".copilot").toString())
+                .setCopilotHome(Path.of(userHome, ".copilot").toString())
         );
     }
 

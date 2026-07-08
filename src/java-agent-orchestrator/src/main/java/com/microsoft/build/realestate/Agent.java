@@ -65,7 +65,7 @@ public class Agent {
     private final List<SessionEvent> sessionEvents = new ArrayList<>();
     private final Instant startedAt = Instant.now();
     private volatile Instant finishedAt;
-    private Runnable notifyUiCallback;
+    private volatile Runnable notifyUiCallback;
 
     public Agent(String enquiryText) {
         this.id = UUID.randomUUID().toString().replace("-", "").substring(0, 8);
