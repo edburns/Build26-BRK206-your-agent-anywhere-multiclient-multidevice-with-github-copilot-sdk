@@ -149,6 +149,9 @@ public class AppState implements Serializable {
     }
 
     public List<Agent> getAgentsByPhase(String phaseName) {
+        if (phaseName == null || phaseName.isBlank()) {
+            return List.of();
+        }
         Phase target;
         try {
             target = Phase.valueOf(phaseName);
