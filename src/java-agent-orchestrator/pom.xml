@@ -19,6 +19,17 @@
         <liberty.runtime.version>26.0.0.5</liberty.runtime.version>
     </properties>
 
+    <repositories>
+        <repository>
+            <id>github</id>
+            <name>GitHub Packages — copilot-sdk-java</name>
+            <url>https://maven.pkg.github.com/github/copilot-sdk-java</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+
     <dependencies>
         <dependency>
             <groupId>jakarta.platform</groupId>

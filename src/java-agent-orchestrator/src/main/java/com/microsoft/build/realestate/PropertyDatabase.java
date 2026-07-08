@@ -13,6 +13,9 @@ import java.util.Locale;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 
+import com.github.copilot.tool.CopilotTool;
+import com.github.copilot.tool.CopilotToolParam;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.Initialized;
 import jakarta.enterprise.event.Observes;
@@ -81,6 +84,17 @@ public class PropertyDatabase {
                 maxPrice,
                 minBedrooms,
                 minBathrooms);
+    }
+
+    @CopilotTool("Searches the real estate listings database for properties matching the given criteria. Returns matching listings with full details.")
+    public List<Property> searchProperties(
+            @CopilotToolParam("Property type substring to filter by (e.g. House, Apartment, Condo)") String type,
+            @CopilotToolParam("City substring to filter by") String city,
+            @CopilotToolParam("Minimum price") int minPrice,
+            @CopilotToolParam("Maximum price") int maxPrice,
+            @CopilotToolParam("Minimum number of bedrooms") int minBedrooms,
+            @CopilotToolParam("Minimum number of bathrooms") int minBathrooms) {
+        return search(type, city, minPrice, maxPrice, minBedrooms, minBathrooms);
     }
 
     private List<String> listSeedResourceNames() {
