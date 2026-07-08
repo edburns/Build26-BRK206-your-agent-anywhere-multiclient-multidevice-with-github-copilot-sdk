@@ -77,7 +77,7 @@ public class Agent {
     }
 
     public void run(CopilotClient client, PropertyDatabase db) {
-        LOGGER.info("Agent " + id + ": run() entered, enquiry=\"" + enquiryText + "\"");
+        LOGGER.info("Agent " + id + ": run() entered, enquiry=\"" + sanitizeForLog(enquiryText) + "\"");
 
         var systemMessageConfig = new SystemMessageConfig();
         systemMessageConfig.setMode(SystemMessageMode.CUSTOMIZE);
@@ -196,5 +196,12 @@ public class Agent {
             result.addAll(list);
         }
         return result;
+    }
+
+    private static String sanitizeForLog(String value) {
+        if (value == null) {
+            return "<null>";
+        }
+        return value.replace("\r", "\\r").replace("\n", "\\n");
     }
 }
