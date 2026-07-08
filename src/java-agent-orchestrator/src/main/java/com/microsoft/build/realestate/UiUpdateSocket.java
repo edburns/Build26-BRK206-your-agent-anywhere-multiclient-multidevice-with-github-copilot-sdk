@@ -19,9 +19,9 @@ public class UiUpdateSocket {
     @Push(channel = "pipelineChannel")
     private PushContext pushContext;
 
-    public void sendUpdate(String agentId, String eventType) {
+    public void sendUpdate(String agentId, String eventType, String sessionId) {
         try {
-            pushContext.send(agentId + ":" + eventType);
+            pushContext.send(agentId + ":" + eventType, sessionId);
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, "Failed to push UI update for agent " + agentId + " event " + eventType, e);
         }

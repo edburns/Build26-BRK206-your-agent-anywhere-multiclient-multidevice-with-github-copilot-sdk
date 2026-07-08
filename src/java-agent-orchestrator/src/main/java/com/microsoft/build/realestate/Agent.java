@@ -61,6 +61,7 @@ public class Agent {
     private final String id;
     private final String enquiryText;
     private final UiUpdateSocket uiUpdateSocket;
+    private final String sessionId;
     private volatile Phase phase = Phase.QUEUED;
     private volatile String currentIntent;
     private volatile String report;
@@ -68,10 +69,11 @@ public class Agent {
     private final Instant startedAt = Instant.now();
     private volatile Instant finishedAt;
 
-    public Agent(String enquiryText, UiUpdateSocket uiUpdateSocket) {
+    public Agent(String enquiryText, UiUpdateSocket uiUpdateSocket, String sessionId) {
         this.id = UUID.randomUUID().toString().replace("-", "").substring(0, 8);
         this.enquiryText = enquiryText;
         this.uiUpdateSocket = Objects.requireNonNull(uiUpdateSocket, "uiUpdateSocket must not be null");
+        this.sessionId = Objects.requireNonNull(sessionId, "sessionId must not be null");
     }
 
     public void run(CopilotClient client, PropertyDatabase db) {
@@ -152,7 +154,7 @@ public class Agent {
     }
 
     public void notifyUi(String eventType) {
-        uiUpdateSocket.sendUpdate(this.id, eventType);
+        uiUpdateSocket.sendUpdate(this.id, eventType, sessionId);
     }
 
     public boolean isRejected() {

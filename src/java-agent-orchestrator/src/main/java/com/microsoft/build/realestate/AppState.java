@@ -15,6 +15,7 @@ import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.SessionScoped;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
+import jakarta.servlet.http.HttpSession;
 
 @Named
 @SessionScoped
@@ -34,6 +35,9 @@ public class AppState implements Serializable {
     @Inject
     UiUpdateSocket uiUpdateSocket;
 
+    @Inject
+    HttpSession httpSession;
+
     private final ConcurrentHashMap<String, Agent> agents = new ConcurrentHashMap<>();
     private static final int MAX_CONCURRENT_SESSIONS = 5;
     private final Semaphore sessionSemaphore = new Semaphore(MAX_CONCURRENT_SESSIONS);
@@ -48,7 +52,7 @@ public class AppState implements Serializable {
             LOGGER.warning("AppState: at capacity (" + MAX_CONCURRENT_SESSIONS + " concurrent sessions); rejecting enquiry");
             return;
         }
-        var agent = new Agent(enquiryText, uiUpdateSocket);
+        var agent = new Agent(enquiryText, uiUpdateSocket, httpSession.getId());
         agents.put(agent.getId(), agent);
         LOGGER.info("AppState: created agent " + agent.getId() + ", total agents=" + agents.size());
         notifyUi(agent.getId(), "agent-added");
@@ -104,6 +108,6 @@ public class AppState implements Serializable {
     }
 
     public void notifyUi(String agentId, String eventType) {
-        uiUpdateSocket.sendUpdate(agentId, eventType);
+        uiUpdateSocket.sendUpdate(agentId, eventType, httpSession.getId());
     }
 }

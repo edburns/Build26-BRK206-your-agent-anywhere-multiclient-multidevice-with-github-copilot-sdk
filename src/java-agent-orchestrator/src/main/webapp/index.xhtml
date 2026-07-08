@@ -15,7 +15,7 @@
         </h:commandButton>
     </h:form>
 
-    <f:websocket channel="pipelineChannel" onmessage="handlePipelinePush" />
+    <f:websocket channel="pipelineChannel" scope="session" user="#{session.id}" onmessage="handlePipelinePush" />
 
     <script>
         function handlePipelinePush(message) {
