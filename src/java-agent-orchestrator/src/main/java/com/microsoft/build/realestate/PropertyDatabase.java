@@ -52,7 +52,8 @@ public class PropertyDatabase {
             for (String resourceName : resourceNames) {
                 try (InputStream inputStream = currentClassLoader().getResourceAsStream(PROPERTIES_RESOURCE_PATH + "/" + resourceName)) {
                     if (inputStream == null) {
-                        throw new IllegalStateException("Missing property seed resource " + resourceName);
+                        throw new IllegalStateException(
+                            "Missing property seed resource: " + PROPERTIES_RESOURCE_PATH + "/" + resourceName);
                     }
                     SeedProperty seedProperty = jsonb.fromJson(inputStream, SeedProperty.class);
                     repository.save(toProperty(seedProperty));
@@ -107,6 +108,16 @@ public class PropertyDatabase {
         for (int i = 1; ; i++) {
             String name = String.format("%05d.json", i);
             if (currentClassLoader().getResource(PROPERTIES_RESOURCE_PATH + "/" + name) == null) {
+                // Look ahead to detect gaps: a missing file should be the end of the corpus,
+                // not a hole in the middle that would silently truncate seeding.
+                for (int j = i + 1; j <= i + 10; j++) {
+                    String laterName = String.format("%05d.json", j);
+                    if (currentClassLoader().getResource(PROPERTIES_RESOURCE_PATH + "/" + laterName) != null) {
+                        throw new IllegalStateException(
+                            "Gap in seed corpus: " + PROPERTIES_RESOURCE_PATH + "/" + name
+                            + " is missing but " + laterName + " exists; check for missing files");
+                    }
+                }
                 break;
             }
             names.add(name);
