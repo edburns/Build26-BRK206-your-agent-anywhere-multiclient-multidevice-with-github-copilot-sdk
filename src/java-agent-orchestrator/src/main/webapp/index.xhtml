@@ -1,26 +1,259 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:h="jakarta.faces.html"
-      xmlns:f="jakarta.faces.core">
-<h:head>
-    <title>Java Agent Orchestrator</title>
-</h:head>
-<h:body>
-    <h1>Java Agent Orchestrator</h1>
-    <p>Active agents: #{appState.agents.size()}</p>
+      xmlns:f="jakarta.faces.core"
+      xmlns:ui="jakarta.faces.facelets"
+      xmlns:p="http://primefaces.org/ui">
+<ui:composition template="/templates/layout.xhtml">
+    <ui:define name="content">
 
-    <h:form>
-        <h:commandButton value="Submit sample enquiry" action="#{appState.submitSampleEnquiry}">
-            <f:ajax execute="@form" render="@none" />
-        </h:commandButton>
-    </h:form>
+        <div class="pipeline-shell">
 
-    <f:websocket channel="pipelineChannel" scope="session" user="#{appState.sessionId}" onmessage="handlePipelinePush" />
+            <!-- ============================================================
+                 Header
+                 ============================================================ -->
+            <div class="pipeline-header">
+                <h1>Real Estate Agent Pipeline</h1>
 
-    <script>
-        function handlePipelinePush(message) {
-            console.log('Pipeline update received:', message);
-        }
-    </script>
-</h:body>
+                <!-- "+" button: opens the add-enquiry dialog -->
+                <h:form id="addForm" prependId="false">
+                    <p:commandButton id="btnAdd"
+                                     styleClass="btn-add"
+                                     value="+"
+                                     type="button"
+                                     onclick="PF('dlgAddEnquiry').show()"
+                                     title="Submit new enquiry" />
+                </h:form>
+            </div>
+
+            <!-- ============================================================
+                 Pipeline grid (wrapped in p:outputPanel so remoteCommand can update it)
+                 ============================================================ -->
+            <h:form id="pipelineForm" prependId="false">
+
+                <!-- WebSocket: receives server push notifications -->
+                <f:websocket channel="pipelineChannel"
+                             scope="session"
+                             user="#{appState.sessionId}"
+                             onmessage="handlePipelinePush" />
+
+                <!-- remoteCommand: called by JS to re-render the grid via JSF ajax -->
+                <p:remoteCommand name="refreshPipeline"
+                                 update="pipelineGrid" />
+
+                <p:outputPanel id="pipelineGrid" layout="block">
+                    <div class="pipeline-grid">
+
+                        <!-- QUEUED -->
+                        <div class="phase-column phase-queued">
+                            <div class="phase-header">Queued</div>
+                            <div class="phase-body">
+                                <ui:repeat value="#{appState.getAgentsByPhase('QUEUED')}" var="agent">
+                                    <div id="agent-#{agent.id}" class="agent-card in-progress">
+                                        <span class="status-dot queued"></span>
+                                        <span class="agent-id">#{agent.id}</span>
+                                        <div class="agent-enquiry" title="#{agent.enquiryText}">#{agent.enquiryText}</div>
+                                        <div class="agent-intent">#{agent.currentIntent}</div>
+                                    </div>
+                                </ui:repeat>
+                                <ui:fragment rendered="#{empty appState.getAgentsByPhase('QUEUED')}">
+                                    <div class="phase-empty">—</div>
+                                </ui:fragment>
+                            </div>
+                        </div>
+
+                        <!-- VALIDATING -->
+                        <div class="phase-column phase-validating">
+                            <div class="phase-header">Validating</div>
+                            <div class="phase-body">
+                                <ui:repeat value="#{appState.getAgentsByPhase('VALIDATING')}" var="agent">
+                                    <div id="agent-#{agent.id}" class="agent-card in-progress">
+                                        <span class="status-dot"></span>
+                                        <span class="agent-id">#{agent.id}</span>
+                                        <div class="agent-enquiry" title="#{agent.enquiryText}">#{agent.enquiryText}</div>
+                                        <div class="agent-intent">#{agent.currentIntent}</div>
+                                    </div>
+                                </ui:repeat>
+                                <ui:fragment rendered="#{empty appState.getAgentsByPhase('VALIDATING')}">
+                                    <div class="phase-empty">—</div>
+                                </ui:fragment>
+                            </div>
+                        </div>
+
+                        <!-- SEARCHING -->
+                        <div class="phase-column phase-searching">
+                            <div class="phase-header">Searching</div>
+                            <div class="phase-body">
+                                <ui:repeat value="#{appState.getAgentsByPhase('SEARCHING')}" var="agent">
+                                    <div id="agent-#{agent.id}" class="agent-card in-progress">
+                                        <span class="status-dot"></span>
+                                        <span class="agent-id">#{agent.id}</span>
+                                        <div class="agent-enquiry" title="#{agent.enquiryText}">#{agent.enquiryText}</div>
+                                        <div class="agent-intent">#{agent.currentIntent}</div>
+                                    </div>
+                                </ui:repeat>
+                                <ui:fragment rendered="#{empty appState.getAgentsByPhase('SEARCHING')}">
+                                    <div class="phase-empty">—</div>
+                                </ui:fragment>
+                            </div>
+                        </div>
+
+                        <!-- WRITING_REPORT -->
+                        <div class="phase-column phase-writing-report">
+                            <div class="phase-header">Writing Report</div>
+                            <div class="phase-body">
+                                <ui:repeat value="#{appState.getAgentsByPhase('WRITING_REPORT')}" var="agent">
+                                    <div id="agent-#{agent.id}" class="agent-card in-progress">
+                                        <span class="status-dot"></span>
+                                        <span class="agent-id">#{agent.id}</span>
+                                        <div class="agent-enquiry" title="#{agent.enquiryText}">#{agent.enquiryText}</div>
+                                        <div class="agent-intent">#{agent.currentIntent}</div>
+                                    </div>
+                                </ui:repeat>
+                                <ui:fragment rendered="#{empty appState.getAgentsByPhase('WRITING_REPORT')}">
+                                    <div class="phase-empty">—</div>
+                                </ui:fragment>
+                            </div>
+                        </div>
+
+                        <!-- DONE -->
+                        <div class="phase-column phase-done">
+                            <div class="phase-header">Done</div>
+                            <div class="phase-body">
+                                <ui:repeat value="#{appState.getAgentsByPhase('DONE')}" var="agent">
+                                    <div id="agent-#{agent.id}" class="agent-card phase-done">
+                                        <span class="status-dot done"></span>
+                                        <span class="agent-id">#{agent.id}</span>
+                                        <div class="agent-enquiry" title="#{agent.enquiryText}">#{agent.enquiryText}</div>
+                                        <div class="agent-intent">#{agent.currentIntent}</div>
+                                    </div>
+                                </ui:repeat>
+                                <ui:fragment rendered="#{empty appState.getAgentsByPhase('DONE')}">
+                                    <div class="phase-empty">—</div>
+                                </ui:fragment>
+                            </div>
+                        </div>
+
+                        <!-- REJECTED -->
+                        <div class="phase-column phase-rejected">
+                            <div class="phase-header">Rejected</div>
+                            <div class="phase-body">
+                                <ui:repeat value="#{appState.getAgentsByPhase('REJECTED')}" var="agent">
+                                    <div id="agent-#{agent.id}" class="agent-card phase-rejected">
+                                        <span class="status-dot rejected"></span>
+                                        <span class="agent-id">#{agent.id}</span>
+                                        <div class="agent-enquiry" title="#{agent.enquiryText}">#{agent.enquiryText}</div>
+                                        <div class="agent-intent">#{agent.currentIntent}</div>
+                                    </div>
+                                </ui:repeat>
+                                <ui:fragment rendered="#{empty appState.getAgentsByPhase('REJECTED')}">
+                                    <div class="phase-empty">—</div>
+                                </ui:fragment>
+                            </div>
+                        </div>
+
+                    </div><!-- /.pipeline-grid -->
+                </p:outputPanel>
+
+            </h:form>
+        </div><!-- /.pipeline-shell -->
+
+        <!-- ============================================================
+             Add-enquiry dialog
+             ============================================================ -->
+        <p:dialog id="dlgAddEnquiry"
+                  widgetVar="dlgAddEnquiry"
+                  header="Submit New Enquiry"
+                  modal="true"
+                  resizable="false"
+                  width="520"
+                  styleClass="enquiry-dialog">
+            <h:form id="enquiryForm" prependId="false">
+                <div class="enquiry-form">
+                    <h:inputTextarea id="enquiryText"
+                                     value="#{appState.enquiryDraft}"
+                                     rows="4"
+                                     style="width:100%;background:#27272a;border:1px solid #52525b;border-radius:0.375rem;color:#e4e4e7;padding:0.5rem;font-family:inherit;font-size:0.9rem;" />
+
+                    <p:commandButton value="Submit"
+                                     action="#{appState.submitDraftEnquiry}"
+                                     update="pipelineGrid"
+                                     oncomplete="PF('dlgAddEnquiry').hide()"
+                                     styleClass="ui-button" />
+
+                    <div class="sample-enquiries-label">Or choose a sample enquiry:</div>
+                    <div class="sample-list">
+
+                        <p:commandButton value="Looking for a 3-bed family home near good schools in the suburbs, budget around $500k"
+                                         styleClass="sample-btn"
+                                         action="#{appState.submitEnquiry('Looking for a 3-bed family home near good schools in the suburbs, budget around $500k')}"
+                                         update="pipelineGrid"
+                                         oncomplete="PF('dlgAddEnquiry').hide()" />
+
+                        <p:commandButton value="Need a downtown condo with parking, 1-2 bedrooms, under $350k"
+                                         styleClass="sample-btn"
+                                         action="#{appState.submitEnquiry('Need a downtown condo with parking, 1-2 bedrooms, under $350k')}"
+                                         update="pipelineGrid"
+                                         oncomplete="PF('dlgAddEnquiry').hide()" />
+
+                        <p:commandButton value="Seeking waterfront property with at least 4 bedrooms for retirement"
+                                         styleClass="sample-btn"
+                                         action="#{appState.submitEnquiry('Seeking waterfront property with at least 4 bedrooms for retirement')}"
+                                         update="pipelineGrid"
+                                         oncomplete="PF('dlgAddEnquiry').hide()" />
+
+                        <p:commandButton value="Want a rural property with land, at least 5 acres, horse-friendly"
+                                         styleClass="sample-btn"
+                                         action="#{appState.submitEnquiry('Want a rural property with land, at least 5 acres, horse-friendly')}"
+                                         update="pipelineGrid"
+                                         oncomplete="PF('dlgAddEnquiry').hide()" />
+
+                        <p:commandButton value="asdkjh asdkjhasd this is spam garbage text!!!"
+                                         styleClass="sample-btn"
+                                         action="#{appState.submitEnquiry('asdkjh asdkjhasd this is spam garbage text!!!')}"
+                                         update="pipelineGrid"
+                                         oncomplete="PF('dlgAddEnquiry').hide()" />
+
+                        <p:commandButton value="Looking for an affordable studio apartment near a university campus"
+                                         styleClass="sample-btn"
+                                         action="#{appState.submitEnquiry('Looking for an affordable studio apartment near a university campus')}"
+                                         update="pipelineGrid"
+                                         oncomplete="PF('dlgAddEnquiry').hide()" />
+
+                        <p:commandButton value="Need a 4-bedroom house with a large garden, pet-friendly neighbourhood, under $750k"
+                                         styleClass="sample-btn"
+                                         action="#{appState.submitEnquiry('Need a 4-bedroom house with a large garden, pet-friendly neighbourhood, under $750k')}"
+                                         update="pipelineGrid"
+                                         oncomplete="PF('dlgAddEnquiry').hide()" />
+
+                        <p:commandButton value="BUY CRYPTO NOW!!! Not actually looking for property lol"
+                                         styleClass="sample-btn"
+                                         action="#{appState.submitEnquiry('BUY CRYPTO NOW!!! Not actually looking for property lol')}"
+                                         update="pipelineGrid"
+                                         oncomplete="PF('dlgAddEnquiry').hide()" />
+
+                        <p:commandButton value="Investor looking for multi-unit rental property near a major hospital"
+                                         styleClass="sample-btn"
+                                         action="#{appState.submitEnquiry('Investor looking for multi-unit rental property near a major hospital')}"
+                                         update="pipelineGrid"
+                                         oncomplete="PF('dlgAddEnquiry').hide()" />
+
+                    </div>
+                </div>
+            </h:form>
+        </p:dialog>
+
+        <!-- WebSocket bridge: receives push and triggers server-side re-render -->
+        <script>
+            //<![CDATA[
+            function handlePipelinePush(message) {
+                console.log('[Pipeline] WebSocket push received:', message);
+                refreshPipeline();
+            }
+            //]]>
+        </script>
+
+    </ui:define>
+</ui:composition>
 </html>
+

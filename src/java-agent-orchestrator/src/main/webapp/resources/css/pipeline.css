@@ -1,0 +1,294 @@
+/* ============================================================
+   pipeline.css — Dark theme for the Real Estate Agent Pipeline
+   ============================================================ */
+
+/* ---- Reset & base ---- */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-color: #17171b;
+    color: #e4e4e7;
+}
+
+/* ---- Layout shell ---- */
+.pipeline-shell {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+    background-color: #17171b;
+    background-image: radial-gradient(rgba(255,255,255,0.08) 1px, transparent 1px);
+    background-size: 20px 20px;
+}
+
+/* ---- Header ---- */
+.pipeline-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 2rem;
+    background: rgba(26,26,34,0.95);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    flex-shrink: 0;
+    z-index: 10;
+}
+
+.pipeline-header h1 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    letter-spacing: 0.025em;
+    color: #f4f4f5;
+    margin: 0;
+}
+
+/* ---- Add-enquiry button ---- */
+.btn-add {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border: 1px solid #52525b;
+    border-radius: 0.375rem;
+    background: #27272a;
+    color: #a1a1aa;
+    cursor: pointer;
+    font-size: 1.5rem;
+    line-height: 1;
+    transition: background 0.15s, color 0.15s;
+}
+
+.btn-add:hover {
+    background: #3f3f46;
+    color: #f4f4f5;
+}
+
+/* ---- Pipeline grid ---- */
+.pipeline-grid {
+    display: flex;
+    flex-direction: row;
+    gap: 0.75rem;
+    padding: 1.5rem 2rem;
+    overflow-x: auto;
+    flex: 1;
+    align-items: flex-start;
+}
+
+/* ---- Phase column ---- */
+.phase-column {
+    flex: 0 0 220px;
+    min-width: 220px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.phase-header {
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem 0.5rem 0 0;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    background: rgba(255,255,255,0.05);
+    border-bottom: 2px solid;
+}
+
+/* Phase-specific accent colours */
+.phase-queued        .phase-header { color: #a1a1aa; border-color: #52525b; }
+.phase-validating    .phase-header { color: #fbbf24; border-color: #fbbf24; }
+.phase-searching     .phase-header { color: #60a5fa; border-color: #60a5fa; }
+.phase-writing-report .phase-header { color: #c084fc; border-color: #c084fc; }
+.phase-done          .phase-header { color: #34d399; border-color: #34d399; }
+.phase-rejected      .phase-header { color: #f87171; border-color: #f87171; }
+
+.phase-body {
+    background: linear-gradient(180deg, #26262b 0%, #222227 60%, #1f1f24 100%);
+    border: 1px solid #3f3f46;
+    border-top: none;
+    border-radius: 0 0 0.5rem 0.5rem;
+    padding: 0.5rem;
+    min-height: 120px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+/* ---- Agent card ---- */
+.agent-card {
+    border-radius: 0.375rem;
+    border: 1px solid #52525b;
+    background: #3f3f46;
+    padding: 0.5rem 0.625rem;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.agent-card:hover {
+    background: #52525b;
+    border-color: #71717a;
+}
+
+/* In-progress: gold/amber border */
+.agent-card.in-progress {
+    border-color: #fbbf24;
+}
+
+/* Done: emerald */
+.agent-card.phase-done {
+    border-color: #34d399;
+    background: rgba(52,211,153,0.08);
+}
+
+/* Rejected: rose */
+.agent-card.phase-rejected {
+    border-color: #f87171;
+    background: rgba(248,113,113,0.08);
+}
+
+.agent-id {
+    font-family: ui-monospace, "Cascadia Code", monospace;
+    font-size: 0.7rem;
+    color: #71717a;
+    letter-spacing: 0.05em;
+}
+
+.agent-enquiry {
+    font-size: 0.8rem;
+    color: #e4e4e7;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.agent-intent {
+    font-size: 0.75rem;
+    color: #a1a1aa;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.status-dot {
+    display: inline-block;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    margin-right: 0.25rem;
+    flex-shrink: 0;
+    vertical-align: middle;
+    background: #fbbf24;
+}
+
+.status-dot.done     { background: #34d399; }
+.status-dot.rejected { background: #f87171; }
+.status-dot.queued   { background: #71717a; }
+
+/* ---- Add-enquiry dialog ---- */
+.enquiry-dialog .ui-dialog-content {
+    background: #1c1c24;
+    color: #e4e4e7;
+}
+
+.enquiry-dialog .ui-dialog-titlebar {
+    background: #27272a;
+    color: #f4f4f5;
+    border-bottom: 1px solid #3f3f46;
+}
+
+.enquiry-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.enquiry-form textarea {
+    width: 100%;
+    background: #27272a;
+    border: 1px solid #52525b;
+    border-radius: 0.375rem;
+    color: #e4e4e7;
+    padding: 0.5rem;
+    font-family: inherit;
+    font-size: 0.9rem;
+    resize: vertical;
+}
+
+.sample-enquiries-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #71717a;
+    margin-bottom: 0.25rem;
+}
+
+.sample-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    max-height: 220px;
+    overflow-y: auto;
+}
+
+.sample-btn {
+    background: #27272a;
+    border: 1px solid #3f3f46;
+    border-radius: 0.375rem;
+    color: #d4d4d8;
+    padding: 0.4rem 0.6rem;
+    text-align: left;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: background 0.12s;
+}
+
+.sample-btn:hover {
+    background: #3f3f46;
+    color: #f4f4f5;
+}
+
+/* ---- PrimeFaces overrides for dark theme ---- */
+.ui-dialog {
+    background: #1c1c24 !important;
+}
+
+.ui-widget-content {
+    background: #1c1c24 !important;
+    color: #e4e4e7 !important;
+}
+
+.ui-widget-header {
+    background: #27272a !important;
+    color: #f4f4f5 !important;
+    border-color: #3f3f46 !important;
+}
+
+.ui-button {
+    background: #4f46e5 !important;
+    border-color: #4f46e5 !important;
+    color: #fff !important;
+}
+
+.ui-button:hover {
+    background: #4338ca !important;
+    border-color: #4338ca !important;
+}
+
+/* ---- Empty-column placeholder ---- */
+.phase-empty {
+    color: #52525b;
+    font-size: 0.75rem;
+    text-align: center;
+    padding: 1rem 0;
+    font-style: italic;
+}
