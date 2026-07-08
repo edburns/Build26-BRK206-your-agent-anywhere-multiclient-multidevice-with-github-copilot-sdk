@@ -3,6 +3,7 @@ package com.microsoft.build.realestate;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -70,7 +71,7 @@ public class Agent {
     public Agent(String enquiryText, UiUpdateSocket uiUpdateSocket) {
         this.id = UUID.randomUUID().toString().replace("-", "").substring(0, 8);
         this.enquiryText = enquiryText;
-        this.uiUpdateSocket = uiUpdateSocket;
+        this.uiUpdateSocket = Objects.requireNonNull(uiUpdateSocket, "uiUpdateSocket must not be null");
     }
 
     public void run(CopilotClient client, PropertyDatabase db) {
@@ -144,7 +145,7 @@ public class Agent {
     }
 
     public void notifyUi() {
-        notifyUi("phase-changed");
+        notifyUi("agent-updated");
     }
 
     public void notifyUi(String eventType) {
