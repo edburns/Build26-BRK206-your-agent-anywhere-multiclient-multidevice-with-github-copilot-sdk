@@ -53,8 +53,8 @@
                 <ui:repeat value="#{pipelineView.allPhases}" var="phase">
                     <div class="phase-column">
 
-                        <!-- Column header: use phase.name() eq 'DONE' to detect the terminal success column -->
-                        <div class="phase-header #{phase.rejected ? 'rejected' : ''} #{phase.name() eq 'DONE' ? 'done' : ''}">
+                        <!-- Column header: CSS class computed by PipelineView.getPhaseHeaderClass() -->
+                        <div class="#{pipelineView.getPhaseHeaderClass(phase)}">
                             #{phase.label}
                         </div>
 
@@ -64,8 +64,9 @@
                                 <!--
                                     data-* attributes tell onPipelineRefreshed() what state
                                     each card is in so it can apply the right CSS classes.
+                                    CSS class computed by PipelineView.getAgentCardClass().
                                 -->
-                                <div class="agent-card #{agent.active ? 'active' : ''} #{agent.done ? 'completed' : ''} #{agent.rejected ? 'rejected' : ''}"
+                                <div class="#{pipelineView.getAgentCardClass(agent)}"
                                      data-agent-id="#{agent.id}"
                                      data-phase="#{agent.phase}"
                                      data-active="#{agent.active}"
@@ -74,7 +75,7 @@
 
                                     <!-- Status dot: pulses for active agents (pulse-indicator added by JS) -->
                                     <div style="display:flex; align-items:center; margin-bottom:0.25rem;">
-                                        <span class="status-dot #{agent.active ? 'active-dot' : ''} #{agent.done ? 'done-dot' : ''} #{agent.rejected ? 'rejected-dot' : ''}"></span>
+                                        <span class="#{pipelineView.getStatusDotClass(agent)}"></span>
                                         <span class="agent-id">#{agent.id}</span>
                                     </div>
 

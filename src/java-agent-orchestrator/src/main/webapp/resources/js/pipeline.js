@@ -14,10 +14,13 @@
 /**
  * Called by the f:websocket onmessage handler when the server sends a push event.
  *
- * @param {string} message - Server push message in the format "agentId:eventType"
- *   Known eventTypes:
- *     "phase-changed" - an agent moved to a new phase
- *     "agent-removed" - a rejected agent was removed from the pipeline
+ * Message format is "agentId:eventType" (e.g. "a3f1b2c4:phase-changed").
+ * Per the issue 3.6 spec, the full grid is refreshed on any message regardless of
+ * event type — the server-side render reflects the current state for all agents.
+ * This avoids complex client-side state management while remaining correct.
+ *
+ * @param {string} message - Server push message (agentId:eventType).
+ *   Known eventTypes: "phase-changed", "agent-removed"
  */
 function handlePipelinePush(message) {
     console.log('[Pipeline] WebSocket push received:', message);

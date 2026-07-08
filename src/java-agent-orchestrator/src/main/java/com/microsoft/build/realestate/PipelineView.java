@@ -62,6 +62,50 @@ public class PipelineView {
         enquiryText = "";
     }
 
+    /**
+     * Returns the CSS class(es) for a phase column header.
+     * Used in index.xhtml to avoid complex inline EL ternary expressions.
+     */
+    public String getPhaseHeaderClass(Phase phase) {
+        if (phase == Phase.DONE) {
+            return "phase-header done";
+        }
+        if (phase.isRejected()) {
+            return "phase-header rejected";
+        }
+        return "phase-header";
+    }
+
+    /**
+     * Returns the CSS class(es) for an agent card based on the agent's current state.
+     * Used in index.xhtml to centralise the conditional class logic.
+     */
+    public String getAgentCardClass(Agent agent) {
+        StringBuilder sb = new StringBuilder("agent-card");
+        if (agent.isActive()) {
+            sb.append(" active");
+        } else if (agent.isDone()) {
+            sb.append(" completed");
+        } else if (agent.isRejected()) {
+            sb.append(" rejected");
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Returns the CSS class(es) for an agent's status dot.
+     */
+    public String getStatusDotClass(Agent agent) {
+        if (agent.isActive()) {
+            return "status-dot active-dot";
+        } else if (agent.isDone()) {
+            return "status-dot done-dot";
+        } else if (agent.isRejected()) {
+            return "status-dot rejected-dot";
+        }
+        return "status-dot";
+    }
+
     public String getEnquiryText() { return enquiryText; }
     public void setEnquiryText(String enquiryText) { this.enquiryText = enquiryText; }
 }
