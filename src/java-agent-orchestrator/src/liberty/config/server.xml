@@ -22,4 +22,6 @@
         <properties URL="jdbc:h2:mem:realestatedb;DB_CLOSE_DELAY=-1" />
     </dataSource>
 
+    <webApplication location="java-agent-orchestrator.war" contextRoot="/" />
+
 </server>
