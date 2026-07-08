@@ -32,6 +32,9 @@
             <id>github</id>
             <name>GitHub Packages — copilot-sdk-java</name>
             <url>https://maven.pkg.github.com/github/copilot-sdk-java</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
             <snapshots>
                 <enabled>true</enabled>
             </snapshots>

@@ -90,11 +90,17 @@ public class PropertyDatabase {
     public List<Property> searchProperties(
             @CopilotToolParam("Property type substring to filter by (e.g. House, Apartment, Condo)") String type,
             @CopilotToolParam("City substring to filter by") String city,
-            @CopilotToolParam("Minimum price") int minPrice,
-            @CopilotToolParam("Maximum price") int maxPrice,
-            @CopilotToolParam("Minimum number of bedrooms") int minBedrooms,
-            @CopilotToolParam("Minimum number of bathrooms") int minBathrooms) {
-        return search(type, city, minPrice, maxPrice, minBedrooms, minBathrooms);
+            @CopilotToolParam("Minimum price (0 if no minimum)") Integer minPrice,
+            @CopilotToolParam("Maximum price (omit or 0 for no maximum)") Integer maxPrice,
+            @CopilotToolParam("Minimum number of bedrooms (0 if no minimum)") Integer minBedrooms,
+            @CopilotToolParam("Minimum number of bathrooms (0 if no minimum)") Integer minBathrooms) {
+        return search(
+            type,
+            city,
+            minPrice != null ? minPrice : 0,
+            (maxPrice == null || maxPrice == 0) ? Integer.MAX_VALUE : maxPrice,
+            minBedrooms != null ? minBedrooms : 0,
+            minBathrooms != null ? minBathrooms : 0);
     }
 
     private List<String> listSeedResourceNames() {

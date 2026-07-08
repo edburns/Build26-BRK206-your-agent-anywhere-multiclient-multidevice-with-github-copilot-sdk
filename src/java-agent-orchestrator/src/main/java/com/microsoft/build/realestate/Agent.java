@@ -127,6 +127,10 @@ public class Agent {
             LOGGER.info("Agent " + id + ": completed with phase=" + phase);
             notifyUi();
 
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            LOGGER.log(Level.WARNING, "Agent " + id + ": interrupted during session setup", e);
+            throw new RuntimeException("Agent run interrupted", e);
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, "Agent " + id + ": error during run: " + e.getMessage(), e);
             throw new RuntimeException("Agent run failed", e);
