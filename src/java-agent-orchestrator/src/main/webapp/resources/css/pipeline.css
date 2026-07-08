@@ -127,7 +127,7 @@ html, body {
     background: #3f3f46;
     padding: 0.5rem 0.625rem;
     cursor: pointer;
-    transition: background 0.15s, border-color 0.15s;
+    transition: border-color 0.5s, background-color 0.5s, transform 0.3s, opacity 0.3s;
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
@@ -153,6 +153,25 @@ html, body {
 .agent-card.phase-rejected {
     border-color: #f87171;
     background: rgba(248,113,113,0.08);
+}
+
+.agent-card.active {
+    border-color: #f59e0b;
+    box-shadow: 0 0 12px rgba(245, 158, 11, 0.3);
+}
+
+.agent-card.completed {
+    border-color: #10b981;
+}
+
+.agent-card.rejected {
+    border-color: #ef4444;
+    opacity: 0.7;
+}
+
+.agent-card.transitioning {
+    transform: translateY(-4px);
+    opacity: 0;
 }
 
 .agent-id {
@@ -192,6 +211,15 @@ html, body {
 .status-dot.done     { background: #34d399; }
 .status-dot.rejected { background: #f87171; }
 .status-dot.queued   { background: #71717a; }
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+.pulse-indicator {
+    animation: pulse 1.5s ease-in-out infinite;
+}
 
 /* ---- Add-enquiry dialog ---- */
 .enquiry-dialog .ui-dialog-content {

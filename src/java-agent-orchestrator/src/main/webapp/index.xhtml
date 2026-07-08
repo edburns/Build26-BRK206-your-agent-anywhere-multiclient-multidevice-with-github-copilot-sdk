@@ -38,7 +38,8 @@
 
                 <!-- remoteCommand: called by JS to re-render the grid via JSF ajax -->
                 <p:remoteCommand name="refreshPipeline"
-                                 update=":pipelineGrid" />
+                                 update=":pipelineGrid"
+                                 oncomplete="onPipelineRefreshed()" />
 
                 <p:outputPanel id="pipelineGrid" layout="block">
                     <div class="pipeline-grid">
@@ -259,4 +260,3 @@
 
     </ui:define>
 </ui:composition>
-
