@@ -3,6 +3,7 @@ package com.microsoft.build.realestate;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -59,25 +60,27 @@ public class Agent {
 
     private final String id;
     private final String enquiryText;
+    private final UiUpdateSocket uiUpdateSocket;
+    private final String sessionId;
     private volatile Phase phase = Phase.QUEUED;
     private volatile String currentIntent;
     private volatile String report;
     private final List<SessionEvent> sessionEvents = new ArrayList<>();
     private final Instant startedAt = Instant.now();
     private volatile Instant finishedAt;
-    private volatile Runnable notifyUiCallback;
 
-    public Agent(String enquiryText) {
+    public Agent(String enquiryText, UiUpdateSocket uiUpdateSocket, String sessionId) {
         this.id = UUID.randomUUID().toString().replace("-", "").substring(0, 8);
         this.enquiryText = enquiryText;
-    }
-
-    public void setNotifyUiCallback(Runnable callback) {
-        this.notifyUiCallback = callback;
+        this.uiUpdateSocket = Objects.requireNonNull(uiUpdateSocket, "uiUpdateSocket must not be null");
+        this.sessionId = Objects.requireNonNull(sessionId, "sessionId must not be null");
     }
 
     public void run(CopilotClient client, PropertyDatabase db) {
         LOGGER.info("Agent " + id + ": run() entered, enquiry=\"" + sanitizeForLog(enquiryText) + "\"");
+
+        // Set initial phase deterministically so the UI sees activity even if session startup fails.
+        setCurrentPhase(Phase.VALIDATING);
 
         var systemMessageConfig = new SystemMessageConfig();
         systemMessageConfig.setMode(SystemMessageMode.CUSTOMIZE);
@@ -91,7 +94,7 @@ public class Agent {
                 "report_intent",
                 "Reports the current intent of the agent to the user interface",
                 Param.of(String.class, "intent", "Intent in max 4 words"),
-                (String intent) -> { this.currentIntent = intent; notifyUi(); return "ok"; })
+                (String intent) -> { this.currentIntent = intent; notifyUi("intent-changed"); return "ok"; })
             .overridesBuiltInTool(true);
 
         // Tool 1 (set_current_phase) and Tool 3 (search_properties) are defined via @CopilotTool annotations
@@ -110,10 +113,6 @@ public class Agent {
             ).get()) {
 
             LOGGER.info("Agent " + id + ": session created with id=" + session.getSessionId());
-
-            // Set initial phase deterministically so the UI always sees VALIDATING from the start,
-            // independent of when the model first calls set_current_phase.
-            setCurrentPhase(Phase.VALIDATING);
 
             session.on(SessionEvent.class, evt -> {
                 synchronized (sessionEvents) {
@@ -143,14 +142,19 @@ public class Agent {
 
     @CopilotTool(name = "set_current_phase", value = "Sets the current phase of the agent. Use this to report progress through the pipeline.")
     void setCurrentPhase(@CopilotToolParam("The phase to transition to") Phase phase) {
+        if (this.phase == phase) {
+            return;
+        }
         this.phase = phase;
-        notifyUi();
+        notifyUi("phase-changed");
     }
 
     public void notifyUi() {
-        if (notifyUiCallback != null) {
-            notifyUiCallback.run();
-        }
+        notifyUi("agent-updated");
+    }
+
+    public void notifyUi(String eventType) {
+        uiUpdateSocket.sendUpdate(this.id, eventType, sessionId);
     }
 
     public boolean isRejected() {
