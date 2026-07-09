@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="jakarta.faces.html"
+      xmlns:f="jakarta.faces.core"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:ui="jakarta.faces.facelets">
+<h:head>
+    <title>Real Estate Agent Pipeline</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- Pipeline stylesheet (issue 3.5 + 3.6: dark theme + CSS transitions) -->
+    <h:outputStylesheet library="css" name="pipeline.css" />
+</h:head>
+<h:body>
+
+    <h1>Real Estate Agent Pipeline</h1>
+    <p class="subtitle">GitHub Copilot SDK for Java — BRK206 Demo</p>
+
+    <h:form id="mainForm">
+
+        <!-- ── Enquiry submission ───────────────────────────────────── -->
+        <div class="submit-form">
+            <h:inputText id="enquiryInput"
+                         value="#{pipelineView.enquiryText}"
+                         styleClass="enquiry-input"
+                         placeholder="Enter a real estate enquiry, e.g. 3-bed house in London under £600k"
+                         required="true"
+                         requiredMessage="Please enter an enquiry." />
+            <p:commandButton id="submitBtn"
+                             value="Submit"
+                             styleClass="submit-btn"
+                             action="#{pipelineView.submitEnquiry}"
+                             update="msgs enquiryInput"
+                             process="@form"
+                             disableOnAjax="true" />
+        </div>
+        <p:messages id="msgs" />
+
+        <!-- ── p:remoteCommand: bridges f:websocket → JSF partial update (issue 3.6) ── -->
+        <!--
+            refreshPipeline() is called by handlePipelinePush() in pipeline.js when
+            the server pushes a phase-change or agent-removed event.
+            oncomplete="onPipelineRefreshed()" fires AFTER PrimeFaces has finished
+            updating the DOM, which is the correct time to apply CSS animation classes.
+        -->
+        <p:remoteCommand name="refreshPipeline"
+                         process="@none"
+                         update="pipelineGrid"
+                         oncomplete="onPipelineRefreshed()" />
+
+        <!-- ── Pipeline grid (issue 3.5: static layout, 3.6: animated) ── -->
+        <p:outputPanel id="pipelineGrid">
+            <div class="pipeline-grid">
+                <ui:repeat value="#{pipelineView.allPhases}" var="phase">
+                    <div class="phase-column">
+
+                        <!-- Column header: CSS class computed by PipelineView.getPhaseHeaderClass() -->
+                        <div class="#{pipelineView.getPhaseHeaderClass(phase)}">
+                            #{phase.label}
+                        </div>
+
+                        <!-- Agent cards in this phase -->
+                        <div class="phase-cards">
+                            <ui:param name="agentsAtPhase" value="#{pipelineView.getAgentsAtPhase(phase)}" />
+                            <ui:repeat value="#{agentsAtPhase}" var="agent">
+                                <!--
+                                    data-* attributes tell onPipelineRefreshed() what state
+                                    each card is in so it can apply the right CSS classes.
+                                    CSS class computed by PipelineView.getAgentCardClass().
+                                -->
+                                <div class="#{pipelineView.getAgentCardClass(agent)}"
+                                     data-agent-id="#{agent.id}"
+                                     data-active="#{agent.active}"
+                                     data-done="#{agent.done}"
+                                     data-rejected="#{agent.rejected}">
+
+                                    <!-- Status dot: pulses for active agents (pulse-indicator added by JS) -->
+                                    <div style="display:flex; align-items:center; margin-bottom:0.25rem;">
+                                        <span class="#{pipelineView.getStatusDotClass(agent)}"></span>
+                                        <span class="agent-id">#{agent.id}</span>
+                                    </div>
+
+                                    <div class="agent-enquiry" title="#{agent.enquiry}">
+                                        <h:outputText value="#{agent.enquiry}" />
+                                    </div>
+
+                                    <ui:fragment rendered="#{not empty agent.currentIntent}">
+                                        <div class="agent-intent">
+                                            <h:outputText value="#{agent.currentIntent}" />
+                                        </div>
+                                    </ui:fragment>
+                                </div>
+                            </ui:repeat>
+
+                            <!-- Show placeholder when no agents are in this column -->
+                            <ui:fragment rendered="#{empty agentsAtPhase}">
+                                <div class="empty-column-hint">—</div>
+                            </ui:fragment>
+                        </div>
+
+                    </div>
+                </ui:repeat>
+            </div>
+
+            <!-- Stats bar -->
+            <div class="stats-bar">
+                <div class="stat">
+                    <span class="count">#{pipelineView.agents.size()}</span>
+                    <span>Total agents</span>
+                </div>
+            </div>
+        </p:outputPanel>
+
+    </h:form>
+
+    <!-- ── f:websocket (issue 3.4): receives push events from UiUpdateSocket ── -->
+    <!--
+        onmessage="handlePipelinePush" wires to the function in pipeline.js.
+        The websocket-2.2 Liberty feature is required (websocket-2.1 conflicts with faces-4.1).
+        web.xml must set jakarta.faces.ENABLE_WEBSOCKET_ENDPOINT=true.
+    -->
+    <f:websocket channel="pipelineChannel" onmessage="handlePipelinePush" />
+
+    <!-- Pipeline JS (issue 3.6: handlePipelinePush + onPipelineRefreshed) -->
+    <h:outputScript library="js" name="pipeline.js" target="head" />
+
+</h:body>
+</html>
