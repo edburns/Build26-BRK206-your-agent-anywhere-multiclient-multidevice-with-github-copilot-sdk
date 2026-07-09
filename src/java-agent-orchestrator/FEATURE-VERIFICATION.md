@@ -1,7 +1,7 @@
 # SDK Feature Verification — Java Real Estate Agent Orchestrator
 
 This document maps each of the **9 Copilot SDK for Java features** from the demo goal to the
-exact class, method, and line(s) in the codebase where the feature is demonstrated.
+exact class and method in the codebase where the feature is demonstrated.
 It also records the test scenarios used to verify end-to-end behaviour.
 
 ---
@@ -13,7 +13,7 @@ It also records the test scenarios used to verify end-to-end behaviour.
 | 1 | Custom tool definition via `@CopilotTool` annotations | ✅ | `Agent.java`, `PropertyDatabase.java` |
 | 2 | Agentic session loop (`session.sendAndWait`) | ✅ | `Agent.java` — `run()` |
 | 3 | System message customisation (`SystemMessageConfig`) | ✅ | `Agent.java` — `run()` |
-| 4 | Built-in tool composition (`web_fetch`) | ⚠️ | System message hints; requires live CLI |
+| 4 | Built-in tool composition (`web_fetch`) | ⚠️ | Not explicitly in source; exercised during live CLI session only |
 | 5 | Real-time session events (`session.on`) | ✅ | `Agent.java` — `run()` |
 | 6 | `CopilotClient` in `EMPTY` mode | ✅ | `AppState.java` — constructor |
 | 7 | Multiple concurrent sessions | ✅ | `AppState.java` — `submitEnquiry()` |
