@@ -134,6 +134,10 @@ h1 {
     transition: border-color 0.5s, background-color 0.5s, transform 0.3s;
 }
 
+.agent-card-link {
+    text-decoration: none;
+}
+
 .agent-card:hover {
     background: #2d2d30;
 }
@@ -258,4 +262,104 @@ h1 {
     font-weight: 700;
     font-size: 1.25rem;
     color: #f4f4f5;
+}
+
+/* ── Agent detail panel (issue 3.7) ───────────────────────────────── */
+
+.detail-summary {
+    display: grid;
+    gap: 0.35rem;
+    margin: 0.75rem 0 1rem;
+    color: #e4e4e7;
+    font-size: 0.9rem;
+}
+
+.detail-events {
+    max-height: 360px;
+    overflow-y: auto;
+    border: 1px solid #27272a;
+    border-radius: 0.5rem;
+    background: #18181b;
+    padding: 0.5rem;
+}
+
+.event-row {
+    border-bottom: 1px solid #27272a;
+    padding: 0.5rem;
+}
+
+.event-row:last-child {
+    border-bottom: none;
+}
+
+.event-head {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.event-time {
+    color: #a1a1aa;
+    font-size: 0.7rem;
+}
+
+.event-type {
+    font-size: 0.65rem;
+    padding: 0.15rem 0.4rem;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    background: #3f3f46;
+    color: #e4e4e7;
+}
+
+.event-type-assistant {
+    background: #3730a3;
+}
+
+.event-type-tool-call {
+    background: #92400e;
+}
+
+.event-type-tool-result {
+    background: #166534;
+}
+
+.event-type-phase {
+    background: #155e75;
+}
+
+.event-type-error {
+    background: #991b1b;
+}
+
+.event-summary {
+    margin-top: 0.35rem;
+    color: #f4f4f5;
+    font-size: 0.85rem;
+}
+
+.event-detail {
+    margin-top: 0.35rem;
+    margin-bottom: 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: #d4d4d8;
+    font-size: 0.75rem;
+    background: #111113;
+    border: 1px solid #27272a;
+    border-radius: 0.35rem;
+    padding: 0.5rem;
+}
+
+.final-report {
+    margin-top: 0.75rem;
+}
+
+.final-report-title {
+    font-size: 0.75rem;
+    color: #a1a1aa;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.3rem;
 }

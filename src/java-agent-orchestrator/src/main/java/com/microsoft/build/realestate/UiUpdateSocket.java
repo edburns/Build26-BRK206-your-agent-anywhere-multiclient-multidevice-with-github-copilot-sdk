@@ -13,6 +13,7 @@ import jakarta.inject.Inject;
  * <p>Message format sent to the browser: {@code "agentId:eventType"}
  * <ul>
  *   <li>{@code "agentId:phase-changed"} — agent moved to a new phase</li>
+ *   <li>{@code "agentId:detail-updated"} — new session events available for the detail panel</li>
  *   <li>{@code "agentId:agent-removed"} — agent was removed from the pipeline</li>
  * </ul>
  */
@@ -28,6 +29,15 @@ public class UiUpdateSocket {
      */
     public void pushPhaseChange(String agentId) {
         pushContext.send(agentId + ":phase-changed");
+    }
+
+    /**
+     * Pushes a detail-update notification for the given agent to all connected browsers.
+     * Called when new session events are captured (tool calls, assistant messages, etc.)
+     * so only the detail panel refreshes without triggering full-grid card animations.
+     */
+    public void pushDetailUpdate(String agentId) {
+        pushContext.send(agentId + ":detail-updated");
     }
 
     /**

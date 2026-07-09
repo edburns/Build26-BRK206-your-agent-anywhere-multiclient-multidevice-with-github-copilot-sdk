@@ -23,6 +23,9 @@ public class PipelineView {
     @Inject
     private AppState appState;
 
+    @Inject
+    private SelectionState selectionState;
+
     /** Text bound to the enquiry input field. */
     private String enquiryText;
 
@@ -48,6 +51,18 @@ public class PipelineView {
                 .filter(a -> a.getPhase() == phase)
                 .sorted(Comparator.comparing(Agent::getStartedAt))
                 .toList();
+    }
+
+    public Agent getSelectedAgent() {
+        return selectionState.getSelectedAgent();
+    }
+
+    public void selectAgent(String agentId) {
+        selectionState.setSelectedAgentId(agentId);
+    }
+
+    public void clearSelectedAgent() {
+        selectionState.setSelectedAgentId(null);
     }
 
     /**
@@ -107,6 +122,17 @@ public class PipelineView {
             return "status-dot rejected-dot";
         }
         return "status-dot";
+    }
+
+    public String getEventTypeBadgeClass(AgentEvent event) {
+        return switch (event.getEventType()) {
+            case "assistant_message" -> "event-type event-type-assistant";
+            case "tool_call" -> "event-type event-type-tool-call";
+            case "tool_result" -> "event-type event-type-tool-result";
+            case "phase_change" -> "event-type event-type-phase";
+            case "session_error" -> "event-type event-type-error";
+            default -> "event-type";
+        };
     }
 
     public String getEnquiryText() { return enquiryText; }
