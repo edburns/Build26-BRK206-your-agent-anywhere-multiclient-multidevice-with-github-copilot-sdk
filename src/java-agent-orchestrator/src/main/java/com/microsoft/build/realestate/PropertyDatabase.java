@@ -1,7 +1,7 @@
 package com.microsoft.build.realestate;
 
-import com.github.copilot.tool.annotation.CopilotTool;
-import com.github.copilot.tool.annotation.CopilotToolParam;
+import com.github.copilot.tool.CopilotTool;
+import com.github.copilot.tool.CopilotToolParam;
 import com.microsoft.build.realestate.data.PropertyRepository;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;

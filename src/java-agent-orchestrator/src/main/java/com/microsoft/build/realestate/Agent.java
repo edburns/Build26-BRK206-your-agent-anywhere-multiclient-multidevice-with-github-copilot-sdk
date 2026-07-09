@@ -2,19 +2,19 @@ package com.microsoft.build.realestate;
 
 import com.github.copilot.CopilotClient;
 import com.github.copilot.CopilotSession;
-import com.github.copilot.PermissionHandler;
-import com.github.copilot.SectionOverride;
-import com.github.copilot.SectionOverrideAction;
-import com.github.copilot.SessionConfig;
-import com.github.copilot.SystemMessageConfig;
 import com.github.copilot.SystemMessageMode;
-import com.github.copilot.SystemMessageSection;
 import com.github.copilot.generated.AssistantMessageEvent;
 import com.github.copilot.generated.AssistantMessageToolRequest;
+import com.github.copilot.rpc.PermissionHandler;
+import com.github.copilot.rpc.SectionOverride;
+import com.github.copilot.rpc.SectionOverrideAction;
+import com.github.copilot.rpc.SessionConfig;
+import com.github.copilot.rpc.SystemMessageConfig;
+import com.github.copilot.rpc.SystemMessageSections;
+import com.github.copilot.rpc.ToolDefinition;
+import com.github.copilot.tool.CopilotTool;
+import com.github.copilot.tool.CopilotToolParam;
 import com.github.copilot.tool.Param;
-import com.github.copilot.tool.ToolDefinition;
-import com.github.copilot.tool.annotation.CopilotTool;
-import com.github.copilot.tool.annotation.CopilotToolParam;
 import java.io.Closeable;
 import java.time.Instant;
 import java.util.ArrayDeque;
@@ -73,7 +73,7 @@ public class Agent {
     public void run(CopilotClient client) {
         SystemMessageConfig systemMessage = new SystemMessageConfig()
                 .setMode(SystemMessageMode.CUSTOMIZE);
-        systemMessage.getSections().put(SystemMessageSection.IDENTITY,
+        systemMessage.getSections().put(SystemMessageSections.IDENTITY,
                 new SectionOverride()
                         .setAction(SectionOverrideAction.REPLACE)
                         .setContent("""

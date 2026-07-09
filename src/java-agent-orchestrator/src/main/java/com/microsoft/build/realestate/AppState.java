@@ -1,8 +1,8 @@
 package com.microsoft.build.realestate;
 
 import com.github.copilot.CopilotClient;
-import com.github.copilot.CopilotClientMode;
-import com.github.copilot.CopilotClientOptions;
+import com.github.copilot.rpc.CopilotClientMode;
+import com.github.copilot.rpc.CopilotClientOptions;
 import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
