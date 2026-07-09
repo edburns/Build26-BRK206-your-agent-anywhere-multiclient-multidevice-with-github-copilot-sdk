@@ -60,7 +60,8 @@
 
                         <!-- Agent cards in this phase -->
                         <div class="phase-cards">
-                            <ui:repeat value="#{pipelineView.getAgentsAtPhase(phase)}" var="agent">
+                            <ui:param name="agentsAtPhase" value="#{pipelineView.getAgentsAtPhase(phase)}" />
+                            <ui:repeat value="#{agentsAtPhase}" var="agent">
                                 <!--
                                     data-* attributes tell onPipelineRefreshed() what state
                                     each card is in so it can apply the right CSS classes.
@@ -68,7 +69,6 @@
                                 -->
                                 <div class="#{pipelineView.getAgentCardClass(agent)}"
                                      data-agent-id="#{agent.id}"
-                                     data-phase="#{agent.phase}"
                                      data-active="#{agent.active}"
                                      data-done="#{agent.done}"
                                      data-rejected="#{agent.rejected}">
@@ -90,7 +90,7 @@
                             </ui:repeat>
 
                             <!-- Show placeholder when no agents are in this column -->
-                            <ui:fragment rendered="#{empty pipelineView.getAgentsAtPhase(phase)}">
+                            <ui:fragment rendered="#{empty agentsAtPhase}">
                                 <div class="empty-column-hint">—</div>
                             </ui:fragment>
                         </div>

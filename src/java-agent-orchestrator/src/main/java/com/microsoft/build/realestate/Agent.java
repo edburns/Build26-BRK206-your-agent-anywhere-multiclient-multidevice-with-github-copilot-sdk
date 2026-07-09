@@ -77,8 +77,6 @@ public class Agent {
                               - Extract relevant search criteria and search our property listings.
                               - To search our property listings, call the search_properties tool.
                                 You may call it multiple times with different filters to refine results.
-                              - If the customer is looking for a neighbourhood with a particular feature,
-                                always perform at least one web search to confirm locations.
                               - At the end of this phase, if you don't find any relevant properties,
                                 set phase to "REJECTED_NO_MATCHES" and stop.
                             - Report phase
@@ -87,8 +85,8 @@ public class Agent {
                                 1-3 matching properties. For each property, include key selling points.
                               - At the end of this phase, set phase to "DONE" and stop.
 
-                            Always use set_current_phase each time you enter a new phase, and report your
-                            intent at each step.
+                            Always use set_current_phase each time you enter a new phase, and use
+                            report_intent to report your intent at each step.
                             """));
 
         // report_intent as inline lambda (ToolDefinition.from) — demonstrates ADR-006 style
@@ -108,7 +106,6 @@ public class Agent {
         SessionConfig sessionConfig = new SessionConfig()
                 .setOnPermissionRequest(PermissionHandler.APPROVE_ALL)
                 .setSystemMessage(systemMessage)
-                .setAvailableTools(List.of("*"))
                 .setTools(concatLists(annotatedTools, dbTools, List.of(reportIntentTool)));
 
         try {

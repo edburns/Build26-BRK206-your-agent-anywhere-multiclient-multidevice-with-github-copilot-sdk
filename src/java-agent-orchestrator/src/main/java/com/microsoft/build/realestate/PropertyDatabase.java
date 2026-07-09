@@ -25,8 +25,12 @@ public class PropertyDatabase {
     private PropertyRepository repository;
 
     @PostConstruct
-    @Transactional
     public void seedDatabase() {
+        doSeedDatabase();
+    }
+
+    @Transactional
+    public void doSeedDatabase() {
         long count = repository.findAll().count();
         if (count > 0) {
             LOG.info("Property database already seeded with " + count + " properties.");
