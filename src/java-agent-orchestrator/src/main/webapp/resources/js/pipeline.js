@@ -37,10 +37,15 @@ function handlePipelinePush(message) {
 
     if (eventType === 'detail-updated') {
         // Only the detail panel needs refreshing; skip full-grid re-render and animations.
-        if (typeof refreshDetailOnly === 'function') {
-            refreshDetailOnly();
-        } else {
-            console.warn('[Pipeline] refreshDetailOnly() not yet available for detail-updated event.');
+        // Only refresh if the detail dialog is currently visible to avoid
+        // unnecessary Ajax traffic while no one is watching the detail panel.
+        var dialogWidget = (typeof PF === 'function') ? PF('agentDetailDialog') : null;
+        if (dialogWidget && dialogWidget.isVisible()) {
+            if (typeof refreshDetailOnly === 'function') {
+                refreshDetailOnly();
+            } else {
+                console.warn('[Pipeline] refreshDetailOnly() not yet available for detail-updated event.');
+            }
         }
         return;
     }

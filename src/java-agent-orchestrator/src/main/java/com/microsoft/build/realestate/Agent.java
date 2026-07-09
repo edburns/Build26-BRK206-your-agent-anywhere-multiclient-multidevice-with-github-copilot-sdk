@@ -199,17 +199,14 @@ public class Agent {
             addEvent(Instant.now(), "assistant_message", "Assistant message", messageContent);
         }
 
+        // Pre-populate toolCallsById for result correlation; the visible "tool_call"
+        // event is emitted by captureToolExecutionStart to avoid duplicate UI entries.
         for (AssistantMessageToolRequest request : event.getData().toolRequests()) {
             String toolCallId = request.toolCallId();
-            String toolName = request.name();
-            String toolArgs = asText(request.arguments());
             if (toolCallId != null && !toolCallId.isBlank()) {
-                toolCallsById.put(toolCallId, new ToolCallSnapshot(toolName, toolArgs));
+                toolCallsById.put(toolCallId,
+                        new ToolCallSnapshot(request.name(), asText(request.arguments())));
             }
-            addEvent(Instant.now(),
-                    "tool_call",
-                    "Tool call: " + nullSafe(toolName, "unknown"),
-                    formatToolDetail(toolName, toolArgs, null));
         }
     }
 
