@@ -5,6 +5,7 @@ import com.github.copilot.tool.annotation.CopilotToolParam;
 import com.microsoft.build.realestate.data.PropertyRepository;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import java.util.List;
@@ -24,9 +25,12 @@ public class PropertyDatabase {
     @Inject
     private PropertyRepository repository;
 
+    @Inject
+    private Instance<PropertyDatabase> self;
+
     @PostConstruct
     public void seedDatabase() {
-        doSeedDatabase();
+        self.get().doSeedDatabase();
     }
 
     @Transactional
