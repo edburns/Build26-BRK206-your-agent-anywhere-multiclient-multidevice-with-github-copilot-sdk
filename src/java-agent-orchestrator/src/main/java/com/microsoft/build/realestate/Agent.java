@@ -9,8 +9,8 @@ import com.github.copilot.SessionConfig;
 import com.github.copilot.SystemMessageConfig;
 import com.github.copilot.SystemMessageMode;
 import com.github.copilot.SystemMessageSection;
-import com.github.copilot.event.AssistantMessageEvent;
-import com.github.copilot.tool.Param;
+import com.github.copilot.generated.AssistantMessageEvent;
+import com.github.copilot.generated.AssistantMessageToolRequest;
 import com.github.copilot.tool.ToolDefinition;
 import com.github.copilot.tool.annotation.CopilotTool;
 import com.github.copilot.tool.annotation.CopilotToolParam;
@@ -184,26 +184,24 @@ public class Agent {
         }
         String eventClassName = event.getClass().getSimpleName();
         switch (eventClassName) {
-            case "AssistantMessageEvent" -> captureAssistantMessageEvent(event);
+            case "AssistantMessageEvent" -> captureAssistantMessageEvent((AssistantMessageEvent) event);
             case "ToolExecutionStartEvent" -> captureToolExecutionStart(event);
             case "ToolExecutionCompleteEvent" -> captureToolExecutionComplete(event);
             default -> addEvent(Instant.now(), "session_event", eventClassName, event.toString());
         }
     }
 
-    private void captureAssistantMessageEvent(Object event) {
-        Object data = invokeNoArg(event, "getData");
-        String messageContent = asText(invokeNoArg(data, "content"));
+    private void captureAssistantMessageEvent(AssistantMessageEvent event) {
+        String messageContent = event.getData().content();
         if (messageContent != null && !messageContent.isBlank()) {
             finalReport = messageContent;
             addEvent(Instant.now(), "assistant_message", "Assistant message", messageContent);
         }
 
-        Object toolRequests = invokeNoArg(data, "toolRequests");
-        for (Object request : asIterable(toolRequests)) {
-            String toolCallId = asText(invokeNoArg(request, "toolCallId"));
-            String toolName = asText(invokeNoArg(request, "name"));
-            String toolArgs = asText(invokeNoArg(request, "arguments"));
+        for (AssistantMessageToolRequest request : event.getData().toolRequests()) {
+            String toolCallId = request.toolCallId();
+            String toolName = request.name();
+            String toolArgs = asText(request.arguments());
             if (toolCallId != null && !toolCallId.isBlank()) {
                 toolCallsById.put(toolCallId, new ToolCallSnapshot(toolName, toolArgs));
             }

@@ -34,6 +34,10 @@ public class SelectionState implements Serializable {
         if (selectedAgentId == null || selectedAgentId.isBlank()) {
             return null;
         }
-        return appState.getAgent(selectedAgentId);
+        Agent agent = appState.getAgent(selectedAgentId);
+        if (agent == null) {
+            selectedAgentId = null;
+        }
+        return agent;
     }
 }
