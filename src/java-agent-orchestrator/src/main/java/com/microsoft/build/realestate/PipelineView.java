@@ -67,6 +67,27 @@ public class PipelineView {
                 .toList();
     }
 
+    /** Dashboard: count of agents in non-terminal (processing) phases. */
+    public long getProcessingCount() {
+        return appState.getAgents().stream()
+                .filter(a -> !a.getPhase().isTerminal())
+                .count();
+    }
+
+    /** Dashboard: count of agents in DONE phase. */
+    public long getCompletedCount() {
+        return appState.getAgents().stream()
+                .filter(a -> a.getPhase() == Phase.DONE)
+                .count();
+    }
+
+    /** Dashboard: count of agents in rejected phases. */
+    public long getRejectedCount() {
+        return appState.getAgents().stream()
+                .filter(a -> a.getPhase().isRejected())
+                .count();
+    }
+
     /**
      * Overload accepting a phase name string (used in XHTML EL expressions).
      */

@@ -55,7 +55,7 @@
         -->
         <p:remoteCommand name="refreshPipeline"
                          process="@none"
-                         update="pipelineGrid detailContent"
+                         update="pipelineGrid dashboardPanel detailContent"
                          oncomplete="onPipelineRefreshed()" />
 
         <!-- refreshDetailOnly: lightweight update for non-phase events (tool calls, assistant messages).
@@ -63,6 +63,9 @@
         <p:remoteCommand name="refreshDetailOnly"
                          process="@none"
                          update="detailContent" />
+
+        <!-- ── Page layout: pipeline + dashboard side by side ──────── -->
+        <div class="page-grid">
 
         <!-- ── Pipeline layout (two-column: lifecycle left, end-states right) ── -->
         <p:outputPanel id="pipelineGrid">
@@ -191,14 +194,35 @@
 
             </div>
 
-            <!-- Stats bar -->
-            <div class="stats-bar">
-                <div class="stat">
-                    <span class="count">#{pipelineView.agents.size()}</span>
-                    <span>Total agents</span>
+        </p:outputPanel>
+
+        <!-- ── Dashboard (right sidebar) ───────────────────────────── -->
+        <p:outputPanel id="dashboardPanel" styleClass="dashboard">
+            <div class="dashboard-title">DASHBOARD</div>
+            <div class="dashboard-item">
+                <div class="dashboard-bar purple"></div>
+                <div class="dashboard-content">
+                    <div class="dashboard-count">#{pipelineView.processingCount}</div>
+                    <div class="dashboard-label">Processing</div>
+                </div>
+            </div>
+            <div class="dashboard-item">
+                <div class="dashboard-bar green"></div>
+                <div class="dashboard-content">
+                    <div class="dashboard-count">#{pipelineView.completedCount}</div>
+                    <div class="dashboard-label">Completed</div>
+                </div>
+            </div>
+            <div class="dashboard-item">
+                <div class="dashboard-bar red"></div>
+                <div class="dashboard-content">
+                    <div class="dashboard-count">#{pipelineView.rejectedCount}</div>
+                    <div class="dashboard-label">Rejected</div>
                 </div>
             </div>
         </p:outputPanel>
+
+        </div> <!-- end .page-grid -->
 
         <p:dialog id="detailPanel"
                   widgetVar="agentDetailDialog"
