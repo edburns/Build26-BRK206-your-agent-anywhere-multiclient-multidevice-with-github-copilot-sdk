@@ -44,6 +44,7 @@
             updating the DOM, which is the correct time to apply CSS animation classes.
         -->
         <p:remoteCommand name="refreshPipeline"
+                         process="@none"
                          update="pipelineGrid"
                          oncomplete="onPipelineRefreshed()" />
 
@@ -80,11 +81,13 @@
                                     </div>
 
                                     <div class="agent-enquiry" title="#{agent.enquiry}">
-                                        #{agent.enquiry}
+                                        <h:outputText value="#{agent.enquiry}" />
                                     </div>
 
                                     <ui:fragment rendered="#{not empty agent.currentIntent}">
-                                        <div class="agent-intent">#{agent.currentIntent}</div>
+                                        <div class="agent-intent">
+                                            <h:outputText value="#{agent.currentIntent}" />
+                                        </div>
                                     </ui:fragment>
                                 </div>
                             </ui:repeat>

@@ -35,7 +35,10 @@ public class PropertyDatabase {
 
     @Transactional
     public void doSeedDatabase() {
-        long count = repository.findAll().count();
+        long count;
+        try (var all = repository.findAll()) {
+            count = all.count();
+        }
         if (count > 0) {
             LOG.info("Property database already seeded with " + count + " properties.");
             return;
@@ -74,7 +77,10 @@ public class PropertyDatabase {
             @CopilotToolParam("Minimum number of bedrooms (0 for no minimum)") int minBedrooms,
             @CopilotToolParam("Maximum price in GBP (0 for no maximum)") double maxPriceGbp) {
 
-        List<Property> results = repository.findAll().toList();
+        List<Property> results;
+        try (var all = repository.findAll()) {
+            results = all.toList();
+        }
 
         if (type != null && !type.isBlank()) {
             String ltype = type.toLowerCase(Locale.ROOT);
