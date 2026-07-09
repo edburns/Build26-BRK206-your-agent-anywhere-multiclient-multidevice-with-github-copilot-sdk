@@ -45,7 +45,7 @@
         -->
         <p:remoteCommand name="refreshPipeline"
                          process="@none"
-                         update="pipelineGrid"
+                         update="pipelineGrid detailPanel"
                          oncomplete="onPipelineRefreshed()" />
 
         <!-- ── Pipeline grid (issue 3.5: static layout, 3.6: animated) ── -->
@@ -63,33 +63,39 @@
                         <div class="phase-cards">
                             <ui:param name="agentsAtPhase" value="#{pipelineView.getAgentsAtPhase(phase)}" />
                             <ui:repeat value="#{agentsAtPhase}" var="agent">
-                                <!--
-                                    data-* attributes tell onPipelineRefreshed() what state
-                                    each card is in so it can apply the right CSS classes.
-                                    CSS class computed by PipelineView.getAgentCardClass().
-                                -->
-                                <div class="#{pipelineView.getAgentCardClass(agent)}"
-                                     data-agent-id="#{agent.id}"
-                                     data-active="#{agent.active}"
-                                     data-done="#{agent.done}"
-                                     data-rejected="#{agent.rejected}">
+                                <p:commandLink styleClass="agent-card-link"
+                                               process="@this"
+                                               action="#{pipelineView.selectAgent(agent.id)}"
+                                               update="detailPanel"
+                                               oncomplete="PF('agentDetailDialog').show();">
+                                    <!--
+                                        data-* attributes tell onPipelineRefreshed() what state
+                                        each card is in so it can apply the right CSS classes.
+                                        CSS class computed by PipelineView.getAgentCardClass().
+                                    -->
+                                    <div class="#{pipelineView.getAgentCardClass(agent)}"
+                                         data-agent-id="#{agent.id}"
+                                         data-active="#{agent.active}"
+                                         data-done="#{agent.done}"
+                                         data-rejected="#{agent.rejected}">
 
-                                    <!-- Status dot: pulses for active agents (pulse-indicator added by JS) -->
-                                    <div style="display:flex; align-items:center; margin-bottom:0.25rem;">
-                                        <span class="#{pipelineView.getStatusDotClass(agent)}"></span>
-                                        <span class="agent-id">#{agent.id}</span>
-                                    </div>
-
-                                    <div class="agent-enquiry" title="#{agent.enquiry}">
-                                        <h:outputText value="#{agent.enquiry}" />
-                                    </div>
-
-                                    <ui:fragment rendered="#{not empty agent.currentIntent}">
-                                        <div class="agent-intent">
-                                            <h:outputText value="#{agent.currentIntent}" />
+                                        <!-- Status dot: pulses for active agents (pulse-indicator added by JS) -->
+                                        <div style="display:flex; align-items:center; margin-bottom:0.25rem;">
+                                            <span class="#{pipelineView.getStatusDotClass(agent)}"></span>
+                                            <span class="agent-id">#{agent.id}</span>
                                         </div>
-                                    </ui:fragment>
-                                </div>
+
+                                        <div class="agent-enquiry" title="#{agent.enquiry}">
+                                            <h:outputText value="#{agent.enquiry}" />
+                                        </div>
+
+                                        <ui:fragment rendered="#{not empty agent.currentIntent}">
+                                            <div class="agent-intent">
+                                                <h:outputText value="#{agent.currentIntent}" />
+                                            </div>
+                                        </ui:fragment>
+                                    </div>
+                                </p:commandLink>
                             </ui:repeat>
 
                             <!-- Show placeholder when no agents are in this column -->
@@ -110,6 +116,54 @@
                 </div>
             </div>
         </p:outputPanel>
+
+        <p:dialog id="detailPanel"
+                  widgetVar="agentDetailDialog"
+                  header="Agent Details"
+                  modal="false"
+                  dynamic="false"
+                  resizable="false"
+                  width="560"
+                  appendTo="@(body)">
+            <ui:fragment rendered="#{not empty pipelineView.selectedAgent}">
+                <p:commandButton type="button"
+                                 styleClass="ui-button-secondary ui-button-flat"
+                                 value="Close"
+                                 onclick="PF('agentDetailDialog').hide(); return false;" />
+                <div class="detail-summary">
+                    <div><strong>ID:</strong> #{pipelineView.selectedAgent.id}</div>
+                    <div><strong>Phase:</strong> #{pipelineView.selectedAgent.phase.label}</div>
+                    <ui:fragment rendered="#{not empty pipelineView.selectedAgent.currentIntent}">
+                        <div><strong>Intent:</strong> #{pipelineView.selectedAgent.currentIntent}</div>
+                    </ui:fragment>
+                </div>
+
+                <div class="detail-events">
+                    <ui:repeat value="#{pipelineView.selectedAgent.events}" var="event">
+                        <div class="event-row">
+                            <div class="event-head">
+                                <span class="event-time">#{event.timestamp}</span>
+                                <span class="#{pipelineView.getEventTypeBadgeClass(event)}">#{event.eventType}</span>
+                            </div>
+                            <div class="event-summary">#{event.summary}</div>
+                            <ui:fragment rendered="#{not empty event.detail}">
+                                <pre class="event-detail"><h:outputText value="#{event.detail}" /></pre>
+                            </ui:fragment>
+                        </div>
+                    </ui:repeat>
+                </div>
+
+                <ui:fragment rendered="#{pipelineView.selectedAgent.done and not empty pipelineView.selectedAgent.finalReport}">
+                    <div class="final-report">
+                        <div class="final-report-title">Final Report</div>
+                        <pre class="event-detail final-report-content"><h:outputText value="#{pipelineView.selectedAgent.finalReport}" /></pre>
+                    </div>
+                </ui:fragment>
+            </ui:fragment>
+            <ui:fragment rendered="#{empty pipelineView.selectedAgent}">
+                <div class="empty-column-hint">Select an agent card to view details.</div>
+            </ui:fragment>
+        </p:dialog>
 
     </h:form>
 

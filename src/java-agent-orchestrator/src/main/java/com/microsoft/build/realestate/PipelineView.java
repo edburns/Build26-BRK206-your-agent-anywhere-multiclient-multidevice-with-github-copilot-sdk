@@ -50,6 +50,18 @@ public class PipelineView {
                 .toList();
     }
 
+    public Agent getSelectedAgent() {
+        return appState.getSelectedAgent();
+    }
+
+    public void selectAgent(String agentId) {
+        appState.setSelectedAgentId(agentId);
+    }
+
+    public void clearSelectedAgent() {
+        appState.setSelectedAgentId(null);
+    }
+
     /**
      * JSF action method: submits the enquiry text to AppState and launches an agent.
      */
@@ -107,6 +119,17 @@ public class PipelineView {
             return "status-dot rejected-dot";
         }
         return "status-dot";
+    }
+
+    public String getEventTypeBadgeClass(AgentEvent event) {
+        return switch (event.getEventType()) {
+            case "assistant_message" -> "event-type event-type-assistant";
+            case "tool_call" -> "event-type event-type-tool-call";
+            case "tool_result" -> "event-type event-type-tool-result";
+            case "phase_change" -> "event-type event-type-phase";
+            case "session_error" -> "event-type event-type-error";
+            default -> "event-type";
+        };
     }
 
     public String getEnquiryText() { return enquiryText; }
