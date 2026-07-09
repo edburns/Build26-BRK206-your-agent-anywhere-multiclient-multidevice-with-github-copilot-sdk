@@ -221,8 +221,8 @@ class AgentTest {
         assertEquals(0, errors.get(), "No thread should throw an exception");
 
         // The event log should contain at least the initial QUEUED + threadCount events
-        assertTrue(agent.getEvents().size() >= threadCount,
-                "Expected at least " + threadCount + " events, got " + agent.getEvents().size());
+        assertTrue(agent.getEvents().size() >= threadCount + 1,
+                "Expected at least " + (threadCount + 1) + " events (initial QUEUED + " + threadCount + " thread events), got " + agent.getEvents().size());
     }
 
 }

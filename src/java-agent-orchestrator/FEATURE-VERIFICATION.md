@@ -76,7 +76,7 @@ AssistantMessageEvent result = session.sendAndWait(
 ```java
 SystemMessageConfig systemMessage = new SystemMessageConfig()
         .setMode(SystemMessageMode.CUSTOMIZE);
-systemMessage.getSections().put(SystemMessageSection.IDENTITY,
+systemMessage.getSections().put(SystemMessageSections.IDENTITY,
         new SectionOverride()
                 .setAction(SectionOverrideAction.REPLACE)
                 .setContent("""
