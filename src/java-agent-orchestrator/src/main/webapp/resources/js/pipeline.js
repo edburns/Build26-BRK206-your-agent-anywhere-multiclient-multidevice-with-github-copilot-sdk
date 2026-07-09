@@ -7,13 +7,14 @@
  *   phase-changed / agent-removed:
  *     1. f:websocket calls handlePipelinePush(message)
  *     2. handlePipelinePush calls refreshPipeline() (p:remoteCommand)
- *     3. PrimeFaces re-renders pipelineGrid + detailPanel via partial update
+ *     3. PrimeFaces re-renders pipelineGrid + detailContent via partial update
  *     4. oncomplete fires onPipelineRefreshed() which applies CSS animation classes
  *
  *   detail-updated (non-phase session events — tool calls, assistant messages, etc.):
  *     1. f:websocket calls handlePipelinePush(message)
  *     2. handlePipelinePush calls refreshDetailOnly() (p:remoteCommand)
- *     3. PrimeFaces re-renders only detailPanel — no card animations triggered
+ *     3. PrimeFaces re-renders only detailContent (inner panel) — no card animations,
+ *        and the dialog widget state is preserved
  */
 
 'use strict';
