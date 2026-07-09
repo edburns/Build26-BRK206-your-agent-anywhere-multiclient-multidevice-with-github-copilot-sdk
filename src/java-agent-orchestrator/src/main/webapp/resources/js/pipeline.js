@@ -72,10 +72,15 @@ function onPipelineRefreshed() {
             card.classList.add('active');
         }
 
-        // Apply the transitioning class briefly to produce a visible scale effect
+        // Apply the transitioning class briefly to produce a visible scale effect.
+        // Cancel any previously scheduled removal to avoid stale timers overwriting new transitions.
+        if (card._transitionTimer) {
+            clearTimeout(card._transitionTimer);
+        }
         card.classList.add('transitioning');
-        setTimeout(function () {
+        card._transitionTimer = setTimeout(function () {
             card.classList.remove('transitioning');
+            card._transitionTimer = null;
         }, 400);
     });
 

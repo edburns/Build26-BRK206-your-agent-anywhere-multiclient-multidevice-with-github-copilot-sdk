@@ -119,7 +119,7 @@
     <f:websocket channel="pipelineChannel" onmessage="handlePipelinePush" />
 
     <!-- Pipeline JS (issue 3.6: handlePipelinePush + onPipelineRefreshed) -->
-    <h:outputScript library="js" name="pipeline.js" target="body" />
+    <h:outputScript library="js" name="pipeline.js" target="head" />
 
 </h:body>
 </html>

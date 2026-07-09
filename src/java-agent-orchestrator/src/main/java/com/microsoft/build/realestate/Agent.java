@@ -133,7 +133,8 @@ public class Agent {
     }
 
     /** Called by the set_current_phase tool to advance the pipeline stage. */
-    @CopilotTool("Sets the current phase of the agent. Use this to report progress.")
+    @CopilotTool(value = "Sets the current phase of the agent. Use this to report progress.",
+                 name = "set_current_phase")
     public String setCurrentPhase(
             @CopilotToolParam("The phase to transition to (VALIDATING, SEARCHING, WRITING_REPORT, "
                     + "REJECTED_GARBAGE, REJECTED_NO_MATCHES, or DONE)") String phaseName) {

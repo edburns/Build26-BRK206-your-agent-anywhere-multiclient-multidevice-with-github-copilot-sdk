@@ -6,6 +6,8 @@ import jakarta.faces.context.FacesContext;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import java.util.Collection;
+import java.util.Comparator;
+import java.util.List;
 import java.util.logging.Logger;
 
 /**
@@ -41,9 +43,10 @@ public class PipelineView {
     /**
      * Returns agents currently in a specific phase.
      */
-    public java.util.List<Agent> getAgentsAtPhase(Phase phase) {
+    public List<Agent> getAgentsAtPhase(Phase phase) {
         return appState.getAgents().stream()
                 .filter(a -> a.getPhase() == phase)
+                .sorted(Comparator.comparing(Agent::getStartedAt))
                 .toList();
     }
 

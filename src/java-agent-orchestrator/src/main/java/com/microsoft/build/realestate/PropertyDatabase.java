@@ -8,6 +8,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import java.util.List;
+import java.util.Locale;
 import java.util.logging.Logger;
 
 /**
@@ -56,7 +57,8 @@ public class PropertyDatabase {
      * @param maxPriceGbp Maximum price in GBP; 0 = no maximum
      * @return Matching properties, up to 10 results
      */
-    @CopilotTool("Searches the real estate listings database. Returns up to 10 matching properties.")
+    @CopilotTool(value = "Searches the real estate listings database. Returns up to 10 matching properties.",
+                 name = "search_properties")
     @Transactional
     public List<Property> searchProperties(
             @CopilotToolParam("Property type substring (e.g. 'flat', 'house', 'bungalow')") String type,
@@ -67,15 +69,15 @@ public class PropertyDatabase {
         List<Property> results = repository.findAll().toList();
 
         if (type != null && !type.isBlank()) {
-            String ltype = type.toLowerCase();
+            String ltype = type.toLowerCase(Locale.ROOT);
             results = results.stream()
-                .filter(p -> p.getType().toLowerCase().contains(ltype))
+                .filter(p -> p.getType().toLowerCase(Locale.ROOT).contains(ltype))
                 .toList();
         }
         if (city != null && !city.isBlank()) {
-            String lcity = city.toLowerCase();
+            String lcity = city.toLowerCase(Locale.ROOT);
             results = results.stream()
-                .filter(p -> p.getCity().toLowerCase().contains(lcity))
+                .filter(p -> p.getCity().toLowerCase(Locale.ROOT).contains(lcity))
                 .toList();
         }
         if (minBedrooms > 0) {
