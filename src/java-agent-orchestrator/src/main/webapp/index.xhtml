@@ -142,10 +142,10 @@
                     <ui:repeat value="#{pipelineView.selectedAgent.events}" var="event">
                         <div class="event-row">
                             <div class="event-head">
-                                <span class="event-time">#{event.timestamp}</span>
-                                <span class="#{pipelineView.getEventTypeBadgeClass(event)}">#{event.eventType}</span>
+                                <span class="event-time"><h:outputText value="#{event.timestamp}" /></span>
+                                <span class="#{pipelineView.getEventTypeBadgeClass(event)}"><h:outputText value="#{event.eventType}" /></span>
                             </div>
-                            <div class="event-summary">#{event.summary}</div>
+                            <div class="event-summary"><h:outputText value="#{event.summary}" /></div>
                             <ui:fragment rendered="#{not empty event.detail}">
                                 <pre class="event-detail"><h:outputText value="#{event.detail}" /></pre>
                             </ui:fragment>

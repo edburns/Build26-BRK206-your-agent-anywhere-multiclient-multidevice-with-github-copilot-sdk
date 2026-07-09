@@ -255,8 +255,9 @@ public class Agent {
     private void addEvent(Instant timestamp, String eventType, String summary, String detail) {
         synchronized (events) {
             events.add(new AgentEvent(timestamp, eventType, summary, detail));
-            while (events.size() > MAX_EVENTS) {
-                events.remove(0);
+            int excess = events.size() - MAX_EVENTS;
+            if (excess > 0) {
+                events.subList(0, excess).clear();
             }
         }
     }
