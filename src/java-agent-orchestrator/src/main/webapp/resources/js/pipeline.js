@@ -57,7 +57,6 @@ function onPipelineRefreshed() {
     var cards = document.querySelectorAll('.agent-card');
 
     cards.forEach(function (card) {
-        var phase = card.getAttribute('data-phase');
         var active = card.getAttribute('data-active') === 'true';
         var rejected = card.getAttribute('data-rejected') === 'true';
         var done = card.getAttribute('data-done') === 'true';

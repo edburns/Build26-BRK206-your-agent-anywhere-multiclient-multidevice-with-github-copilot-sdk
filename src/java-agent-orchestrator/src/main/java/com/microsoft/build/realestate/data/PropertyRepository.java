@@ -22,9 +22,9 @@ public interface PropertyRepository extends BasicRepository<Property, Long> {
     @Find
     List<Property> findByCity(@By("city") String city);
 
-    @Query("WHERE p.bedrooms >= ?1")
+    @Query("WHERE bedrooms >= ?1")
     List<Property> findByBedroomsAtLeast(int minBedrooms);
 
-    @Query("WHERE p.priceGbp <= ?1")
+    @Query("WHERE priceGbp <= ?1")
     List<Property> findByPriceAtMost(double maxPrice);
 }

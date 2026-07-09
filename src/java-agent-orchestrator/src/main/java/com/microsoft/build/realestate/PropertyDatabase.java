@@ -47,12 +47,13 @@ public class PropertyDatabase {
 
     /**
      * Searches the property database using the given criteria.
-     * Any parameter may be null or empty to skip that filter.
+     * String parameters may be null or empty to skip that filter.
+     * Numeric parameters use 0 as a sentinel meaning "no filter".
      *
-     * @param type        Property type substring (e.g. "flat", "house")
-     * @param city        City substring (e.g. "London", "Bristol")
-     * @param minBedrooms Minimum number of bedrooms (0 = no minimum)
-     * @param maxPriceGbp Maximum price in GBP (0 = no maximum)
+     * @param type        Property type substring (e.g. "flat", "house"); null or blank = no filter
+     * @param city        City substring (e.g. "London", "Bristol"); null or blank = no filter
+     * @param minBedrooms Minimum number of bedrooms; 0 = no minimum
+     * @param maxPriceGbp Maximum price in GBP; 0 = no maximum
      * @return Matching properties, up to 10 results
      */
     @CopilotTool("Searches the real estate listings database. Returns up to 10 matching properties.")

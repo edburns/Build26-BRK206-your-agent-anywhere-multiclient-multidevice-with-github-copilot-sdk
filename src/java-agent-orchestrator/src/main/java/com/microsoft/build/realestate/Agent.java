@@ -117,7 +117,7 @@ public class Agent {
             LOG.info("Agent " + id + " completed: " + result.getData().content());
         } catch (Exception e) {
             LOG.severe("Agent " + id + " failed: " + e.getMessage());
-            if (phase != Phase.REJECTED_GARBAGE && phase != Phase.REJECTED_NO_MATCHES) {
+            if (!phase.isTerminal()) {
                 phase = Phase.REJECTED_GARBAGE;
                 notifyUi();
             }
