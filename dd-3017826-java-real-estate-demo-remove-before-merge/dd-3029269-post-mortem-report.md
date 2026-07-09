@@ -533,9 +533,58 @@ CCA and CCRA credits are billed by GitHub based on coding agent runs and review 
 
 ---
 
-## Section 7: Observations and Recommendations
+## Section 7: Human-Directed Changes After the Agentic Work Completed
 
-### 7.1 What Worked Well
+This section details the human-directed changes to the app to make it acceptable to the customer after the agentic work completed.
+
+After the nine-issue agentic pipeline completed and all PRs were merged, the human developer tested the app end-to-end. Three categories of UI deficiencies were identified that required human-directed changes (commits `f6d9ddb`–`c6168d0`, tags `20260709-1644-02-column-layout-success` through `20260709-1800-04-dashboard-success`). These changes spanned 5 files, adding 500 lines and removing 96 lines.
+
+### 7.1 Pipeline Layout Restructure (commit `f6d9ddb`)
+
+**Problem:** The agent built the pipeline grid as a horizontal auto-fill CSS grid (`repeat(auto-fill, minmax(180px, 1fr))`), rendering all 7 phases as equal-width columns in a single row. The Blazor reference app uses a vertical two-column layout: lifecycle states (Queued → Validating → Searching → Writing Report) in the left column with downward arrows, and end states (Rejected, No Matches, Done) in the right column with rightward arrows connecting them to the corresponding lifecycle phase.
+
+**Changes made:**
+- **index.xhtml:** Replaced the single `ui:repeat` over all phases with an explicit two-column structure — 4 `pipeline-row` divs, each with a `lifecycle-col`, `arrow-col`, and `endstate-col`. Added column headers ("Lifecycle state" / "End state"). Created a reusable `agent-card.xhtml` include fragment to avoid repeating card markup across 7 phase slots.
+- **pipeline.css:** Replaced `.pipeline-grid` with `.pipeline-layout` using CSS grid rows (`1fr 60px 1fr`). Added vertical arrow styling (`.arrow-line`) and horizontal arrow styling (`.arrow-right`) with triangle pseudo-elements.
+- **PipelineView.java:** Added `String` overloads for `getAgentsAtPhase()` and `getPhaseHeaderClass()` since the new XHTML passes phase names as string literals rather than enum references.
+
+### 7.2 Canned Query "+" Button (commit `d7e2b56`)
+
+**Problem:** The agent built a free-text input field with a "Submit" button for entering enquiries. The Blazor reference app uses a "+" button in the top-right corner that toggles a popup list of 10 pre-defined sample queries. The free-text input was not part of the Blazor design and would require the presenter to type queries during the demo.
+
+**Changes made:**
+- **PipelineView.java:** Added a `SAMPLE_ENQUIRIES` array (10 canned queries matching the Blazor demo) and a `submitSampleEnquiry(String)` action method.
+- **index.xhtml:** Removed the `h:inputText` and `p:commandButton`. Added a circular "+" button with an absolutely-positioned popup that uses `c:forEach` over the sample enquiries list. (Note: `ui:repeat` was tried first but produced no output for the `List<String>`; `c:forEach` was required.) Added inline `<script>` for the toggle function to avoid browser JS cache issues.
+- **pipeline.css:** Added styling for `.canned-query-btn` (44px circle), `.canned-query-popup` (absolute-positioned dark dropdown to the left of the button), and `.canned-query-item` (hover-highlighted rows).
+
+### 7.3 Dashboard Sidebar (commit `c6168d0`)
+
+**Problem:** The agent created a "Total agents" stats bar at the bottom of the pipeline. The Blazor reference app has a white Dashboard panel on the right side with three live-updating metrics: Processing (purple), Completed (green), and Rejected (red), each with a vertical color bar, a large count, and a label.
+
+**Changes made:**
+- **PipelineView.java:** Added `getProcessingCount()` (agents in non-terminal phases), `getCompletedCount()` (agents in DONE), and `getRejectedCount()` (agents in rejected phases).
+- **index.xhtml:** Removed the stats bar. Added a `.page-grid` wrapper to place the pipeline and dashboard side-by-side. Added a `dashboardPanel` with three metric items. Updated the `refreshPipeline` remoteCommand to also update `dashboardPanel` for live count updates.
+- **pipeline.css:** Replaced `.stats-bar` rules with `.page-grid` (CSS grid `1fr auto`), `.dashboard` (white background), `.dashboard-bar` (4px colored bars), `.dashboard-count`, and `.dashboard-label`.
+
+### 7.4 How to Improve the Issues So That the Human-Directed Changes Would Be Less
+
+The three human-directed changes above all stem from a single root cause: **the issue descriptions specified functional behavior but not visual design**. The issues described *what* the pipeline should do (display phases, accept enquiries, show statistics) but did not describe *how it should look* relative to the Blazor reference. Specific improvements to the Issue Legend:
+
+1. **Include a screenshot or wireframe of the target UI in the issue body.** The agent had no visual reference for the Blazor app's two-column layout with arrows. A pasted screenshot with annotations (e.g., "left column = lifecycle, right column = end states, arrows connect them") would have given the agent the information it needed to produce the correct layout on the first pass.
+
+2. **Specify the interaction pattern explicitly, not just the data.** Issue [#8](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/8)/[#20](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/20) (dynamic UI) described "cards move between phases" but did not specify that enquiry submission should use a canned-query popup rather than a text input. Adding "Use a '+' button that toggles a dropdown of predefined queries; do NOT use a free-text input" to the issue body would have eliminated this change entirely.
+
+3. **Describe the Dashboard as a named, distinct UI component.** The issue mentioned "stats" but did not describe the Dashboard's visual design (white panel, colored bars, specific metrics). A requirement like "Add a DASHBOARD sidebar to the right of the pipeline with three metrics: Processing (count of agents in non-terminal phases), Completed (count in DONE), Rejected (count in rejected phases), each with a colored vertical bar" would have produced the correct component.
+
+4. **Reference the Blazor source files for UI parity.** The issues could have included directives like "Match the layout and styling of `src/AgentOrchestrator/Components/Pages/Home.razor`" to give the agent a concrete implementation to reference rather than inventing a UI from scratch.
+
+In summary: the agent produced functionally correct code, but the issues lacked visual specifications. Adding screenshots, interaction patterns, and explicit references to the Blazor UI components would reduce human-directed changes from ~500 lines to near zero.
+
+---
+
+## Section 8: Observations and Recommendations
+
+### 8.1 What Worked Well
 
 **1. End-to-end automation was robust.** All 9 tasks completed without human code intervention. The shepherd pipeline reliably handled PR creation, CI approval, CCRA polling, fix application, commit, and merge across a 21-hour period.
 
@@ -547,7 +596,9 @@ CCA and CCRA credits are billed by GitHub based on coding agent runs and review 
 
 **5. Sequential batching of phase-1 and phase-2 worked correctly.** The handoff between shepherd-to-ready (phase 1) and ready-to-merged (phase 2) was seamless; the CCA branch was ready for CCRA as soon as phase 1 completed.
 
-### 7.2 What Didn't Work Well
+**6. Human-directed post-agentic changes were manageable and predictable.** The 500-line human-directed UI change (Section 7) was concentrated in CSS, XHTML, and one backing bean. The agent's functional implementation was correct — it correctly wired WebSocket push, CDI beans, agent lifecycle, and tool definitions. The human changes were purely visual/UX, not architectural. This validates the pattern of using agentic development for the functional backbone and human direction for visual polish.
+
+### 8.2 What Didn't Work Well
 
 **1. Two tasks hit the 8-round CCRA cap without convergence.** Issues [#5](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/5) (core agent) and [#6](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/6) (WebSocket push) reached 8 rounds with no sign of comment reduction. These tasks likely had CCRA oscillation — fixing one concern caused the CCRA to re-flag related code in the next round. The 8-round hard cap forced merge with potentially unresolved issues.
 
@@ -561,7 +612,9 @@ CCA and CCRA credits are billed by GitHub based on coding agent runs and review 
 
 **6. Phase-2 batch `shepherd-tasks-20260708-1340` ran 4 tasks sequentially rather than in parallel.** Tasks [#4](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/4), [#5](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/5), [#6](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/6), [#7](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/7) were shepherded one at a time. Given these were independent issues building on an ordered dependency chain, some parallelism was possible (though serial order was architecturally safer given each PR merged into the base branch for the next).
 
-### 7.3 Recommendations
+**7. The agentic workflow produced a functionally correct but visually incorrect UI.** Three runtime bugs (Section 7 of the runtime-fix commit `b676b53`) and three visual design gaps (Section 7 of this report) required human intervention. The runtime bugs were architectural (SDK mode contracts, CDI lifecycle, virtual thread context propagation), while the visual gaps were specification-related (no screenshots or interaction patterns in the issues). Both categories are addressable with better issue specifications.
+
+### 8.3 Recommendations
 
 #### For the CCA (Copilot Coding Agent)
 
@@ -571,36 +624,39 @@ CCA and CCRA credits are billed by GitHub based on coding agent runs and review 
 
 **R3: Break large tasks into smaller sub-tasks.** Issue [#4](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/4) (domain model + seeding) generated 107 changed files, which is far too large for accurate CCRA review. Splitting into "JPA entities" and "seed data" sub-tasks would improve review signal quality.
 
+**R4: Include visual references in UI-related issues.** Screenshots, wireframes, or references to existing implementations (e.g., "match `Home.razor` layout") should be mandatory for any issue that involves UI rendering. This would have eliminated the ~500 lines of human-directed changes documented in Section 7.
+
 #### For the CCRA (Copilot Code Review Agent)
 
-**R4: Track comment IDs across rounds to detect oscillation.** If the CCRA flags a specific location that was already flagged and supposedly fixed in a prior round, flag it as an escalation rather than a re-comment. The shepherd script could compare new comment bodies against the resolved comment set.
+**R5: Track comment IDs across rounds to detect oscillation.** If the CCRA flags a specific location that was already flagged and supposedly fixed in a prior round, flag it as an escalation rather than a re-comment. The shepherd script could compare new comment bodies against the resolved comment set.
 
-**R5: Categorize comments by severity in a structured format.** The CCRA comments appeared as free-text in review threads; post-processing required manual categorization. A structured `<!-- severity: HIGH -->` annotation in CCRA comments would enable the shepherd to dismiss low-severity comments (style nits) after round 3 and focus remaining rounds on HIGH/MEDIUM severity only.
+**R6: Categorize comments by severity in a structured format.** The CCRA comments appeared as free-text in review threads; post-processing required manual categorization. A structured `<!-- severity: HIGH -->` annotation in CCRA comments would enable the shepherd to dismiss low-severity comments (style nits) after round 3 and focus remaining rounds on HIGH/MEDIUM severity only.
 
-**R6: Raise or make the round cap adaptive.** The 8-round cap forced merge with unresolved issues for [#5](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/5) and [#6](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/6). An adaptive cap — e.g., merge when comment count drops below N or plateaus for 2 consecutive rounds — would be more accurate. Alternatively, raise to 12 rounds for complex tasks while keeping 4 rounds for small tasks.
+**R7: Raise or make the round cap adaptive.** The 8-round cap forced merge with unresolved issues for [#5](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/5) and [#6](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/6). An adaptive cap — e.g., merge when comment count drops below N or plateaus for 2 consecutive rounds — would be more accurate. Alternatively, raise to 12 rounds for complex tasks while keeping 4 rounds for small tasks.
 
 #### For the Local Copilot CLI Shepherd
 
-**R7: Add asynchronous CCRA polling with process sleep.** Rather than blocking a copilot CLI process for up to 10 hours (issue [#9](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/9)), the shepherd should save state to disk and re-launch between CCRA rounds. This would free the CLI process during the 20–60 minute CCRA review windows.
+**R8: Add asynchronous CCRA polling with process sleep.** Rather than blocking a copilot CLI process for up to 10 hours (issue [#9](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/9)), the shepherd should save state to disk and re-launch between CCRA rounds. This would free the CLI process during the 20–60 minute CCRA review windows.
 
-**R8: Implement a pre-merge diff validation step.** Before merging, the shepherd should verify the final diff against a minimum-viability checklist derived from the issue body (e.g., required class names, required annotations). This catches cases where the 8-round cap forced a merge of incomplete work.
+**R9: Implement a pre-merge diff validation step.** Before merging, the shepherd should verify the final diff against a minimum-viability checklist derived from the issue body (e.g., required class names, required annotations). This catches cases where the 8-round cap forced a merge of incomplete work.
 
-**R9: Dismiss CCRA comments explicitly before re-requesting review.** The current pattern leaves resolved threads "open" in GitHub's UI. Explicit thread resolution (via `gh api`) before each re-review request would give the CCRA a cleaner context and reduce the chance of re-flagging already-addressed comments.
+**R10: Dismiss CCRA comments explicitly before re-requesting review.** The current pattern leaves resolved threads "open" in GitHub's UI. Explicit thread resolution (via `gh api`) before each re-review request would give the CCRA a cleaner context and reduce the chance of re-flagging already-addressed comments.
 
-**R10: Log input token counts.** The JSONL event stream should include `inputTokens` alongside `outputTokens` on `assistant.message` events to enable accurate cost accounting.
+**R11: Log input token counts.** The JSONL event stream should include `inputTokens` alongside `outputTokens` on `assistant.message` events to enable accurate cost accounting.
 
 #### For the Shepherd Orchestration Script
 
-**R11: Detect and reject scope-creep PRs before starting phase 2.** After CCA creates the PR, the shepherd should check `changedFiles` against the expected range. If `changedFiles > threshold` (e.g., 20 for typical sub-issues), abort phase 1 and alert for human review rather than proceeding to the expensive CCRA loop.
+**R12: Detect and reject scope-creep PRs before starting phase 2.** After CCA creates the PR, the shepherd should check `changedFiles` against the expected range. If `changedFiles > threshold` (e.g., 20 for typical sub-issues), abort phase 1 and alert for human review rather than proceeding to the expensive CCRA loop.
 
-**R12: Run issues in parallel where the dependency graph allows.** Issues [#10](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/10) and [#11](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/11) could have run in parallel (neither depends on the other). A dependency-aware scheduler would reduce total wall-clock time.
+**R13: Run issues in parallel where the dependency graph allows.** Issues [#10](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/10) and [#11](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/11) could have run in parallel (neither depends on the other). A dependency-aware scheduler would reduce total wall-clock time.
 
-**R13: Record batch start/end events in a structured log.** The empty `shepherd-tasks-20260708-1233` directory and the abrupt phase-1 restart for issue [#4](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/4) suggest the orchestration script lacked adequate state tracking. A persistent run manifest (JSON) recording issue→PR→phase→status would enable safe restart without re-doing completed work.
+**R14: Record batch start/end events in a structured log.** The empty `shepherd-tasks-20260708-1233` directory and the abrupt phase-1 restart for issue [#4](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/4) suggest the orchestration script lacked adequate state tracking. A persistent run manifest (JSON) recording issue→PR→phase→status would enable safe restart without re-doing completed work.
 
-### 7.4 Patterns Observed
+### 8.4 Patterns Observed
 
 - **Simple, well-bounded tasks converge fastest.** Scaffolding, documentation, and testing tasks (1–4 rounds) had the lowest defect density in CCA output.
 - **Infrastructure/plumbing tasks drive the highest CCRA comment counts.** WebSocket, CDI, and JSF bean wiring (issues [#5](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/5), [#6](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/6), [#7](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/7)) generated the highest comments-per-file ratios because these areas involve subtle lifecycle constraints that are hard to get right in one pass.
 - **Large file count impairs CCRA signal quality.** Issue [#4](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/4) (107 files) had 24 comments over 7 rounds; the CCRA likely could not deeply review all 107 files in each pass, leading to incomplete but persistent feedback.
 - **CCRA reviews under overnight conditions have unpredictable latency.** Issue [#9](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/9)'s 10-hour session was not unusually complex — the long duration was purely an artifact of 7 asynchronous CCRA review cycles during low-traffic hours. Planning for overnight execution should include asynchronous shepherd checkpointing.
 - **The three-agent pipeline is viable for complex greenfield development** but needs tooling improvements (scope guards, adaptive round caps, async state persistence) to operate reliably at scale without human oversight.
+- **Human-directed changes are expected and manageable.** The agentic workflow correctly handled architecture, data access, SDK integration, WebSocket push, and CDI wiring. The human changes were limited to visual/UX polish — precisely the kind of work that benefits from human judgment (visual comparison with a reference design) rather than textual specification. The total human effort (~3 hours for 500 lines) was a small fraction of the ~21 hours of automated work that produced the functional backbone.
