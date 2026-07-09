@@ -53,6 +53,13 @@ public class PipelineView {
                 .toList();
     }
 
+    /**
+     * Overload accepting a phase name string (used in XHTML EL expressions).
+     */
+    public List<Agent> getAgentsAtPhase(String phaseName) {
+        return getAgentsAtPhase(Phase.valueOf(phaseName));
+    }
+
     public Agent getSelectedAgent() {
         return selectionState.getSelectedAgent();
     }
@@ -92,6 +99,13 @@ public class PipelineView {
             return "phase-header rejected";
         }
         return "phase-header";
+    }
+
+    /**
+     * Overload accepting a phase name string (used in XHTML EL expressions).
+     */
+    public String getPhaseHeaderClass(String phaseName) {
+        return getPhaseHeaderClass(Phase.valueOf(phaseName));
     }
 
     /**

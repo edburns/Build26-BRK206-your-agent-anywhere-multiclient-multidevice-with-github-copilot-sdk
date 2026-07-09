@@ -54,71 +54,131 @@
                          process="@none"
                          update="detailContent" />
 
-        <!-- ── Pipeline grid (issue 3.5: static layout, 3.6: animated) ── -->
+        <!-- ── Pipeline layout (two-column: lifecycle left, end-states right) ── -->
         <p:outputPanel id="pipelineGrid">
-            <div class="pipeline-grid">
-                <ui:repeat value="#{pipelineView.allPhases}" var="phase">
-                    <div class="phase-column">
+            <div class="pipeline-layout">
 
-                        <!-- Column header: CSS class computed by PipelineView.getPhaseHeaderClass() -->
-                        <div class="#{pipelineView.getPhaseHeaderClass(phase)}">
-                            #{phase.label}
-                        </div>
+                <!-- Column headers -->
+                <div class="pipeline-row pipeline-col-headers">
+                    <div class="lifecycle-col"><span class="col-title">Lifecycle state</span></div>
+                    <div class="arrow-col"></div>
+                    <div class="endstate-col"><span class="col-title">End state</span></div>
+                </div>
 
-                        <!-- Agent cards in this phase -->
+                <!-- Row 1: QUEUED -->
+                <div class="pipeline-row">
+                    <div class="lifecycle-col">
+                        <div class="#{pipelineView.getPhaseHeaderClass('QUEUED')}">Queued</div>
                         <div class="phase-cards">
-                            <ui:param name="agentsAtPhase" value="#{pipelineView.getAgentsAtPhase(phase)}" />
-                            <ui:repeat value="#{agentsAtPhase}" var="agent">
-                                <p:commandLink styleClass="agent-card-link"
-                                               process="@this"
-                                               action="#{pipelineView.selectAgent(agent.id)}"
-                                               update="detailContent"
-                                               oncomplete="PF('agentDetailDialog').show();">
-                                    <!--
-                                        data-* attributes tell onPipelineRefreshed() what state
-                                        each card is in so it can apply the right CSS classes.
-                                        CSS class computed by PipelineView.getAgentCardClass().
-                                    -->
-                                    <div class="#{pipelineView.getAgentCardClass(agent)}"
-                                         data-agent-id="#{agent.id}"
-                                         data-active="#{agent.active}"
-                                         data-done="#{agent.done}"
-                                         data-rejected="#{agent.rejected}"
-                                         data-failed="#{agent.failed}"
-                                         title="#{agent.failed ? agent.errorMessage : agent.enquiry}">
-
-                                        <!-- Status dot: pulses for active agents (pulse-indicator added by JS) -->
-                                        <div style="display:flex; align-items:center; margin-bottom:0.25rem;">
-                                            <span class="#{pipelineView.getStatusDotClass(agent)}"></span>
-                                            <span class="agent-id">#{agent.id}</span>
-                                        </div>
-
-                                        <div class="agent-enquiry" title="#{agent.enquiry}">
-                                            <h:outputText value="#{agent.enquiry}" />
-                                        </div>
-
-                                        <ui:fragment rendered="#{not empty agent.currentIntent}">
-                                            <div class="agent-intent">
-                                                <h:outputText value="#{agent.currentIntent}" />
-                                            </div>
-                                        </ui:fragment>
-                                        <ui:fragment rendered="#{agent.failed}">
-                                            <div class="agent-error-msg">
-                                                ⚠ <h:outputText value="#{agent.errorMessage}" />
-                                            </div>
-                                        </ui:fragment>
-                                    </div>
-                                </p:commandLink>
+                            <ui:param name="queuedAgents" value="#{pipelineView.getAgentsAtPhase('QUEUED')}" />
+                            <ui:repeat value="#{queuedAgents}" var="agent">
+                                <ui:include src="/WEB-INF/includes/agent-card.xhtml" />
                             </ui:repeat>
-
-                            <!-- Show placeholder when no agents are in this column -->
-                            <ui:fragment rendered="#{empty agentsAtPhase}">
+                            <ui:fragment rendered="#{empty queuedAgents}">
                                 <div class="empty-column-hint">—</div>
                             </ui:fragment>
                         </div>
-
                     </div>
-                </ui:repeat>
+                    <div class="arrow-col"></div>
+                    <div class="endstate-col"></div>
+                </div>
+
+                <!-- Arrow down -->
+                <div class="pipeline-arrow-down"><div class="arrow-line"></div></div>
+
+                <!-- Row 2: VALIDATING → REJECTED -->
+                <div class="pipeline-row">
+                    <div class="lifecycle-col">
+                        <div class="#{pipelineView.getPhaseHeaderClass('VALIDATING')}">Validating</div>
+                        <div class="phase-cards">
+                            <ui:param name="validatingAgents" value="#{pipelineView.getAgentsAtPhase('VALIDATING')}" />
+                            <ui:repeat value="#{validatingAgents}" var="agent">
+                                <ui:include src="/WEB-INF/includes/agent-card.xhtml" />
+                            </ui:repeat>
+                            <ui:fragment rendered="#{empty validatingAgents}">
+                                <div class="empty-column-hint">—</div>
+                            </ui:fragment>
+                        </div>
+                    </div>
+                    <div class="arrow-col"><div class="arrow-right"></div></div>
+                    <div class="endstate-col">
+                        <div class="phase-header rejected">Rejected</div>
+                        <div class="phase-cards">
+                            <ui:param name="rejectedAgents" value="#{pipelineView.getAgentsAtPhase('REJECTED_GARBAGE')}" />
+                            <ui:repeat value="#{rejectedAgents}" var="agent">
+                                <ui:include src="/WEB-INF/includes/agent-card.xhtml" />
+                            </ui:repeat>
+                            <ui:fragment rendered="#{empty rejectedAgents}">
+                                <div class="empty-column-hint">—</div>
+                            </ui:fragment>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Arrow down -->
+                <div class="pipeline-arrow-down"><div class="arrow-line"></div></div>
+
+                <!-- Row 3: SEARCHING → NO MATCHES -->
+                <div class="pipeline-row">
+                    <div class="lifecycle-col">
+                        <div class="#{pipelineView.getPhaseHeaderClass('SEARCHING')}">Searching</div>
+                        <div class="phase-cards">
+                            <ui:param name="searchingAgents" value="#{pipelineView.getAgentsAtPhase('SEARCHING')}" />
+                            <ui:repeat value="#{searchingAgents}" var="agent">
+                                <ui:include src="/WEB-INF/includes/agent-card.xhtml" />
+                            </ui:repeat>
+                            <ui:fragment rendered="#{empty searchingAgents}">
+                                <div class="empty-column-hint">—</div>
+                            </ui:fragment>
+                        </div>
+                    </div>
+                    <div class="arrow-col"><div class="arrow-right"></div></div>
+                    <div class="endstate-col">
+                        <div class="phase-header rejected">No Matches</div>
+                        <div class="phase-cards">
+                            <ui:param name="noMatchAgents" value="#{pipelineView.getAgentsAtPhase('REJECTED_NO_MATCHES')}" />
+                            <ui:repeat value="#{noMatchAgents}" var="agent">
+                                <ui:include src="/WEB-INF/includes/agent-card.xhtml" />
+                            </ui:repeat>
+                            <ui:fragment rendered="#{empty noMatchAgents}">
+                                <div class="empty-column-hint">—</div>
+                            </ui:fragment>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Arrow down -->
+                <div class="pipeline-arrow-down"><div class="arrow-line"></div></div>
+
+                <!-- Row 4: WRITING_REPORT → DONE -->
+                <div class="pipeline-row">
+                    <div class="lifecycle-col">
+                        <div class="#{pipelineView.getPhaseHeaderClass('WRITING_REPORT')}">Writing Report</div>
+                        <div class="phase-cards">
+                            <ui:param name="writingAgents" value="#{pipelineView.getAgentsAtPhase('WRITING_REPORT')}" />
+                            <ui:repeat value="#{writingAgents}" var="agent">
+                                <ui:include src="/WEB-INF/includes/agent-card.xhtml" />
+                            </ui:repeat>
+                            <ui:fragment rendered="#{empty writingAgents}">
+                                <div class="empty-column-hint">—</div>
+                            </ui:fragment>
+                        </div>
+                    </div>
+                    <div class="arrow-col"><div class="arrow-right"></div></div>
+                    <div class="endstate-col">
+                        <div class="phase-header done">Done</div>
+                        <div class="phase-cards">
+                            <ui:param name="doneAgents" value="#{pipelineView.getAgentsAtPhase('DONE')}" />
+                            <ui:repeat value="#{doneAgents}" var="agent">
+                                <ui:include src="/WEB-INF/includes/agent-card.xhtml" />
+                            </ui:repeat>
+                            <ui:fragment rendered="#{empty doneAgents}">
+                                <div class="empty-column-hint">—</div>
+                            </ui:fragment>
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
             <!-- Stats bar -->
