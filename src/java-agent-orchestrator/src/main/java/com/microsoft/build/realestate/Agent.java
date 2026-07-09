@@ -16,12 +16,14 @@ import com.github.copilot.tool.annotation.CopilotTool;
 import com.github.copilot.tool.annotation.CopilotToolParam;
 import java.io.Closeable;
 import java.time.Instant;
+import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
 
 /**
@@ -44,7 +46,8 @@ public class Agent {
     private final String enquiry;
     private final PropertyDatabase propertyDatabase;
     private final UiUpdateSocket uiUpdateSocket;
-    private final List<AgentEvent> events = new CopyOnWriteArrayList<>();
+    private final Lock eventsLock = new ReentrantLock();
+    private final ArrayDeque<AgentEvent> events = new ArrayDeque<>();
     private final Map<String, ToolCallSnapshot> toolCallsById = new ConcurrentHashMap<>();
 
     private volatile Phase phase = Phase.QUEUED;
@@ -253,12 +256,14 @@ public class Agent {
     }
 
     private void addEvent(Instant timestamp, String eventType, String summary, String detail) {
-        synchronized (events) {
-            events.add(new AgentEvent(timestamp, eventType, summary, detail));
-            int excess = events.size() - MAX_EVENTS;
-            if (excess > 0) {
-                events.subList(0, excess).clear();
+        eventsLock.lock();
+        try {
+            events.addLast(new AgentEvent(timestamp, eventType, summary, detail));
+            while (events.size() > MAX_EVENTS) {
+                events.removeFirst();
             }
+        } finally {
+            eventsLock.unlock();
         }
     }
 
@@ -341,7 +346,14 @@ public class Agent {
     public String getCurrentIntent() { return currentIntent; }
     public Instant getStartedAt() { return startedAt; }
     public Instant getFinishedAt() { return finishedAt; }
-    public List<AgentEvent> getEvents() { return List.copyOf(events); }
+    public List<AgentEvent> getEvents() {
+        eventsLock.lock();
+        try {
+            return List.copyOf(events);
+        } finally {
+            eventsLock.unlock();
+        }
+    }
     public String getFinalReport() { return finalReport; }
 
     public boolean isActive() {

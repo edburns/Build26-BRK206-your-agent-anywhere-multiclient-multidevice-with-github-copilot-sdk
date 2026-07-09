@@ -1,12 +1,19 @@
 /**
  * pipeline.js — Real Estate Agent Pipeline UI (issue 3.6)
  *
- * Implements the WebSocket → remoteCommand → partial update → CSS transition chain:
+ * Implements the WebSocket → remoteCommand → partial update → CSS transition chain.
+ * handlePipelinePush() dispatches on event type:
  *
- *   1. f:websocket calls handlePipelinePush(message) when the server pushes
- *   2. handlePipelinePush calls refreshPipeline() (p:remoteCommand)
- *   3. PrimeFaces re-renders the pipelineGrid via partial update
- *   4. oncomplete fires onPipelineRefreshed() which applies CSS animation classes
+ *   phase-changed / agent-removed:
+ *     1. f:websocket calls handlePipelinePush(message)
+ *     2. handlePipelinePush calls refreshPipeline() (p:remoteCommand)
+ *     3. PrimeFaces re-renders pipelineGrid + detailPanel via partial update
+ *     4. oncomplete fires onPipelineRefreshed() which applies CSS animation classes
+ *
+ *   detail-updated (non-phase session events — tool calls, assistant messages, etc.):
+ *     1. f:websocket calls handlePipelinePush(message)
+ *     2. handlePipelinePush calls refreshDetailOnly() (p:remoteCommand)
+ *     3. PrimeFaces re-renders only detailPanel — no card animations triggered
  */
 
 'use strict';

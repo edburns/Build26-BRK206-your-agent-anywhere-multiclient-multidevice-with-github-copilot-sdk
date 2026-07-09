@@ -13,6 +13,7 @@ import jakarta.inject.Inject;
  * <p>Message format sent to the browser: {@code "agentId:eventType"}
  * <ul>
  *   <li>{@code "agentId:phase-changed"} — agent moved to a new phase</li>
+ *   <li>{@code "agentId:detail-updated"} — new session events available for the detail panel</li>
  *   <li>{@code "agentId:agent-removed"} — agent was removed from the pipeline</li>
  * </ul>
  */
