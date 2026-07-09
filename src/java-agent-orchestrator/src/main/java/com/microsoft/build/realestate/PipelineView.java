@@ -100,7 +100,9 @@ public class PipelineView {
      */
     public String getAgentCardClass(Agent agent) {
         StringBuilder sb = new StringBuilder("agent-card");
-        if (agent.isActive()) {
+        if (agent.isFailed()) {
+            sb.append(" failed");
+        } else if (agent.isActive()) {
             sb.append(" active");
         } else if (agent.isDone()) {
             sb.append(" completed");
@@ -114,7 +116,9 @@ public class PipelineView {
      * Returns the CSS class(es) for an agent's status dot.
      */
     public String getStatusDotClass(Agent agent) {
-        if (agent.isActive()) {
+        if (agent.isFailed()) {
+            return "status-dot failed-dot";
+        } else if (agent.isActive()) {
             return "status-dot active-dot";
         } else if (agent.isDone()) {
             return "status-dot done-dot";

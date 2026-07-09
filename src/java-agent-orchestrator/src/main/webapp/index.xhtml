@@ -83,7 +83,9 @@
                                          data-agent-id="#{agent.id}"
                                          data-active="#{agent.active}"
                                          data-done="#{agent.done}"
-                                         data-rejected="#{agent.rejected}">
+                                         data-rejected="#{agent.rejected}"
+                                         data-failed="#{agent.failed}"
+                                         title="#{agent.failed ? agent.errorMessage : agent.enquiry}">
 
                                         <!-- Status dot: pulses for active agents (pulse-indicator added by JS) -->
                                         <div style="display:flex; align-items:center; margin-bottom:0.25rem;">
@@ -98,6 +100,11 @@
                                         <ui:fragment rendered="#{not empty agent.currentIntent}">
                                             <div class="agent-intent">
                                                 <h:outputText value="#{agent.currentIntent}" />
+                                            </div>
+                                        </ui:fragment>
+                                        <ui:fragment rendered="#{agent.failed}">
+                                            <div class="agent-error-msg">
+                                                ⚠ <h:outputText value="#{agent.errorMessage}" />
                                             </div>
                                         </ui:fragment>
                                     </div>
@@ -143,6 +150,9 @@
                     <div><strong>Phase:</strong> <h:outputText value="#{pipelineView.selectedAgent.phase.label}" /></div>
                     <ui:fragment rendered="#{not empty pipelineView.selectedAgent.currentIntent}">
                         <div><strong>Intent:</strong> <h:outputText value="#{pipelineView.selectedAgent.currentIntent}" /></div>
+                    </ui:fragment>
+                    <ui:fragment rendered="#{pipelineView.selectedAgent.failed}">
+                        <div class="detail-error"><strong>⚠ Error:</strong> <h:outputText value="#{pipelineView.selectedAgent.errorMessage}" /></div>
                     </ui:fragment>
                 </div>
 

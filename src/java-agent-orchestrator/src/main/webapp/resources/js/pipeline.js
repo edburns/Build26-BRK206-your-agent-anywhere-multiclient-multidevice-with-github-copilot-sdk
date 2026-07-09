@@ -87,9 +87,11 @@ function onPipelineRefreshed() {
         var done = card.getAttribute('data-done') === 'true';
 
         // Remove existing state classes before reapplying
-        card.classList.remove('active', 'completed', 'rejected');
+        card.classList.remove('active', 'completed', 'rejected', 'failed');
 
-        if (rejected) {
+        if (card.dataset.failed === 'true') {
+            card.classList.add('failed');
+        } else if (rejected) {
             card.classList.add('rejected');
         } else if (done) {
             card.classList.add('completed');

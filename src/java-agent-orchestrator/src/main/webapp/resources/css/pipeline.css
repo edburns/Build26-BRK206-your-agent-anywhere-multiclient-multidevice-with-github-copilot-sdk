@@ -159,6 +159,13 @@ h1 {
     opacity: 0.7;
 }
 
+/* Failed state: agent session threw an unexpected error */
+.agent-card.failed {
+    border-color: #dc2626;
+    box-shadow: 0 0 10px rgba(220, 38, 38, 0.4);
+    opacity: 0.85;
+}
+
 /* Transitioning: applied briefly when a card changes state */
 .agent-card.transitioning {
     transform: scale(1.03);
@@ -216,6 +223,10 @@ h1 {
 
 .status-dot.rejected-dot {
     background: #ef4444;
+}
+
+.status-dot.failed-dot {
+    background: #dc2626;
 }
 
 /* Pulse animation for the active agent's status indicator */
@@ -362,4 +373,27 @@ h1 {
     text-transform: uppercase;
     letter-spacing: 0.05em;
     margin-bottom: 0.3rem;
+}
+
+/* ── Error display on agent cards ───────────────────────────────── */
+
+.agent-error-msg {
+    font-size: 0.72rem;
+    color: #fca5a5;
+    margin-top: 0.25rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ── Error display in detail panel ──────────────────────────────── */
+
+.detail-error {
+    color: #fca5a5;
+    background: #450a0a;
+    border: 1px solid #7f1d1d;
+    border-radius: 0.35rem;
+    padding: 0.4rem 0.6rem;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
 }
