@@ -24,6 +24,7 @@
                          value="#{pipelineView.enquiryText}"
                          styleClass="enquiry-input"
                          placeholder="Enter a real estate enquiry, e.g. 3-bed house in London under £600k"
+                         required="true"
                          requiredMessage="Please enter an enquiry." />
             <p:commandButton id="submitBtn"
                              value="Submit"
@@ -31,8 +32,7 @@
                              action="#{pipelineView.submitEnquiry}"
                              update="msgs"
                              process="@form"
-                             onclick="this.disabled=true"
-                             oncomplete="this.disabled=false" />
+                             disableOnAjax="true" />
         </div>
         <p:messages id="msgs" />
 

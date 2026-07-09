@@ -79,7 +79,7 @@ function onPipelineRefreshed() {
         }, 400);
     });
 
-    // Update pulse indicators: only the currently-active card's status dot pulses
+    // Update pulse indicators: all currently-active cards' status dots pulse
     var allDots = document.querySelectorAll('.status-dot');
     allDots.forEach(function (dot) {
         dot.classList.remove('pulse-indicator');

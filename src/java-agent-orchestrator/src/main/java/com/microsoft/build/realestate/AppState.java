@@ -91,6 +91,7 @@ public class AppState {
                 Thread.sleep(REJECTED_LINGER_MS);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
+                return;
             }
             agents.remove(agentId);
             uiUpdateSocket.pushAgentRemoved(agentId);

@@ -16,6 +16,7 @@ import com.github.copilot.tool.annotation.CopilotTool;
 import com.github.copilot.tool.annotation.CopilotToolParam;
 import java.time.Instant;
 import java.util.List;
+import java.util.Locale;
 import java.util.logging.Logger;
 
 /**
@@ -123,7 +124,9 @@ public class Agent {
             }
         } finally {
             if (session != null) {
-                try { session.close(); } catch (Exception ignored) {}
+                try { session.close(); } catch (Exception e) {
+                    LOG.warning("Error closing CopilotSession for agent " + id + ": " + e.getMessage());
+                }
             }
             finishedAt = Instant.now();
         }
@@ -135,7 +138,7 @@ public class Agent {
             @CopilotToolParam("The phase to transition to (VALIDATING, SEARCHING, WRITING_REPORT, "
                     + "REJECTED_GARBAGE, REJECTED_NO_MATCHES, or DONE)") String phaseName) {
         try {
-            phase = Phase.valueOf(phaseName.toUpperCase());
+            phase = Phase.valueOf(phaseName.trim().toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException e) {
             return "Unknown phase: " + phaseName;
         }
