@@ -72,12 +72,7 @@ To stop the server, press `Ctrl+C` or run `mvn liberty:stop` in a second termina
 
 ### Sample enquiries to try
 
-| Enquiry | Expected outcome |
-|---------|-----------------|
-| `3-bed house in London under £600k` | Searches → finds matches → DONE with report |
-| `2-bed flat in Edinburgh` | Searches → finds matches → DONE with report |
-| `cheap beachfront villa with infinity pool in Monaco` | REJECTED_NO_MATCHES |
-| `asdfjkl;` | REJECTED_GARBAGE (spam) |
+Select the **+** button to show a list of sample queries. Select a query to enqueue it. Select the **+** button again to hide the list of sample queries.
 
 Submit multiple enquiries simultaneously to see concurrent virtual-thread agents in action.
 
