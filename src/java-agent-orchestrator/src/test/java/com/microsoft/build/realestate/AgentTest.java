@@ -53,7 +53,7 @@ class AgentTest {
     @Test
     void newAgentHasOneInitialEvent() {
         List<AgentEvent> events = agent.getEvents();
-        assertFalse(events.isEmpty(), "Agent should have an initial QUEUED phase event");
+        assertEquals(1, events.size(), "Agent should have exactly one initial QUEUED phase event");
         AgentEvent first = events.get(0);
         assertEquals("phase_change", first.getEventType());
         assertEquals(Phase.QUEUED.name(), first.getDetail());

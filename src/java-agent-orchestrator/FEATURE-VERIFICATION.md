@@ -336,7 +336,8 @@ Submit 5+ enquiries within 2 seconds and verify:
 
 ### Replay proxy approach (CI-friendly)
 
-The Copilot SDK test harness (`copilot-sdk/test/harness/`) provides a replay proxy that
+The Copilot SDK test harness (located in the upstream `github/copilot-sdk` repository under
+`test/harness/`, not in this demo checkout) provides a replay proxy that
 can serve pre-recorded YAML snapshots of CLI responses. To use it:
 
 1. Record a real session using the SDK's capture mode
