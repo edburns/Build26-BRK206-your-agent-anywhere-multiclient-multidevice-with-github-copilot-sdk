@@ -53,6 +53,7 @@ public class Agent {
     private volatile Phase phase = Phase.QUEUED;
     private volatile String currentIntent;
     private volatile String finalReport;
+    private volatile String errorMessage;
     private final Instant startedAt = Instant.now();
     private volatile Instant finishedAt;
     private CopilotSession session;
@@ -138,7 +139,9 @@ public class Agent {
             LOG.info("Agent " + id + " completed: " + result.getData().content());
         } catch (Exception e) {
             LOG.severe("Agent " + id + " failed: " + e.getMessage());
-            addEvent(Instant.now(), "session_error", "Session failed", e.getMessage());
+            String msg = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
+            errorMessage = msg;
+            addEvent(Instant.now(), "session_error", "Session failed", msg);
             if (!phase.isTerminal()) {
                 phase = Phase.REJECTED_GARBAGE;
                 addEvent(Instant.now(), "phase_change", "Phase changed to " + phase.name(), phase.name());
@@ -341,6 +344,8 @@ public class Agent {
     }
     public String getFinalReport() { return finalReport; }
 
+    public String getErrorMessage() { return errorMessage; }
+
     public boolean isActive() {
         return !phase.isTerminal();
     }
@@ -351,5 +356,10 @@ public class Agent {
 
     public boolean isRejected() {
         return phase.isRejected();
+    }
+
+    /** Returns true when the session failed due to an unhandled exception (as opposed to intentional rejection by the agent). */
+    public boolean isFailed() {
+        return errorMessage != null;
     }
 }

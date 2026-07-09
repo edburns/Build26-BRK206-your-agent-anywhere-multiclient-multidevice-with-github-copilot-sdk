@@ -225,4 +225,14 @@ class AgentTest {
                 "Expected at least " + (threadCount + 1) + " events (initial QUEUED + " + threadCount + " thread events), got " + agent.getEvents().size());
     }
 
+    // -----------------------------------------------------------------------
+    // Error state (isFailed / errorMessage)
+    // -----------------------------------------------------------------------
+
+    @Test
+    void newAgentIsNotFailed() {
+        assertFalse(agent.isFailed());
+        assertNull(agent.getErrorMessage());
+    }
+
 }
