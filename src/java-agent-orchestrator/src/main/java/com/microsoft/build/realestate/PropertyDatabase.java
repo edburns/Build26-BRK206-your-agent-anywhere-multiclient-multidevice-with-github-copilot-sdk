@@ -5,9 +5,7 @@ import com.github.copilot.tool.CopilotToolParam;
 import com.microsoft.build.realestate.data.PropertyRepository;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
-import jakarta.transaction.Transactional;
 import java.util.List;
 import java.util.Locale;
 import java.util.logging.Logger;
@@ -25,16 +23,8 @@ public class PropertyDatabase {
     @Inject
     private PropertyRepository repository;
 
-    @Inject
-    private Instance<PropertyDatabase> self;
-
     @PostConstruct
     public void seedDatabase() {
-        self.get().doSeedDatabase();
-    }
-
-    @Transactional
-    public void doSeedDatabase() {
         long count;
         try (var all = repository.findAll()) {
             count = all.count();
@@ -70,17 +60,20 @@ public class PropertyDatabase {
      */
     @CopilotTool(value = "Searches the real estate listings database. Returns up to 10 matching properties.",
                  name = "search_properties")
-    @Transactional
     public List<Property> searchProperties(
             @CopilotToolParam("Property type substring (e.g. 'flat', 'house', 'bungalow')") String type,
             @CopilotToolParam("City substring (e.g. 'London', 'Bristol')") String city,
             @CopilotToolParam("Minimum number of bedrooms (0 for no minimum)") int minBedrooms,
             @CopilotToolParam("Maximum price in GBP (0 for no maximum)") double maxPriceGbp) {
 
+        LOG.info("searchProperties called: type=" + type + ", city=" + city
+                + ", minBedrooms=" + minBedrooms + ", maxPriceGbp=" + maxPriceGbp);
+
         List<Property> results;
         try (var all = repository.findAll()) {
             results = all.toList();
         }
+        LOG.info("searchProperties loaded " + results.size() + " total properties from DB");
 
         if (type != null && !type.isBlank()) {
             String ltype = type.toLowerCase(Locale.ROOT);
@@ -104,6 +97,8 @@ public class PropertyDatabase {
                 .filter(p -> p.getPriceGbp() <= maxPriceGbp)
                 .toList();
         }
-        return results.stream().limit(10).toList();
+        List<Property> finalResults = results.stream().limit(10).toList();
+        LOG.info("searchProperties returning " + finalResults.size() + " matching properties");
+        return finalResults;
     }
 }

@@ -8,10 +8,12 @@ import com.github.copilot.generated.AssistantMessageToolRequest;
 import com.github.copilot.rpc.PermissionHandler;
 import com.github.copilot.rpc.SectionOverride;
 import com.github.copilot.rpc.SectionOverrideAction;
+import com.github.copilot.rpc.BuiltInTools;
 import com.github.copilot.rpc.SessionConfig;
 import com.github.copilot.rpc.SystemMessageConfig;
 import com.github.copilot.rpc.SystemMessageSections;
 import com.github.copilot.rpc.ToolDefinition;
+import com.github.copilot.rpc.ToolSet;
 import com.github.copilot.tool.CopilotTool;
 import com.github.copilot.tool.CopilotToolParam;
 import com.github.copilot.tool.Param;
@@ -72,9 +74,10 @@ public class Agent {
      * Blocks (on a virtual thread) until the session completes.
      */
     public void run(CopilotClient client) {
+        LOG.info("Agent " + id + " starting run. Enquiry: " + enquiry);
         SystemMessageConfig systemMessage = new SystemMessageConfig()
-                .setMode(SystemMessageMode.CUSTOMIZE);
-        systemMessage.getSections().put(SystemMessageSections.IDENTITY,
+                .setMode(SystemMessageMode.CUSTOMIZE)
+                .setSections(Map.of(SystemMessageSections.IDENTITY,
                 new SectionOverride()
                         .setAction(SectionOverrideAction.REPLACE)
                         .setContent("""
@@ -101,7 +104,7 @@ public class Agent {
 
                             Always use set_current_phase each time you enter a new phase, and use
                             report_intent to report your intent at each step.
-                            """));
+                            """)));
 
         // report_intent as inline lambda (ToolDefinition.from) — demonstrates ADR-006 style
         ToolDefinition reportIntentTool = ToolDefinition
@@ -117,28 +120,47 @@ public class Agent {
                 .overridesBuiltInTool(true);
 
         // @CopilotTool annotated methods on this instance — demonstrates ADR-005 style
+        LOG.info("Agent " + id + " registering tools...");
         List<ToolDefinition> annotatedTools = ToolDefinition.fromObject(this);
 
-        // search_properties from PropertyDatabase — demonstrates cross-class @CopilotTool
-        List<ToolDefinition> dbTools = ToolDefinition.fromObject(propertyDatabase);
+        // search_properties — defined as a lambda because PropertyDatabase is a CDI
+        // proxy (@ApplicationScoped) and ToolDefinition.fromObject() cannot resolve
+        // the generated $$CopilotToolMeta through the WELD client proxy class.
+        ToolDefinition searchTool = ToolDefinition
+                .from("search_properties",
+                      "Searches the real estate listings database. Returns up to 10 matching properties.",
+                      Param.of(String.class, "type", "Property type substring (e.g. 'flat', 'house', 'bungalow'). Empty string for no filter."),
+                      Param.of(String.class, "city", "City substring (e.g. 'London', 'Bristol'). Empty string for no filter."),
+                      (String type, String city) -> propertyDatabase.searchProperties(type, city, 0, 0));
+
+        LOG.info("Agent " + id + " registered " + annotatedTools.size()
+                + " annotated tool(s) + reportIntentTool + searchTool");
 
         SessionConfig sessionConfig = new SessionConfig()
                 .setOnPermissionRequest(PermissionHandler.APPROVE_ALL)
                 .setSystemMessage(systemMessage)
-                .setTools(concatLists(annotatedTools, dbTools, List.of(reportIntentTool)));
+                .setAvailableTools(new ToolSet().addCustom("*").addBuiltIn("web_fetch"))
+                .setTools(concatLists(annotatedTools, List.of(reportIntentTool, searchTool)));
 
         Closeable sessionSubscription = null;
         try {
+            LOG.info("Agent " + id + " creating Copilot session...");
             session = client.createSession(sessionConfig).get();
+            LOG.info("Agent " + id + " Copilot session established and authenticated successfully.");
             sessionSubscription = session.on(event -> {
                 captureSessionEvent(event);
                 uiUpdateSocket.pushDetailUpdate(id);
             });
-            AssistantMessageEvent result = session.sendAndWait(
-                    "<enquiry>" + xmlEscape(enquiry) + "</enquiry>").get();
-            LOG.info("Agent " + id + " completed: " + result.getData().content());
+            String escapedEnquiry = "<enquiry>" + xmlEscape(enquiry) + "</enquiry>";
+            LOG.info("Agent " + id + " calling sendAndWait. Payload: " + escapedEnquiry);
+            AssistantMessageEvent result = session.sendAndWait(escapedEnquiry).get();
+            LOG.info("Agent " + id + " sendAndWait completed successfully.");
+            LOG.info("Agent " + id + " final response: " + result.getData().content());
         } catch (Exception e) {
-            LOG.severe("Agent " + id + " failed: " + e.getMessage());
+            LOG.severe("Agent " + id + " failed: " + e.getClass().getName() + ": " + e.getMessage());
+            if (e.getCause() != null) {
+                LOG.severe("Agent " + id + " root cause: " + e.getCause().getClass().getName() + ": " + e.getCause().getMessage());
+            }
             String msg = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
             errorMessage = msg;
             addEvent(Instant.now(), "session_error", "Session failed", msg);
@@ -159,6 +181,8 @@ public class Agent {
                 }
             }
             finishedAt = Instant.now();
+            LOG.info("Agent " + id + " run() finished. Phase=" + phase
+                    + ", Duration=" + java.time.Duration.between(startedAt, finishedAt));
         }
     }
 
@@ -171,8 +195,10 @@ public class Agent {
         try {
             phase = Phase.valueOf(phaseName.trim().toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException e) {
+            LOG.warning("Agent " + id + " set_current_phase called with unknown phase: " + phaseName);
             return "Unknown phase: " + phaseName;
         }
+        LOG.info("Agent " + id + " phase -> " + phase.name());
         addEvent(Instant.now(), "phase_change", "Phase changed to " + phase.name(), phase.name());
         if (phase.isTerminal()) {
             finishedAt = Instant.now();
@@ -217,6 +243,8 @@ public class Agent {
         String toolCallId = asText(invokeNoArg(data, "toolCallId"));
         String toolName = asText(invokeNoArg(data, "toolName"));
         String toolArgs = asText(invokeNoArg(data, "arguments"));
+        LOG.info("Agent " + id + " tool execution START: " + nullSafe(toolName, "unknown")
+                + " args=" + nullSafe(toolArgs, "(none)"));
         if (toolCallId != null && !toolCallId.isBlank()) {
             toolCallsById.put(toolCallId, new ToolCallSnapshot(toolName, toolArgs));
         }
@@ -246,6 +274,9 @@ public class Agent {
         if (resultContent == null || resultContent.isBlank()) {
             resultContent = asText(result);
         }
+        LOG.info("Agent " + id + " tool execution COMPLETE: " + nullSafe(toolName, "unknown")
+                + " success=" + success
+                + " result=" + (resultContent == null ? "(null)" : resultContent.substring(0, Math.min(resultContent.length(), 200))));
 
         addEvent(Instant.now(),
                 "tool_result",

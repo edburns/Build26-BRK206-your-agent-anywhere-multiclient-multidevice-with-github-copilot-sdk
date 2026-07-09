@@ -3,7 +3,10 @@ package com.microsoft.build.realestate;
 import com.github.copilot.CopilotClient;
 import com.github.copilot.rpc.CopilotClientMode;
 import com.github.copilot.rpc.CopilotClientOptions;
+import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
+import jakarta.annotation.Resource;
+import jakarta.enterprise.concurrent.ContextService;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import java.nio.file.Path;
@@ -12,6 +15,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
 import java.util.logging.Logger;
 
 /**
@@ -29,8 +33,10 @@ public class AppState {
     /** How long (ms) a rejected agent stays visible before being removed. */
     private static final long REJECTED_LINGER_MS = 15_000L;
 
-    private final CopilotClient copilotClient;
     private final Map<String, Agent> agents = new ConcurrentHashMap<>();
+
+    @Resource
+    private ContextService contextService;
 
     @Inject
     private PropertyDatabase propertyDatabase;
@@ -38,12 +44,26 @@ public class AppState {
     @Inject
     private UiUpdateSocket uiUpdateSocket;
 
+    private CopilotClient copilotClient;
+
     public AppState() {
+        // CopilotClient created in init() after @Resource/@Inject fields are available
+    }
+
+    @PostConstruct
+    public void init() {
+        // Build a virtual-thread executor that propagates the container's context
+        // (JNDI, transactions, persistence) so SDK tool callbacks can use JPA.
+        Executor contextualVirtualThreadExecutor = runnable ->
+                Thread.ofVirtual().start(contextService.contextualRunnable(runnable));
+
         String copilotHome = Path.of(System.getProperty("user.home"), ".copilot").toString();
-        this.copilotClient = new CopilotClient(
+        copilotClient = new CopilotClient(
                 new CopilotClientOptions()
                         .setMode(CopilotClientMode.EMPTY)
-                        .setCopilotHome(copilotHome));
+                        .setCopilotHome(copilotHome)
+                        .setExecutor(contextualVirtualThreadExecutor));
+        LOG.info("CopilotClient initialized with context-propagating virtual-thread executor.");
     }
 
     /**
@@ -54,11 +74,14 @@ public class AppState {
      */
     public String submitEnquiry(String enquiry) {
         String agentId = UUID.randomUUID().toString().replace("-", "").substring(0, 8);
+        LOG.info("Submitting enquiry. AgentId=" + agentId + ", Enquiry=" + enquiry);
+
         Agent agent = new Agent(agentId, enquiry, propertyDatabase, uiUpdateSocket);
         agents.put(agentId, agent);
         uiUpdateSocket.pushPhaseChange(agentId);
 
-        Thread.ofVirtual().name("agent-" + agentId).start(() -> {
+        Thread.ofVirtual().name("agent-" + agentId).start(contextService.contextualRunnable(() -> {
+            LOG.info("Virtual thread started for agent " + agentId);
             try {
                 agent.run(copilotClient);
             } finally {
@@ -66,7 +89,7 @@ public class AppState {
                     scheduleRemoval(agentId);
                 }
             }
-        });
+        }));
 
         return agentId;
     }

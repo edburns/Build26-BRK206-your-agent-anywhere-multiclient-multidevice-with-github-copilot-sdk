@@ -7,6 +7,7 @@
         <feature>faces-4.1</feature>
         <feature>cdi-4.1</feature>
         <feature>websocket-2.2</feature>
+        <feature>concurrent-3.1</feature>
     </featureManager>
 
     <httpEndpoint id="defaultHttpEndpoint"
@@ -17,11 +18,16 @@
         <fileset dir="${server.config.dir}/jdbc" includes="h2*.jar" />
     </library>
 
-    <dataSource id="RealEstateDataSource" jndiName="jdbc/realEstateDS">
+    <dataSource id="DefaultDataSource" jndiName="jdbc/realEstateDS">
         <jdbcDriver libraryRef="h2Lib" />
         <properties URL="jdbc:h2:mem:realestatedb;DB_CLOSE_DELAY=-1" />
     </dataSource>
 
     <webApplication location="java-agent-orchestrator.war" contextRoot="/" />
+
+    <!-- Route application INFO+ messages to console so they appear in mvn liberty:dev / liberty:run output -->
+    <logging consoleLogLevel="INFO"
+            consoleSource="message"
+            traceSpecification="com.microsoft.build.*=info" />
 
 </server>
