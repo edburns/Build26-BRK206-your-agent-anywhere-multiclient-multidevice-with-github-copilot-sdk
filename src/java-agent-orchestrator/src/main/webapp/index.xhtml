@@ -3,7 +3,8 @@
       xmlns:h="jakarta.faces.html"
       xmlns:f="jakarta.faces.core"
       xmlns:p="http://primefaces.org/ui"
-      xmlns:ui="jakarta.faces.facelets">
+      xmlns:ui="jakarta.faces.facelets"
+      xmlns:c="jakarta.tags.core">
 <h:head>
     <title>Real Estate Agent Pipeline</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -18,21 +19,30 @@
 
     <h:form id="mainForm">
 
-        <!-- ── Enquiry submission ───────────────────────────────────── -->
-        <div class="submit-form">
-            <h:inputText id="enquiryInput"
-                         value="#{pipelineView.enquiryText}"
-                         styleClass="enquiry-input"
-                         placeholder="Enter a real estate enquiry, e.g. 3-bed house in London under £600k"
-                         required="true"
-                         requiredMessage="Please enter an enquiry." />
-            <p:commandButton id="submitBtn"
-                             value="Submit"
-                             styleClass="submit-btn"
-                             action="#{pipelineView.submitEnquiry}"
-                             update="msgs enquiryInput"
-                             process="@form"
-                             disableOnAjax="true" />
+        <!-- ── Canned query "+" toggle ─────────────────────────────── -->
+        <script type="text/javascript">
+            function toggleCannedQueries() {
+                var popup = document.getElementById('cannedQueryPopup');
+                if (popup) {
+                    popup.style.display = (popup.style.display === 'none') ? 'flex' : 'none';
+                }
+            }
+        </script>
+        <div class="canned-query-container">
+            <div id="cannedQueryPopup" class="canned-query-popup" style="display:none;">
+                <div class="canned-query-title">Sample enquiries</div>
+                <c:forEach items="#{pipelineView.sampleEnquiries}" var="enquiry">
+                    <p:commandLink styleClass="canned-query-item"
+                                   process="@this"
+                                   action="#{pipelineView.submitSampleEnquiry(enquiry)}"
+                                   update="pipelineGrid"
+                                   oncomplete="toggleCannedQueries();">
+                        <h:outputText value="#{enquiry}" />
+                    </p:commandLink>
+                </c:forEach>
+            </div>
+            <button type="button" class="canned-query-btn" onclick="toggleCannedQueries();"
+                    title="Show sample queries">+</button>
         </div>
         <p:messages id="msgs" />
 

@@ -122,3 +122,13 @@ function onPipelineRefreshed() {
         dot.classList.add('pulse-indicator');
     });
 }
+
+/**
+ * Toggles the canned-queries popup visibility.
+ */
+function toggleCannedQueries() {
+    var popup = document.getElementById('cannedQueryPopup');
+    if (popup) {
+        popup.style.display = (popup.style.display === 'none') ? 'flex' : 'none';
+    }
+}

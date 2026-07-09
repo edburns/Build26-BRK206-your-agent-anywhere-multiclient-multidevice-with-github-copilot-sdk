@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.logging.Logger;
+import java.util.Arrays;
 
 /**
  * JSF request-scoped backing bean for index.xhtml.
@@ -19,6 +20,19 @@ import java.util.logging.Logger;
 public class PipelineView {
 
     private static final Logger LOG = Logger.getLogger(PipelineView.class.getName());
+
+    private static final String[] SAMPLE_ENQUIRIES = {
+        "Looking for a 3-bed family home near good schools in the suburbs, budget around $500k",
+        "Need a downtown condo with parking, 1-2 bedrooms, under $350k",
+        "Seeking waterfront property with at least 4 bedrooms for retirement",
+        "Budget max $450k, want to be near Sugar Wharf Podium School",
+        "Want a rural property with land, at least 5 acres, horse-friendly",
+        "asdkjh asdkjhasd this is spam garbage text!!!",
+        "Investor looking for multi-unit rental property near university campus",
+        "Need an accessible single-story home with wheelchair modifications, 2+ bed",
+        "Looking for a fixer-upper Victorian in the historic district",
+        "BUY CRYPTO NOW!!! Not actually looking for property lol"
+    };
 
     @Inject
     private AppState appState;
@@ -85,6 +99,23 @@ public class PipelineView {
         String agentId = appState.submitEnquiry(enquiryText.trim());
         LOG.info("Submitted enquiry, agent ID: " + agentId);
         enquiryText = "";
+    }
+
+    /**
+     * Returns the list of canned sample enquiries for the "+" popup.
+     */
+    public List<String> getSampleEnquiries() {
+        return Arrays.asList(SAMPLE_ENQUIRIES);
+    }
+
+    /**
+     * JSF action method: submits a canned query by text.
+     */
+    public void submitSampleEnquiry(String enquiry) {
+        if (enquiry != null && !enquiry.isBlank()) {
+            String agentId = appState.submitEnquiry(enquiry);
+            LOG.info("Submitted sample enquiry, agent ID: " + agentId);
+        }
     }
 
     /**
