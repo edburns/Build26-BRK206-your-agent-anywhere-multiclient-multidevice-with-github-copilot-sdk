@@ -31,7 +31,6 @@ public class AppState {
 
     private final CopilotClient copilotClient;
     private final Map<String, Agent> agents = new ConcurrentHashMap<>();
-    private volatile String selectedAgentId;
 
     @Inject
     private PropertyDatabase propertyDatabase;
@@ -82,21 +81,6 @@ public class AppState {
         return agents.get(agentId);
     }
 
-    public String getSelectedAgentId() {
-        return selectedAgentId;
-    }
-
-    public void setSelectedAgentId(String selectedAgentId) {
-        this.selectedAgentId = selectedAgentId;
-    }
-
-    public Agent getSelectedAgent() {
-        if (selectedAgentId == null || selectedAgentId.isBlank()) {
-            return null;
-        }
-        return agents.get(selectedAgentId);
-    }
-
     /**
      * Schedules removal of a rejected agent after the linger period.
      * After removal, pushes an agent-removed event so the browser clears the card.
@@ -110,9 +94,6 @@ public class AppState {
                 return;
             }
             agents.remove(agentId);
-            if (agentId.equals(selectedAgentId)) {
-                selectedAgentId = null;
-            }
             uiUpdateSocket.pushAgentRemoved(agentId);
         });
     }

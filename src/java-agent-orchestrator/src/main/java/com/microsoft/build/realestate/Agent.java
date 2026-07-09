@@ -128,7 +128,7 @@ public class Agent {
             session = client.createSession(sessionConfig).get();
             sessionSubscription = session.on(event -> {
                 captureSessionEvent(event);
-                notifyUi();
+                uiUpdateSocket.pushDetailUpdate(id);
             });
             AssistantMessageEvent result = session.sendAndWait(
                     "<enquiry>" + xmlEscape(enquiry) + "</enquiry>").get();

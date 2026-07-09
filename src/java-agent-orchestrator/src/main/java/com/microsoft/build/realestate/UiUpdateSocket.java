@@ -31,6 +31,15 @@ public class UiUpdateSocket {
     }
 
     /**
+     * Pushes a detail-update notification for the given agent to all connected browsers.
+     * Called when new session events are captured (tool calls, assistant messages, etc.)
+     * so only the detail panel refreshes without triggering full-grid card animations.
+     */
+    public void pushDetailUpdate(String agentId) {
+        pushContext.send(agentId + ":detail-updated");
+    }
+
+    /**
      * Pushes a removal notification for the given agent to all connected browsers.
      * Called when a rejected agent is removed from the pipeline after its linger period.
      */

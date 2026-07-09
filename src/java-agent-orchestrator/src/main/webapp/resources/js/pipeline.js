@@ -15,15 +15,27 @@
  * Called by the f:websocket onmessage handler when the server sends a push event.
  *
  * Message format is "agentId:eventType" (e.g. "a3f1b2c4:phase-changed").
- * Per the issue 3.6 spec, the full grid is refreshed on any message regardless of
- * event type — the server-side render reflects the current state for all agents.
- * This avoids complex client-side state management while remaining correct.
+ * - "phase-changed" and "agent-removed": full grid + detail refresh with card animations.
+ * - "detail-updated": lightweight refresh of the detail panel only (no card animations).
  *
  * @param {string} message - Server push message (agentId:eventType).
- *   Known eventTypes: "phase-changed", "agent-removed"
+ *   Known eventTypes: "phase-changed", "agent-removed", "detail-updated"
  */
 function handlePipelinePush(message) {
     console.log('[Pipeline] WebSocket push received:', message);
+
+    var parts = message.split(':');
+    var eventType = parts.length > 1 ? parts[parts.length - 1] : '';
+
+    if (eventType === 'detail-updated') {
+        // Only the detail panel needs refreshing; skip full-grid re-render and animations.
+        if (typeof refreshDetailOnly === 'function') {
+            refreshDetailOnly();
+        } else {
+            console.warn('[Pipeline] refreshDetailOnly() not yet available for detail-updated event.');
+        }
+        return;
+    }
 
     // Trigger server-side re-render via the p:remoteCommand bridge.
     // refreshPipeline() is defined by PrimeFaces as a JS function that

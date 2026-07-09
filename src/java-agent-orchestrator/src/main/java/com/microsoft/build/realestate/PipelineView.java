@@ -23,6 +23,9 @@ public class PipelineView {
     @Inject
     private AppState appState;
 
+    @Inject
+    private SelectionState selectionState;
+
     /** Text bound to the enquiry input field. */
     private String enquiryText;
 
@@ -51,15 +54,15 @@ public class PipelineView {
     }
 
     public Agent getSelectedAgent() {
-        return appState.getSelectedAgent();
+        return selectionState.getSelectedAgent();
     }
 
     public void selectAgent(String agentId) {
-        appState.setSelectedAgentId(agentId);
+        selectionState.setSelectedAgentId(agentId);
     }
 
     public void clearSelectedAgent() {
-        appState.setSelectedAgentId(null);
+        selectionState.setSelectedAgentId(null);
     }
 
     /**

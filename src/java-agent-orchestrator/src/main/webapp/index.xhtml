@@ -48,6 +48,12 @@
                          update="pipelineGrid detailPanel"
                          oncomplete="onPipelineRefreshed()" />
 
+        <!-- refreshDetailOnly: lightweight update for non-phase events (tool calls, assistant messages).
+             Refreshes only the detail panel without animating all agent cards. -->
+        <p:remoteCommand name="refreshDetailOnly"
+                         process="@none"
+                         update="detailPanel" />
+
         <!-- ── Pipeline grid (issue 3.5: static layout, 3.6: animated) ── -->
         <p:outputPanel id="pipelineGrid">
             <div class="pipeline-grid">
