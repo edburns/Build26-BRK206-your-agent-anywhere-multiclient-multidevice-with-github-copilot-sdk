@@ -111,7 +111,7 @@ public class Agent {
         try {
             session = client.createSession(sessionConfig).get();
             AssistantMessageEvent result = session.sendAndWait(
-                    "<enquiry>" + enquiry + "</enquiry>").get();
+                    "<enquiry>" + xmlEscape(enquiry) + "</enquiry>").get();
             LOG.info("Agent " + id + " completed: " + result.getData().content());
         } catch (Exception e) {
             LOG.severe("Agent " + id + " failed: " + e.getMessage());
@@ -149,6 +149,14 @@ public class Agent {
 
     private void notifyUi() {
         uiUpdateSocket.pushPhaseChange(id);
+    }
+
+    private static String xmlEscape(String text) {
+        return text.replace("&", "&amp;")
+                   .replace("<", "&lt;")
+                   .replace(">", "&gt;")
+                   .replace("\"", "&quot;")
+                   .replace("'", "&apos;");
     }
 
     @SafeVarargs
