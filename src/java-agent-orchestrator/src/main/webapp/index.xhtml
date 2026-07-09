@@ -45,14 +45,14 @@
         -->
         <p:remoteCommand name="refreshPipeline"
                          process="@none"
-                         update="pipelineGrid detailPanel"
+                         update="pipelineGrid detailContent"
                          oncomplete="onPipelineRefreshed()" />
 
         <!-- refreshDetailOnly: lightweight update for non-phase events (tool calls, assistant messages).
-             Refreshes only the detail panel without animating all agent cards. -->
+             Targets detailContent (inner panel) to avoid resetting the dialog widget state. -->
         <p:remoteCommand name="refreshDetailOnly"
                          process="@none"
-                         update="detailPanel" />
+                         update="detailContent" />
 
         <!-- ── Pipeline grid (issue 3.5: static layout, 3.6: animated) ── -->
         <p:outputPanel id="pipelineGrid">
@@ -72,7 +72,7 @@
                                 <p:commandLink styleClass="agent-card-link"
                                                process="@this"
                                                action="#{pipelineView.selectAgent(agent.id)}"
-                                               update="detailPanel"
+                                               update="detailContent"
                                                oncomplete="PF('agentDetailDialog').show();">
                                     <!--
                                         data-* attributes tell onPipelineRefreshed() what state
@@ -131,16 +131,18 @@
                   resizable="false"
                   width="560"
                   appendTo="@(body)">
+            <!-- detailContent is the Ajax update target; updating the dialog root would reset widget state -->
+            <p:outputPanel id="detailContent">
             <ui:fragment rendered="#{not empty pipelineView.selectedAgent}">
                 <p:commandButton type="button"
                                  styleClass="ui-button-secondary ui-button-flat"
                                  value="Close"
                                  onclick="PF('agentDetailDialog').hide(); return false;" />
                 <div class="detail-summary">
-                    <div><strong>ID:</strong> #{pipelineView.selectedAgent.id}</div>
-                    <div><strong>Phase:</strong> #{pipelineView.selectedAgent.phase.label}</div>
+                    <div><strong>ID:</strong> <h:outputText value="#{pipelineView.selectedAgent.id}" /></div>
+                    <div><strong>Phase:</strong> <h:outputText value="#{pipelineView.selectedAgent.phase.label}" /></div>
                     <ui:fragment rendered="#{not empty pipelineView.selectedAgent.currentIntent}">
-                        <div><strong>Intent:</strong> #{pipelineView.selectedAgent.currentIntent}</div>
+                        <div><strong>Intent:</strong> <h:outputText value="#{pipelineView.selectedAgent.currentIntent}" /></div>
                     </ui:fragment>
                 </div>
 
@@ -169,6 +171,7 @@
             <ui:fragment rendered="#{empty pipelineView.selectedAgent}">
                 <div class="empty-column-hint">Select an agent card to view details.</div>
             </ui:fragment>
+            </p:outputPanel>
         </p:dialog>
 
     </h:form>

@@ -11,6 +11,7 @@ import com.github.copilot.SystemMessageMode;
 import com.github.copilot.SystemMessageSection;
 import com.github.copilot.generated.AssistantMessageEvent;
 import com.github.copilot.generated.AssistantMessageToolRequest;
+import com.github.copilot.tool.Param;
 import com.github.copilot.tool.ToolDefinition;
 import com.github.copilot.tool.annotation.CopilotTool;
 import com.github.copilot.tool.annotation.CopilotToolParam;
