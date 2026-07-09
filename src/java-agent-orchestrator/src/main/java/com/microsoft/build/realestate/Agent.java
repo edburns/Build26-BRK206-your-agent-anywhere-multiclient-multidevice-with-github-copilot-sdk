@@ -18,7 +18,6 @@ import com.github.copilot.tool.annotation.CopilotToolParam;
 import java.io.Closeable;
 import java.time.Instant;
 import java.util.ArrayDeque;
-import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -283,16 +282,6 @@ public class Agent {
             return b;
         }
         return fallback;
-    }
-
-    private static Collection<?> asIterable(Object value) {
-        if (value instanceof Collection<?> collection) {
-            return collection;
-        }
-        if (value instanceof Object[] array) {
-            return List.of(array);
-        }
-        return List.of();
     }
 
     private static String nullSafe(String value, String fallback) {
