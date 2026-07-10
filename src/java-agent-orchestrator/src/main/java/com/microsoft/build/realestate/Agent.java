@@ -8,7 +8,6 @@ import com.github.copilot.generated.AssistantMessageToolRequest;
 import com.github.copilot.rpc.PermissionHandler;
 import com.github.copilot.rpc.SectionOverride;
 import com.github.copilot.rpc.SectionOverrideAction;
-import com.github.copilot.rpc.BuiltInTools;
 import com.github.copilot.rpc.SessionConfig;
 import com.github.copilot.rpc.SystemMessageConfig;
 import com.github.copilot.rpc.SystemMessageSections;

@@ -3,8 +3,7 @@
       xmlns:h="jakarta.faces.html"
       xmlns:f="jakarta.faces.core"
       xmlns:p="http://primefaces.org/ui"
-      xmlns:ui="jakarta.faces.facelets"
-      xmlns:c="jakarta.tags.core">
+      xmlns:ui="jakarta.faces.facelets">
 <h:head>
     <title>Real Estate Agent Pipeline</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -23,7 +22,7 @@
         <div class="canned-query-container">
             <div id="cannedQueryPopup" class="canned-query-popup" style="display:none;">
                 <div class="canned-query-title">Sample enquiries</div>
-                <c:forEach items="#{pipelineView.sampleEnquiries}" var="enquiry">
+                <ui:repeat value="#{pipelineView.sampleEnquiries}" var="enquiry">
                     <p:commandLink styleClass="canned-query-item"
                                    process="@this"
                                    action="#{pipelineView.submitSampleEnquiry(enquiry)}"
@@ -31,7 +30,7 @@
                                    oncomplete="toggleCannedQueries();">
                         <h:outputText value="#{enquiry}" />
                     </p:commandLink>
-                </c:forEach>
+                </ui:repeat>
             </div>
             <button type="button" class="canned-query-btn" onclick="toggleCannedQueries();"
                     title="Show sample queries">+</button>
