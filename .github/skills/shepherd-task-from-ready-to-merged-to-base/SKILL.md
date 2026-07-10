@@ -102,6 +102,8 @@ When `jtbdtask-pr-comments` has been identified, proceed.
 
 ### Step 3: Determine N (number of comments)
 
+❌❌❌ DO NOT TAKE ANY ACTION ON COMMENTS ALREADY MARKED **Resolved**. ❌❌❌
+
 Extract the number of comments from the **Comments generated:** line in the findings header. There will be exactly N individual review comments in this batch to address.
 
 ### Step 4: Fetch upstream and set up local worktree
