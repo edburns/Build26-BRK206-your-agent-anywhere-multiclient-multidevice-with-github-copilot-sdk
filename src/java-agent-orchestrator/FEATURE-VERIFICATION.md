@@ -136,15 +136,19 @@ entries) and surfaced in the detail panel on the right-hand side of the UI.
 which is the headless server-side mode where no browser window is spawned:
 
 ```java
-// AppState constructor
+// AppState.init() (@PostConstruct)
 String copilotHome = System.getenv("COPILOT_HOME");
 if (copilotHome == null || copilotHome.isBlank()) {
     copilotHome = Path.of(System.getProperty("user.home"), ".copilot").toString();
 }
-this.copilotClient = new CopilotClient(
+Executor contextualVirtualThreadExecutor = runnable ->
+        Thread.ofVirtual().start(contextService.contextualRunnable(runnable));
+
+copilotClient = new CopilotClient(
         new CopilotClientOptions()
                 .setMode(CopilotClientMode.EMPTY)
-                .setCopilotHome(copilotHome));
+                .setCopilotHome(copilotHome)
+                .setExecutor(contextualVirtualThreadExecutor));
 ```
 
 `@PreDestroy` in `AppState` calls `copilotClient.close()` to clean up on
