@@ -1,0 +1,593 @@
+/*
+ * pipeline.css — Real Estate Agent Pipeline UI
+ * Dark theme, grid layout mirroring the C# Blazor demo.
+ * CSS transitions animate agent card state changes (issue 3.6).
+ */
+
+/* ── Page & layout ───────────────────────────────────────────────── */
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #111113;
+    color: #e4e4e7;
+    margin: 0;
+    padding: 1.5rem;
+}
+
+h1 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #f4f4f5;
+    margin-bottom: 0.25rem;
+}
+
+.subtitle {
+    font-size: 0.875rem;
+    color: #71717a;
+    margin-bottom: 1.5rem;
+}
+
+/* ── Enquiry submission form ─────────────────────────────────────── */
+
+.submit-form {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+    max-width: 700px;
+}
+
+.enquiry-input {
+    flex: 1;
+    padding: 0.625rem 0.875rem;
+    background: #27272a;
+    border: 1px solid #3f3f46;
+    border-radius: 0.5rem;
+    color: #f4f4f5;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.enquiry-input:focus {
+    border-color: #6366f1;
+}
+
+.submit-btn {
+    padding: 0.625rem 1.25rem;
+    background: #6366f1;
+    border: none;
+    border-radius: 0.5rem;
+    color: white;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.submit-btn:hover {
+    background: #4f46e5;
+}
+
+/* ── Canned query "+" button and popup ───────────────────────────── */
+
+.canned-query-container {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 1.5rem;
+    position: relative;
+}
+
+.canned-query-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 2px solid #3f3f46;
+    background: #27272a;
+    color: #e4e4e7;
+    font-size: 1.75rem;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, border-color 0.2s;
+    flex-shrink: 0;
+}
+
+.canned-query-btn:hover {
+    background: #3f3f46;
+    border-color: #6366f1;
+}
+
+.canned-query-popup {
+    position: absolute;
+    top: 0;
+    right: 56px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    background: #1c1c1e;
+    border: 1px solid #3f3f46;
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    width: 340px;
+    max-height: 400px;
+    overflow-y: auto;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    z-index: 100;
+}
+
+.canned-query-title {
+    font-size: 0.75rem;
+    color: #71717a;
+    margin-bottom: 0.25rem;
+    padding: 0 0.5rem;
+}
+
+.canned-query-item {
+    display: block;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.35rem;
+    color: #e4e4e7;
+    font-size: 0.85rem;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.canned-query-item:hover {
+    background: #3f3f46;
+    color: #f4f4f5;
+}
+
+/* ── Pipeline layout (two-column: lifecycle left, end-states right) ── */
+
+.pipeline-layout {
+    max-width: 750px;
+}
+
+.pipeline-col-headers {
+    margin-bottom: 0.75rem;
+}
+
+.col-title {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #a1a1aa;
+    font-weight: 600;
+}
+
+.pipeline-row {
+    display: grid;
+    grid-template-columns: 1fr 60px 1fr;
+    align-items: start;
+    gap: 0;
+}
+
+.lifecycle-col,
+.endstate-col {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-width: 200px;
+}
+
+.endstate-col {
+    margin-top: 1.5rem; /* offset slightly below, matching Blazor style */
+}
+
+/* Vertical arrow between lifecycle rows */
+.pipeline-arrow-down {
+    display: flex;
+    justify-content: center;
+    padding: 0.25rem 0;
+    /* Only span the first column */
+    max-width: calc(50% - 30px);
+}
+
+.arrow-line {
+    width: 2px;
+    height: 32px;
+    background: #52525b;
+    position: relative;
+}
+
+.arrow-line::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 6px solid #52525b;
+}
+
+/* Horizontal arrow from lifecycle to end-state */
+.arrow-col {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 60px;
+    padding-top: 1.5rem;
+}
+
+.arrow-right {
+    width: 36px;
+    height: 2px;
+    background: #52525b;
+    position: relative;
+}
+
+.arrow-right::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    border-top: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+    border-left: 6px solid #52525b;
+}
+
+/* ── Phase column (shared between lifecycle and endstate) ───────── */
+
+.phase-column {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-width: 160px;
+}
+
+.phase-header {
+    padding: 0.5rem 0.75rem;
+    background: #18181b;
+    border: 1px solid #3f3f46;
+    border-radius: 0.5rem 0.5rem 0 0;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #a1a1aa;
+}
+
+.phase-header.done {
+    color: #34d399;
+    border-color: #065f46;
+}
+
+.phase-header.rejected {
+    color: #f87171;
+    border-color: #7f1d1d;
+}
+
+.phase-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-height: 80px;
+    padding: 0.5rem;
+    background: #18181b;
+    border: 1px solid #27272a;
+    border-top: none;
+    border-radius: 0 0 0.5rem 0.5rem;
+}
+
+/* ── Agent card — main deliverable for issue 3.6 ─────────────────── */
+
+.agent-card {
+    position: relative;
+    padding: 0.625rem 0.75rem;
+    background: #27272a;
+    border: 1.5px solid #3f3f46;
+    border-radius: 0.5rem;
+    user-select: none;
+
+    /* CSS transitions — key deliverable for 3.6 */
+    transition: border-color 0.5s, background-color 0.5s, transform 0.3s;
+}
+
+.agent-card-link {
+    text-decoration: none;
+}
+
+.agent-card:hover {
+    background: #2d2d30;
+}
+
+/* Active state: agent is currently processing */
+.agent-card.active {
+    border-color: #f59e0b;
+    box-shadow: 0 0 12px rgba(245, 158, 11, 0.3);
+}
+
+/* Completed state: agent has finished successfully */
+.agent-card.completed {
+    border-color: #10b981;
+}
+
+/* Rejected state: agent was rejected */
+.agent-card.rejected {
+    border-color: #ef4444;
+    opacity: 0.7;
+}
+
+/* Failed state: agent session threw an unexpected error */
+.agent-card.failed {
+    border-color: #dc2626;
+    box-shadow: 0 0 10px rgba(220, 38, 38, 0.4);
+    opacity: 0.85;
+}
+
+/* Transitioning: applied briefly when a card changes state */
+.agent-card.transitioning {
+    transform: scale(1.03);
+}
+
+/* ── Agent card content ──────────────────────────────────────────── */
+
+.agent-id {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #71717a;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.25rem;
+}
+
+.agent-enquiry {
+    font-size: 0.8rem;
+    color: #d4d4d8;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 100%;
+}
+
+.agent-intent {
+    font-size: 0.75rem;
+    color: #71717a;
+    margin-top: 0.25rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ── Status dot + pulse indicator (key deliverable for 3.6) ─────── */
+
+.status-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #52525b;
+    margin-right: 0.4rem;
+    vertical-align: middle;
+    flex-shrink: 0;
+}
+
+.status-dot.active-dot {
+    background: #f59e0b;
+}
+
+.status-dot.done-dot {
+    background: #10b981;
+}
+
+.status-dot.rejected-dot {
+    background: #ef4444;
+}
+
+.status-dot.failed-dot {
+    background: #dc2626;
+}
+
+/* Pulse animation for the active agent's status indicator */
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+.pulse-indicator {
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* ── Empty column placeholder ────────────────────────────────────── */
+
+.empty-column-hint {
+    font-size: 0.75rem;
+    color: #3f3f46;
+    text-align: center;
+    padding: 0.5rem 0;
+    font-style: italic;
+}
+
+/* ── Page grid (pipeline + dashboard) ────────────────────────────── */
+
+.page-grid {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 2rem;
+    align-items: start;
+}
+
+/* ── Dashboard ───────────────────────────────────────────────────── */
+
+.dashboard {
+    background: #f4f4f5;
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    min-width: 180px;
+}
+
+.dashboard-title {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: #71717a;
+    margin-bottom: 1rem;
+}
+
+.dashboard-item {
+    display: flex;
+    gap: 0.75rem;
+    align-items: stretch;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #e4e4e7;
+}
+
+.dashboard-item:last-child {
+    border-bottom: none;
+}
+
+.dashboard-bar {
+    width: 4px;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+.dashboard-bar.purple { background: #8b5cf6; }
+.dashboard-bar.green  { background: #10b981; }
+.dashboard-bar.red    { background: #ef4444; }
+
+.dashboard-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.dashboard-count {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #18181b;
+    line-height: 1;
+}
+
+.dashboard-label {
+    font-size: 0.8rem;
+    color: #71717a;
+    margin-top: 0.2rem;
+}
+
+/* ── Agent detail panel (issue 3.7) ───────────────────────────────── */
+
+.detail-summary {
+    display: grid;
+    gap: 0.35rem;
+    margin: 0.75rem 0 1rem;
+    color: #e4e4e7;
+    font-size: 0.9rem;
+}
+
+.detail-events {
+    max-height: 360px;
+    overflow-y: auto;
+    border: 1px solid #27272a;
+    border-radius: 0.5rem;
+    background: #18181b;
+    padding: 0.5rem;
+}
+
+.event-row {
+    border-bottom: 1px solid #27272a;
+    padding: 0.5rem;
+}
+
+.event-row:last-child {
+    border-bottom: none;
+}
+
+.event-head {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.event-time {
+    color: #a1a1aa;
+    font-size: 0.7rem;
+}
+
+.event-type {
+    font-size: 0.65rem;
+    padding: 0.15rem 0.4rem;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    background: #3f3f46;
+    color: #e4e4e7;
+}
+
+.event-type-assistant {
+    background: #3730a3;
+}
+
+.event-type-tool-call {
+    background: #92400e;
+}
+
+.event-type-tool-result {
+    background: #166534;
+}
+
+.event-type-phase {
+    background: #155e75;
+}
+
+.event-type-error {
+    background: #991b1b;
+}
+
+.event-summary {
+    margin-top: 0.35rem;
+    color: #f4f4f5;
+    font-size: 0.85rem;
+}
+
+.event-detail {
+    margin-top: 0.35rem;
+    margin-bottom: 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: #d4d4d8;
+    font-size: 0.75rem;
+    background: #111113;
+    border: 1px solid #27272a;
+    border-radius: 0.35rem;
+    padding: 0.5rem;
+}
+
+.final-report {
+    margin-top: 0.75rem;
+}
+
+.final-report-title {
+    font-size: 0.75rem;
+    color: #a1a1aa;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.3rem;
+}
+
+/* ── Error display on agent cards ───────────────────────────────── */
+
+.agent-error-msg {
+    font-size: 0.72rem;
+    color: #fca5a5;
+    margin-top: 0.25rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ── Error display in detail panel ──────────────────────────────── */
+
+.detail-error {
+    color: #fca5a5;
+    background: #450a0a;
+    border: 1px solid #7f1d1d;
+    border-radius: 0.35rem;
+    padding: 0.4rem 0.6rem;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}

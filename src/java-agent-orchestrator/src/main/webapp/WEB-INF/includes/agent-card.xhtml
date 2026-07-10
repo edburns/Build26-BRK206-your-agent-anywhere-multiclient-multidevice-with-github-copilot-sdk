@@ -1,0 +1,40 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+               xmlns:h="jakarta.faces.html"
+               xmlns:f="jakarta.faces.core"
+               xmlns:p="http://primefaces.org/ui"
+               xmlns:ui="jakarta.faces.facelets">
+    <p:commandLink styleClass="agent-card-link"
+                   process="@this"
+                   action="#{pipelineView.selectAgent(agent.id)}"
+                   update="detailContent"
+                   oncomplete="PF('agentDetailDialog').show();">
+        <div class="#{pipelineView.getAgentCardClass(agent)}"
+             data-agent-id="#{agent.id}"
+             data-active="#{agent.active}"
+             data-done="#{agent.done}"
+             data-rejected="#{agent.rejected}"
+             data-failed="#{agent.failed}"
+             title="#{agent.failed ? agent.errorMessage : agent.enquiry}">
+
+            <div style="display:flex; align-items:center; margin-bottom:0.25rem;">
+                <span class="#{pipelineView.getStatusDotClass(agent)}"></span>
+                <span class="agent-id">#{agent.id}</span>
+            </div>
+
+            <div class="agent-enquiry" title="#{agent.enquiry}">
+                <h:outputText value="#{agent.enquiry}" />
+            </div>
+
+            <ui:fragment rendered="#{not empty agent.currentIntent}">
+                <div class="agent-intent">
+                    <h:outputText value="#{agent.currentIntent}" />
+                </div>
+            </ui:fragment>
+            <ui:fragment rendered="#{agent.failed}">
+                <div class="agent-error-msg">
+                    ⚠ <h:outputText value="#{agent.errorMessage}" />
+                </div>
+            </ui:fragment>
+        </div>
+    </p:commandLink>
+</ui:composition>
