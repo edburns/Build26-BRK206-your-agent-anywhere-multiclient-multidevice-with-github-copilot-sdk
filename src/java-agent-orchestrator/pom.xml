@@ -35,7 +35,7 @@
         <dependency>
             <groupId>com.github</groupId>
             <artifactId>copilot-sdk-java</artifactId>
-            <version>1.0.7-SNAPSHOT</version>
+            <version>1.0.7-preview.1</version>
         </dependency>
         <dependency>
             <groupId>org.primefaces</groupId>
@@ -73,7 +73,7 @@
                         <path>
                             <groupId>com.github</groupId>
                             <artifactId>copilot-sdk-java</artifactId>
-                            <version>1.0.7-SNAPSHOT</version>
+                            <version>1.0.7-preview.1</version>
                         </path>
                     </annotationProcessorPaths>
                 </configuration>
