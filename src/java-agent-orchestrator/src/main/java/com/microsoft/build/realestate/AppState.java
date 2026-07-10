@@ -57,7 +57,10 @@ public class AppState {
         Executor contextualVirtualThreadExecutor = runnable ->
                 Thread.ofVirtual().start(contextService.contextualRunnable(runnable));
 
-        String copilotHome = Path.of(System.getProperty("user.home"), ".copilot").toString();
+        String copilotHome = System.getenv("COPILOT_HOME");
+        if (copilotHome == null || copilotHome.isBlank()) {
+            copilotHome = Path.of(System.getProperty("user.home"), ".copilot").toString();
+        }
         copilotClient = new CopilotClient(
                 new CopilotClientOptions()
                         .setMode(CopilotClientMode.EMPTY)

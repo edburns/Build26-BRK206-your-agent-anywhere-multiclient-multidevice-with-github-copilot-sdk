@@ -123,24 +123,14 @@ public class Agent {
         LOG.info("Agent " + id + " registering tools...");
         List<ToolDefinition> annotatedTools = ToolDefinition.fromObject(this);
 
-        // search_properties — defined as a lambda because PropertyDatabase is a CDI
-        // proxy (@ApplicationScoped) and ToolDefinition.fromObject() cannot resolve
-        // the generated $$CopilotToolMeta through the WELD client proxy class.
-        ToolDefinition searchTool = ToolDefinition
-                .from("search_properties",
-                      "Searches the real estate listings database. Returns up to 10 matching properties.",
-                      Param.of(String.class, "type", "Property type substring (e.g. 'flat', 'house', 'bungalow'). Empty string for no filter."),
-                      Param.of(String.class, "city", "City substring (e.g. 'London', 'Bristol'). Empty string for no filter."),
-                      (String type, String city) -> propertyDatabase.searchProperties(type, city, 0, 0));
-
         LOG.info("Agent " + id + " registered " + annotatedTools.size()
-                + " annotated tool(s) + reportIntentTool + searchTool");
+                + " annotated tool(s) + reportIntentTool");
 
         SessionConfig sessionConfig = new SessionConfig()
                 .setOnPermissionRequest(PermissionHandler.APPROVE_ALL)
                 .setSystemMessage(systemMessage)
                 .setAvailableTools(new ToolSet().addCustom("*").addBuiltIn("web_fetch"))
-                .setTools(concatLists(annotatedTools, List.of(reportIntentTool, searchTool)));
+                .setTools(concatLists(annotatedTools, List.of(reportIntentTool)));
 
         Closeable sessionSubscription = null;
         try {
@@ -205,6 +195,20 @@ public class Agent {
         }
         notifyUi();
         return "Phase set to " + phase.getLabel();
+    }
+
+    @CopilotTool(value = "Searches the real estate listings database. Returns up to 10 matching properties.",
+                 name = "search_properties")
+    public List<Property> searchProperties(
+            @CopilotToolParam("Property type substring (e.g. 'flat', 'house', 'bungalow'). Empty string for no filter.")
+            String type,
+            @CopilotToolParam("City substring (e.g. 'London', 'Bristol'). Empty string for no filter.")
+            String city,
+            @CopilotToolParam("Minimum number of bedrooms (0 for no minimum).")
+            int minBedrooms,
+            @CopilotToolParam("Maximum price in GBP (0 for no maximum).")
+            double maxPriceGbp) {
+        return propertyDatabase.searchProperties(type, city, minBedrooms, maxPriceGbp);
     }
 
     private void captureSessionEvent(Object event) {

@@ -28,7 +28,7 @@ It also records the test scenarios used to verify end-to-end behaviour.
 
 ### Feature 1 — `@CopilotTool` annotation (ADR-005)
 
-Two classes use `@CopilotTool` to expose methods as SDK tools:
+`Agent.java` uses `@CopilotTool` to expose methods as SDK tools:
 
 **`Agent.java`** — `setCurrentPhase` method:
 ```java
@@ -38,11 +38,10 @@ public String setCurrentPhase(
         @CopilotToolParam("The phase to transition to ...") String phaseName) { ... }
 ```
 
-**`PropertyDatabase.java`** — `searchProperties` method:
+**`Agent.java`** — `searchProperties` method (delegates to `PropertyDatabase`):
 ```java
 @CopilotTool(value = "Searches the real estate listings database. Returns up to 10 matching properties.",
              name = "search_properties")
-@Transactional
 public List<Property> searchProperties(
         @CopilotToolParam("Property type substring ...") String type,
         @CopilotToolParam("City substring ...") String city,
@@ -50,8 +49,8 @@ public List<Property> searchProperties(
         @CopilotToolParam("Maximum price in GBP ...") double maxPriceGbp) { ... }
 ```
 
-Tools are registered via `ToolDefinition.fromObject(this)` and
-`ToolDefinition.fromObject(propertyDatabase)` in `Agent.run()`.
+Tools are registered in `Agent.run()` via `ToolDefinition.fromObject(this)`,
+which includes both `set_current_phase` and `search_properties`.
 
 ---
 
@@ -138,7 +137,10 @@ which is the headless server-side mode where no browser window is spawned:
 
 ```java
 // AppState constructor
-String copilotHome = Path.of(System.getProperty("user.home"), ".copilot").toString();
+String copilotHome = System.getenv("COPILOT_HOME");
+if (copilotHome == null || copilotHome.isBlank()) {
+    copilotHome = Path.of(System.getProperty("user.home"), ".copilot").toString();
+}
 this.copilotClient = new CopilotClient(
         new CopilotClientOptions()
                 .setMode(CopilotClientMode.EMPTY)
@@ -214,7 +216,7 @@ ToolDefinition reportIntentTool = ToolDefinition
 ```
 
 This also serves as the example of the ADR-006 inline lambda style (contrast with
-ADR-005 annotation style used for `set_current_phase` and `search_properties`).
+ADR-005 annotation style used for `set_current_phase` and `search_properties` in `Agent.java`).
 
 ---
 
