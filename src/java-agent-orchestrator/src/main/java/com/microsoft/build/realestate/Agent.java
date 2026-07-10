@@ -170,7 +170,15 @@ public class Agent {
                     LOG.warning("Error closing CopilotSession for agent " + id + ": " + e.getMessage());
                 }
             }
-            finishedAt = Instant.now();
+            Instant endTime = Instant.now();
+            if (!phase.isTerminal()) {
+                phase = Phase.REJECTED_GARBAGE;
+                addEvent(endTime, "phase_change", "Phase changed to " + phase.name(), phase.name());
+                notifyUi();
+            }
+            if (finishedAt == null) {
+                finishedAt = endTime;
+            }
             LOG.info("Agent " + id + " run() finished. Phase=" + phase
                     + ", Duration=" + java.time.Duration.between(startedAt, finishedAt));
         }
