@@ -84,12 +84,12 @@ Submit multiple enquiries simultaneously to see concurrent virtual-thread agents
 |---|---------|------|---------------|
 | 1 | `@CopilotTool` annotation — ADR-005 ergonomic tool definition | `Agent.java` | `setCurrentPhase()` |
 | 2 | `ToolDefinition.from(...)` lambda — ADR-006 inline tool | `Agent.java` | `reportIntentTool` |
-| 3 | `ToolDefinition.fromObject(...)` — cross-class annotation tools | `Agent.java` | `dbTools` / `PropertyDatabase.searchProperties()` |
+| 3 | `ToolDefinition.fromObject(...)` — annotation-tool registration | `Agent.java` | `ToolDefinition.fromObject(this)` |
 | 4 | `.overridesBuiltInTool(true)` — tool override | `Agent.java` | `reportIntentTool.overridesBuiltInTool(true)` |
 | 5 | `SessionConfig.setSystemMessage(...)` — `CUSTOMIZE` mode | `Agent.java` | `Agent.run()` → `SystemMessageMode.CUSTOMIZE` |
 | 6 | `session.sendAndWait(...)` — agentic loop | `Agent.java` | `session.sendAndWait(...).get()` |
 | 7 | `session.on(handler)` — real-time session events | `Agent.java` | `session.on(event -> captureSessionEvent(...))` |
-| 8 | `CopilotClientMode.EMPTY` — headless server-side client | `AppState.java` | `AppState()` constructor |
+| 8 | `CopilotClientMode.EMPTY` — headless server-side client | `AppState.java` | `init()` |
 | 9 | `PermissionHandler.APPROVE_ALL` — permission handling | `Agent.java` | `sessionConfig.setOnPermissionRequest(...)` |
 
 > **`web_fetch`** built-in tool is available to all sessions via the default toolset; the

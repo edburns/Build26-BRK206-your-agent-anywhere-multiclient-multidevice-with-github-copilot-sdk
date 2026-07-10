@@ -1,7 +1,5 @@
 package com.microsoft.build.realestate;
 
-import com.github.copilot.tool.CopilotTool;
-import com.github.copilot.tool.CopilotToolParam;
 import com.microsoft.build.realestate.data.PropertyRepository;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -13,7 +11,7 @@ import java.util.logging.Logger;
 /**
  * CDI bean that manages the real-estate property database.
  * Seeds the database with sample listings on startup.
- * Exposes a searchProperties tool for the Copilot SDK agents.
+ * Provides search capability used by the agent's search_properties tool.
  */
 @ApplicationScoped
 public class PropertyDatabase {
@@ -58,13 +56,11 @@ public class PropertyDatabase {
      * @param maxPriceGbp Maximum price in GBP; 0 = no maximum
      * @return Matching properties, up to 10 results
      */
-    @CopilotTool(value = "Searches the real estate listings database. Returns up to 10 matching properties.",
-                 name = "search_properties")
     public List<Property> searchProperties(
-            @CopilotToolParam("Property type substring (e.g. 'flat', 'house', 'bungalow')") String type,
-            @CopilotToolParam("City substring (e.g. 'London', 'Bristol')") String city,
-            @CopilotToolParam("Minimum number of bedrooms (0 for no minimum)") int minBedrooms,
-            @CopilotToolParam("Maximum price in GBP (0 for no maximum)") double maxPriceGbp) {
+            String type,
+            String city,
+            int minBedrooms,
+            double maxPriceGbp) {
 
         LOG.info("searchProperties called: type=" + type + ", city=" + city
                 + ", minBedrooms=" + minBedrooms + ", maxPriceGbp=" + maxPriceGbp);

@@ -74,13 +74,13 @@ AssistantMessageEvent result = session.sendAndWait(
 
 ```java
 SystemMessageConfig systemMessage = new SystemMessageConfig()
-        .setMode(SystemMessageMode.CUSTOMIZE);
-systemMessage.getSections().put(SystemMessageSections.IDENTITY,
-        new SectionOverride()
-                .setAction(SectionOverrideAction.REPLACE)
-                .setContent("""
-                    You are part of a real estate recommendation system. ...
-                    """));
+        .setMode(SystemMessageMode.CUSTOMIZE)
+        .setSections(Map.of(SystemMessageSections.IDENTITY,
+                new SectionOverride()
+                        .setAction(SectionOverrideAction.REPLACE)
+                        .setContent("""
+                            You are part of a real estate recommendation system. ...
+                            """)));
 ```
 
 The prompt instructs the model about the full workflow (VALIDATING → SEARCHING →

@@ -34,9 +34,9 @@ import java.util.logging.Logger;
  *
  * <p>Demonstrates three Copilot SDK tool definition styles:
  * <ol>
- *   <li>{@code @CopilotTool} annotation — {@code setCurrentPhase}</li>
+ *   <li>{@code @CopilotTool} annotations — {@code setCurrentPhase} and {@code searchProperties}</li>
  *   <li>{@code ToolDefinition.from(...)} lambda — {@code reportIntent}</li>
- *   <li>{@code ToolDefinition.fromObject(...)} — {@code searchProperties} in {@link PropertyDatabase}</li>
+ *   <li>{@code ToolDefinition.fromObject(...)} registration — annotated tools on this class</li>
  * </ol>
  */
 public class Agent {
