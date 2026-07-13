@@ -9,6 +9,8 @@ import jakarta.annotation.Resource;
 import jakarta.enterprise.concurrent.ContextService;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import java.io.File;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
@@ -16,6 +18,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -58,12 +61,20 @@ public class AppState {
                 Thread.ofVirtual().start(contextService.contextualRunnable(runnable));
 
         String copilotHome = Path.of(System.getProperty("user.home"), ".copilot").toString();
-        copilotClient = new CopilotClient(
-                new CopilotClientOptions()
-                        .setMode(CopilotClientMode.EMPTY)
-                        .setCopilotHome(copilotHome)
-                        .setExecutor(contextualVirtualThreadExecutor));
+        CopilotClientOptions copilotClientOptions = new CopilotClientOptions()
+                .setMode(CopilotClientMode.EMPTY)
+                .setCopilotHome(copilotHome)
+                .setExecutor(contextualVirtualThreadExecutor);
+        copilotClient = new CopilotClient(copilotClientOptions);
         LOG.info("CopilotClient initialized with context-propagating virtual-thread executor.");
+        try {
+            String cliVersion = copilotClient.getStatus().get().getVersion();
+            Path resolvedCliPath = resolveCliPath(copilotClientOptions.getCliPath());
+            LOG.info("Copilot CLI version=%s, executable=%s"
+                    .formatted(cliVersion, resolvedCliPath));
+        } catch (Exception e) {
+            LOG.log(Level.WARNING, "Unable to read Copilot CLI status: " + e.getMessage(), e);
+        }
     }
 
     /**
@@ -128,5 +139,22 @@ public class AppState {
         } catch (Exception e) {
             LOG.warning("Error closing CopilotClient: " + e.getMessage());
         }
+    }
+
+    private static Path resolveCliPath(String configuredPath) {
+        if (configuredPath != null) {
+            return Path.of(configuredPath);
+        }
+        String pathValue = System.getenv("PATH");
+        if (pathValue == null || pathValue.isBlank()) {
+            return null;
+        }
+        for (String dir : pathValue.split(File.pathSeparator)) {
+            Path candidate = Path.of(dir, "copilot");
+            if (Files.isExecutable(candidate)) {
+                return candidate;
+            }
+        }
+        return null;
     }
 }
