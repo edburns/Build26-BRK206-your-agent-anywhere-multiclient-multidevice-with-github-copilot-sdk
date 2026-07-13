@@ -154,10 +154,33 @@ public String setCurrentPhase(
 
 The `@CopilotTool` annotation declares the method as a tool the model can call. The `@CopilotToolParam` annotation describes each parameter so the model knows what to pass. The SDK handles all the JSON Schema generation, argument parsing, and dispatch — you just write a normal Java method.
 
-> **Note from author to Copilot**: Replace this note with documentation on the following necessary preconditions for using tools. Both of these are shown in the POM `BRK206-01/src/java-agent-orchestrator/pom.xml` in the `maven-compiler-plugin` configuration.
-> 1. The need to enable experimental features.  Include the text: "For more details on the experimental APIs see [Copilot SDK documentation](https://github.com/github/copilot-sdk/tree/main/java#using-experimental-apis).
-> 2. The need to enable the annotation procsesor.
-> Explain the two things and then pull the relevant excerpt from the POM: `BRK206-01/src/java-agent-orchestrator/pom.xml`. 
+**Two build prerequisites for `@CopilotTool`.** The annotation-based tool API is currently an experimental feature of the SDK, so you need to configure two things in your Maven build:
+
+1. **Enable experimental APIs** — pass `-Acopilot.experimental.allowed=true` to the compiler. Without this flag, the annotation processor will refuse to generate the tool metadata. For more details on the experimental APIs see [Copilot SDK documentation](https://github.com/github/copilot-sdk/tree/main/java#using-experimental-apis).
+
+2. **Register the annotation processor** — add the SDK as an `annotationProcessorPath` so the compiler can find the `@CopilotTool` processor and generate the `$$CopilotToolMeta` classes at compile time.
+
+Both are configured in the `maven-compiler-plugin`:
+
+```xml
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-compiler-plugin</artifactId>
+    <version>3.15.0</version>
+    <configuration>
+        <compilerArgs>
+            <arg>-Acopilot.experimental.allowed=true</arg>
+        </compilerArgs>
+        <annotationProcessorPaths>
+            <path>
+                <groupId>com.github</groupId>
+                <artifactId>copilot-sdk-java</artifactId>
+                <version>1.0.7-preview.1</version>
+            </path>
+        </annotationProcessorPaths>
+    </configuration>
+</plugin>
+```
 
 To register all annotated tools from an object:
 
