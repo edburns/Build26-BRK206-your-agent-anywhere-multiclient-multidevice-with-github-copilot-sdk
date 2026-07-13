@@ -22,7 +22,7 @@ customization, and real-time WebSocket push to update a pipeline dashboard in th
 | Runtime | OpenLiberty 26.0.0.5 |
 | Platform | Jakarta EE 11 — Faces 4.1, CDI 4.1, WebSocket 2.2, Data 1.0, Persistence 3.2 |
 | UI framework | PrimeFaces 15.0.16 (jakarta classifier) |
-| AI orchestration | Copilot SDK for Java 1.0.7-SNAPSHOT |
+| AI orchestration | Copilot SDK for Java 1.0.7-preview.1 |
 | Database | H2 in-memory (10 seed property listings) |
 | Build | Maven 3.9+ with Liberty Maven Plugin 3.12.0 |
 | JDK | 25+ (virtual threads used for concurrent agent sessions) |
