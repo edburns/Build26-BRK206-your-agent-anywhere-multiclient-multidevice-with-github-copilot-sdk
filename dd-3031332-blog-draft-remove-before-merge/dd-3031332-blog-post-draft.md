@@ -113,11 +113,11 @@ graph TB
     subgraph Browser
         UI[Pipeline Dashboard]
     end
-    subgraph OpenLiberty
-        AS[AppState<br/>@ApplicationScoped]
-        CC[CopilotClient<br/>EMPTY mode]
-        AG1[Agent 1<br/>Virtual Thread]
-        AG2[Agent 2<br/>Virtual Thread]
+    subgraph "OpenLiberty (Jakarta EE 11)"
+        AS["AppState — @ApplicationScoped"]
+        CC["CopilotClient — EMPTY mode"]
+        AG1["Agent 1 — Virtual Thread"]
+        AG2["Agent 2 — Virtual Thread"]
         WS[WebSocket Push]
     end
     UI -->|Submit enquiry| AS
