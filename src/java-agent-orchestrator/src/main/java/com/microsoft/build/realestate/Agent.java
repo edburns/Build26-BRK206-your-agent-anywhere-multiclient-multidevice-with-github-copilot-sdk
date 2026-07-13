@@ -27,6 +27,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Represents a single real-estate enquiry agent session.
@@ -43,6 +45,8 @@ public class Agent {
 
     private static final Logger LOG = Logger.getLogger(Agent.class.getName());
     private static final int MAX_EVENTS = 100;
+        private static final Pattern PHASE_MARKER_PATTERN =
+            Pattern.compile("\\[phase:\\s*([A-Z_]+)", Pattern.CASE_INSENSITIVE);
 
     private final String id;
     private final String enquiry;
@@ -155,7 +159,20 @@ public class Agent {
             LOG.info("Agent " + id + " calling sendAndWait. Payload: " + escapedEnquiry);
             AssistantMessageEvent result = session.sendAndWait(escapedEnquiry).get();
             LOG.info("Agent " + id + " sendAndWait completed successfully.");
-            LOG.info("Agent " + id + " final response: " + result.getData().content());
+            String responseContent = result.getData().content();
+            LOG.info("Agent " + id + " final response: " + responseContent);
+            if (phase == Phase.QUEUED) {
+                Phase inferredPhase = extractLastPhaseMarker(responseContent);
+                if (inferredPhase != null) {
+                    phase = inferredPhase;
+                    addEvent(Instant.now(), "phase_change", "Phase changed to " + phase.name(), phase.name());
+                    if (phase.isTerminal()) {
+                        finishedAt = Instant.now();
+                    }
+                    notifyUi();
+                    LOG.info("Agent " + id + " inferred phase from response text: " + phase.name());
+                }
+            }
         } catch (Exception e) {
             LOG.severe("Agent " + id + " failed: " + e.getClass().getName() + ": " + e.getMessage());
             if (e.getCause() != null) {
@@ -334,6 +351,23 @@ public class Agent {
             sb.append("result: ").append(result);
         }
         return sb.toString().trim();
+    }
+
+    private static Phase extractLastPhaseMarker(String content) {
+        if (content == null || content.isBlank()) {
+            return null;
+        }
+        Matcher matcher = PHASE_MARKER_PATTERN.matcher(content);
+        Phase last = null;
+        while (matcher.find()) {
+            String token = matcher.group(1);
+            try {
+                last = Phase.valueOf(token.toUpperCase(Locale.ROOT));
+            } catch (IllegalArgumentException ignored) {
+                // Ignore unknown phase markers and continue scanning.
+            }
+        }
+        return last;
     }
 
     private record ToolCallSnapshot(String toolName, String toolArgs) { }
