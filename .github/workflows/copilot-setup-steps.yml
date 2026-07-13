@@ -1,0 +1,43 @@
+name: "Copilot Setup Steps"
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+  pull_request:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+
+jobs:
+  # The job MUST be called 'copilot-setup-steps' to be recognized by GitHub Copilot Agent
+  copilot-setup-steps:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: "microsoft"
+          java-version: "25"
+          cache: "maven"
+
+      - name: Verify installations
+        run: |
+          echo "=== Verifying installations ==="
+          node --version
+          npm --version
+          java -version
+          mvn --version
+          echo "✅ All tools installed successfully"
