@@ -24,6 +24,9 @@
         <properties URL="jdbc:h2:mem:realestatedb;DB_CLOSE_DELAY=-1" />
     </dataSource>
 
+    <!-- Virtual-thread managed factory for spec-compliant thread creation -->
+    <managedThreadFactory jndiName="concurrent/virtualThreadFactory" virtual="true" />
+
     <webApplication location="java-agent-orchestrator.war" contextRoot="/" />
 
     <!-- Route application INFO+ messages to console so they appear in mvn liberty:dev / liberty:run output -->
