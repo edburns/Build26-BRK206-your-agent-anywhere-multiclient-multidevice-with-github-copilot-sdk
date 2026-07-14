@@ -70,7 +70,7 @@ You can also scan tools from any object with `ToolDefinition.fromObject(instance
 
 ## Walk through the sample app
 
-The best way to see the SDK in action is to run the sample application from the Microsoft Build 2026 session **BRK206 — Your Agent Anywhere**.
+The best way to see the SDK in action is to run the sample application from the Microsoft Build 2026 session [BRK206 — Your Agent Anywhere](https://github.com/microsoft/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk).
 
 ### Get the code
 
@@ -93,7 +93,7 @@ The Java demo is built on:
 
 ### What the app does
 
-The application is a real-estate lead-management agent pipeline. A customer submits an enquiry ("I'm looking for a 3-bedroom house in London under £800,000"), and the system spins up an isolated Copilot agent session on a virtual thread to process it through a pipeline:
+The application is a real-estate lead-management agent pipeline. A customer submits an enquiry ("I'm looking for a 3-bedroom house in London under £800,000"), and the system spins up an isolated Copilot Agent on a virtual thread to process it through a pipeline:
 
 ```mermaid
 graph LR
