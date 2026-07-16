@@ -15,13 +15,16 @@ Create a Python analog of the C# Blazor AgentOrchestrator demo that showcases th
 
 | Concern | Technology |
 |---------|-----------|
-| Runtime | CPython 3.10+ (virtualenv project) |
-| Platform | Python application services (asyncio-based orchestration) |
-| UI framework | TBD in Phase 1 architecture mapping (must support real-time pipeline updates) |
-| AI orchestration | GitHub Copilot SDK for Python (version TBD during setup) |
-| Database | SQLite (in-memory for demo mode) for property listings |
-| Build / dependency management | `pyproject.toml` + `pip` editable install (`pip install -e .`) |
-| Tooling | `pytest`, `ruff`, `pyright` |
+| Runtime | CPython 3.12+ (virtualenv project) |
+| Backend web framework | FastAPI (ASGI, asyncio-native) |
+| ASGI server | Uvicorn |
+| UI framework | Server-rendered Jinja2 + HTMX + Alpine.js + Tailwind CSS |
+| Real-time updates | FastAPI WebSocket endpoint broadcasting pipeline state changes |
+| Animation model | CSS transitions/keyframes for box-to-box movement + yellow pulsing in-progress indicator |
+| AI orchestration | GitHub Copilot SDK for Python (latest stable at implementation time) |
+| Database | SQLite (in-memory for demo mode) via SQLModel |
+| Build / dependency management | `pyproject.toml` + editable install (`pip install -e .[dev]`), with `uv` as optional fast path |
+| Tooling | `pytest`, `pytest-asyncio`, `ruff`, `pyright` |
 
 ### SDK features to demonstrate
 
