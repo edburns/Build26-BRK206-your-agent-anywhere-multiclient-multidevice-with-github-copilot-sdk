@@ -176,7 +176,39 @@ await done.wait()
 
 **Spike needed:** Confirm this pattern handles multi-turn tool calls correctly (i.e., the SDK internally handles tool execution and only fires `SessionIdleData` after the model produces a final assistant message with no pending tool calls). Verify with a simple tool that the above pattern works end-to-end.
 
-**Resolution:** *(to be filled after spike)*
+**Resolution:**
+
+**✅ RESOLVED (2026-07-17):** Confirmed. The Python SDK handles multi-turn tool calls automatically. Spike app: `28-python-agent-demo-remove-before-merge/spike_2_2_multi_turn_in_python/`.
+
+Key findings:
+1. **SDK handles the full agentic loop internally** — when the model calls a tool, the SDK executes the handler, sends the result back to the model, and waits for the next action. This repeats until the model produces a final response.
+2. **`SessionIdleData` fires only after completion** — it signals that ALL tool calls are done and the final assistant message has been emitted.
+3. **Events are emitted at each step** — `ToolExecutionStartData` and `ToolExecutionCompleteData` fire for each tool call, enabling real-time UI updates.
+4. **Multi-tool sequences work** — tested with step_one → step_two sequential dependency; model correctly chains results.
+5. **`AssistantMessageData` fires multiple times** — once per model "turn" (intermediate thinking + final response). The last one contains the user-facing answer.
+
+Recommended pattern for the demo:
+```python
+done = asyncio.Event()
+
+def on_event(event):
+    match event.data:
+        case ToolExecutionStartData():
+            # Update UI: tool is running
+            pass
+        case ToolExecutionCompleteData():
+            # Update UI: tool finished
+            pass
+        case AssistantMessageData() as data:
+            # Update UI: assistant responded
+            pass
+        case SessionIdleData():
+            done.set()
+
+session.on(on_event)
+await session.send(prompt)
+await asyncio.wait_for(done.wait(), timeout=45.0)
+```
 
 ### 2.3 — Session event subscription and types
 
