@@ -456,7 +456,24 @@ system_message={
 
 **Spike needed:** Confirm that `"mode": "customize"` with `"identity"` section replacement works and the agent receives the custom instructions correctly. Test that the agent follows the multi-phase workflow (validate → search → report) with appropriate tool calls.
 
-**Resolution:** *(to be filled after spike)*
+**Resolution:** RESOLVED (by inference from spike 2.7 + source reading; no standalone spike needed).
+
+Spike 2.7 already proved the full end-to-end pattern: client → session → tools → model follows instructions and calls tools in the prompted order. The system message config is a plain dict passed through `create_session` to the runtime as JSON (see `session.py`). The `"mode": "customize"` with section replacement is the exact format documented in the SDK README (line 592+).
+
+The exact dict to use in Phase 3:
+```python
+system_message={
+    "mode": "customize",
+    "sections": {
+        "identity": {
+            "action": "replace",
+            "content": "You are a real-estate lead validation and property search agent. ..."
+        },
+    },
+}
+```
+
+If behavior issues arise during Phase 3 implementation, we debug then — no value in a dedicated spike for what is essentially a JSON config pass-through.
 
 ### 2.9 — `mode="empty"` + ToolSet configuration
 
