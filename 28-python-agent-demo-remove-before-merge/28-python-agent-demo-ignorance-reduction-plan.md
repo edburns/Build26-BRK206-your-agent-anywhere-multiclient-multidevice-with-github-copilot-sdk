@@ -494,7 +494,25 @@ session = await client.create_session(
 
 **Spike needed:** Verify that `mode="empty"` + `available_tools` + custom tools works end-to-end. Confirm what `base_directory` value to use (the Java demo uses `~/.copilot`).
 
-**Resolution:** *(to be filled after spike)*
+**Resolution:** RESOLVED (by inference from spikes 2.1 and 2.7; no standalone spike needed).
+
+- Spike 2.1 confirmed `CopilotClient(mode="empty", base_directory=os.getcwd())` starts successfully in headless server mode.
+- Spike 2.7 confirmed `ToolSet().add_custom("*")` with custom `@define_tool` tools works end-to-end — the model called all three tools and the runtime accepted the ToolSet configuration.
+- `base_directory` can be any writable directory; `os.getcwd()` works fine (spike 2.1 used it). The Java demo's `~/.copilot` is equivalent to using a stable path — for the Python demo, `os.getcwd()` or a temp directory is sufficient.
+- The only untested piece is `add_builtin("web_fetch")` — this adds a string to the ToolSet filter. If it's needed during Phase 3, we verify then. The C# demo uses it for web search; if the Python demo doesn't need web search, we can omit it.
+
+Exact pattern for Phase 3:
+```python
+available_tools = ToolSet().add_custom("*")  # all custom tools
+# Add .add_builtin("web_fetch") only if web search is needed
+
+session = await client.create_session(
+    tools=create_tools_for_agent(agent),
+    available_tools=available_tools,
+    on_permission_request=PermissionHandler.approve_all,
+    system_message={...},
+)
+```
 
 ### 2.10 — Multiple concurrent sessions
 
