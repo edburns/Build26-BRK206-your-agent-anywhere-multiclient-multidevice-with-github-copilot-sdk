@@ -55,7 +55,7 @@ class PipelineState:
 
     def get_state(self) -> dict:
         """Return the full pipeline state for reconciliation."""
-        phases = ["Queued", "Validating", "Searching", "WritingReport", "Done", "Rejected"]
+        phases = ["Queued", "Validating", "Searching", "WritingReport", "Done", "Rejected", "NoMatches"]
         columns = {p: [] for p in phases}
         for q in self.queries.values():
             phase = q["phase"]
@@ -220,9 +220,7 @@ INDEX_HTML = r"""<!DOCTYPE html>
 <head>
     <meta charset="UTF-8">
     <title>Spike 2.6 - Pipeline UI</title>
-    <!-- Alpine.js for reactive state -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <!-- HTMX for server reconciliation -->
     <script src="https://unpkg.com/htmx.org@2.0.4"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -233,96 +231,123 @@ INDEX_HTML = r"""<!DOCTYPE html>
             min-height: 100vh;
         }
         header {
-            background: #1a1b26;
-            padding: 16px 24px;
-            border-bottom: 1px solid #2a2b3d;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            padding: 24px 32px 8px;
         }
-        header h1 { font-size: 18px; font-weight: 600; }
-        .btn {
-            background: #3b82f6;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        .btn:hover { background: #2563eb; }
+        header h1 { font-size: 22px; font-weight: 600; }
+        header .subtitle { font-size: 13px; color: #6b7280; margin-top: 4px; }
 
-        /* Pipeline columns */
-        .pipeline {
+        /* Main layout: pipeline on the left, dashboard on the right */
+        .main-layout {
             display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 12px;
-            padding: 24px;
-            min-height: calc(100vh - 60px);
+            grid-template-columns: 1fr 200px;
+            gap: 24px;
+            padding: 16px 32px 40px;
+            align-items: start;
         }
-        .column {
+
+        /* Pipeline area: two columns (lifecycle states, end states) */
+        .pipeline-area {
+            display: grid;
+            grid-template-columns: 220px 220px;
+            gap: 0;
+            position: relative;
+        }
+        .pipeline-area .col-label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #6b7280;
+            margin-bottom: 12px;
+        }
+
+        /* Phase box (lifecycle or end-state) */
+        .phase-box {
             background: #1a1b26;
-            border-radius: 8px;
-            padding: 12px;
             border: 1px solid #2a2b3d;
+            border-radius: 6px;
+            padding: 10px 14px;
+            min-height: 90px;
+            width: 200px;
+            position: relative;
         }
-        .column-header {
-            font-size: 13px;
+        .phase-box .phase-label {
+            font-size: 12px;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.05em;
             color: #9ca3af;
-            margin-bottom: 12px;
-            padding-bottom: 8px;
-            border-bottom: 1px solid #2a2b3d;
+            margin-bottom: 8px;
         }
-        .column-header .count {
-            float: right;
-            background: #2a2b3d;
-            padding: 1px 8px;
-            border-radius: 10px;
-            font-size: 11px;
+        .phase-box .empty-dash {
+            color: #3a3b4d;
+            font-size: 18px;
+        }
+
+        /* End-state boxes have colored borders */
+        .phase-box.end-rejected { border-color: #ef4444; }
+        .phase-box.end-rejected .phase-label { color: #ef4444; }
+        .phase-box.end-no-matches { border-color: #ef4444; }
+        .phase-box.end-no-matches .phase-label { color: #ef4444; }
+        .phase-box.end-done { border-color: #22c55e; }
+        .phase-box.end-done .phase-label { color: #22c55e; }
+
+        /* Vertical arrow between lifecycle boxes */
+        .arrow-down {
+            display: flex;
+            justify-content: center;
+            padding: 6px 0;
+            width: 200px;
+        }
+        .arrow-down svg { color: #4b5563; }
+
+        /* Horizontal arrow to end-state boxes */
+        .arrow-right {
+            display: flex;
+            align-items: center;
+            padding: 0 8px;
+        }
+        .arrow-right svg { color: #4b5563; }
+
+        /* Pipeline row: lifecycle box + arrow + end-state box */
+        .pipeline-row {
+            display: flex;
+            align-items: flex-start;
+        }
+        /* The end-state column is offset so arrows align with the boxes */
+        .end-state-slot {
+            display: flex;
+            align-items: flex-start;
         }
 
         /* Query cards */
         .card {
             background: #262738;
             border: 1px solid #3a3b4d;
-            border-radius: 6px;
-            padding: 10px 12px;
-            margin-bottom: 8px;
+            border-radius: 5px;
+            padding: 8px 10px;
+            margin-bottom: 6px;
             position: relative;
-            /* CSS transition for smooth appearance */
             transition: transform 0.4s ease, opacity 0.4s ease, box-shadow 0.3s ease;
             animation: cardEnter 0.4s ease-out;
         }
         @keyframes cardEnter {
-            from { opacity: 0; transform: translateY(-10px) scale(0.95); }
+            from { opacity: 0; transform: translateY(-8px) scale(0.95); }
             to { opacity: 1; transform: translateY(0) scale(1); }
         }
-        .card .query-text {
-            font-size: 13px;
-            font-weight: 500;
-            margin-bottom: 4px;
-        }
-        .card .intent {
-            font-size: 11px;
-            color: #9ca3af;
-            font-style: italic;
-        }
+        .card .query-text { font-size: 12px; font-weight: 500; margin-bottom: 2px; }
+        .card .intent { font-size: 10px; color: #9ca3af; font-style: italic; }
 
         /* Yellow pulsing indicator for active card */
         .card.active {
             border-color: #eab308;
-            box-shadow: 0 0 12px rgba(234, 179, 8, 0.3);
+            box-shadow: 0 0 10px rgba(234, 179, 8, 0.25);
         }
         .card.active::before {
             content: '';
             position: absolute;
-            top: 8px;
-            right: 8px;
-            width: 10px;
-            height: 10px;
+            top: 7px; right: 7px;
+            width: 8px; height: 8px;
             background: #eab308;
             border-radius: 50%;
             animation: pulse 1.5s ease-in-out infinite;
@@ -331,32 +356,69 @@ INDEX_HTML = r"""<!DOCTYPE html>
             0%, 100% { opacity: 1; transform: scale(1); }
             50% { opacity: 0.5; transform: scale(1.3); }
         }
+        .card.done { border-color: #22c55e; opacity: 0.85; }
+        .card.rejected { border-color: #ef4444; opacity: 0.85; }
 
-        /* Done state */
-        .card.done {
-            border-color: #22c55e;
-            opacity: 0.8;
+        /* Dashboard panel */
+        .dashboard {
+            background: #1e1f2e;
+            border: 1px solid #2a2b3d;
+            border-radius: 8px;
+            padding: 16px;
+            position: sticky;
+            top: 24px;
         }
-        .card.done::before {
-            content: '\2713';
+        .dashboard h2 {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #6b7280;
+            margin-bottom: 16px;
+        }
+        .dash-stat {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+        .dash-stat .indicator {
+            width: 3px;
+            height: 36px;
+            border-radius: 2px;
+        }
+        .dash-stat .indicator.processing { background: #6366f1; }
+        .dash-stat .indicator.completed  { background: #22c55e; }
+        .dash-stat .indicator.rejected   { background: #ef4444; }
+        .dash-stat .number { font-size: 26px; font-weight: 700; line-height: 1; }
+        .dash-stat .label  { font-size: 11px; color: #9ca3af; }
+
+        /* + button */
+        .add-btn {
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            background: #2a2b3d;
+            border: 1px solid #3a3b4d;
+            color: #9ca3af;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             position: absolute;
-            top: 8px;
-            right: 10px;
-            color: #22c55e;
-            font-size: 14px;
-            font-weight: bold;
+            top: 16px;
+            right: 220px;
         }
+        .add-btn:hover { background: #3b82f6; color: white; border-color: #3b82f6; }
 
         /* Status bar */
         .status-bar {
             position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
+            bottom: 0; left: 0; right: 0;
             background: #1a1b26;
             border-top: 1px solid #2a2b3d;
-            padding: 8px 24px;
-            font-size: 12px;
+            padding: 6px 24px;
+            font-size: 11px;
             color: #6b7280;
             display: flex;
             gap: 20px;
@@ -369,108 +431,209 @@ INDEX_HTML = r"""<!DOCTYPE html>
 
 <header>
     <h1>Real Estate Agent Pipeline</h1>
-    <div style="display: flex; gap: 10px; align-items: center;">
-        <button class="btn" @click="startDemo()">Start Demo Agent</button>
-        <!-- HTMX reconciliation button (Option C: manual reconcile) -->
-        <button class="btn" style="background: #6b7280;"
-                hx-get="/partials/pipeline"
-                hx-target="#pipeline-container"
-                hx-swap="innerHTML">
-            Reconcile
-        </button>
-    </div>
+    <div class="subtitle">GitHub Copilot SDK for Python -- BRK206 Demo</div>
 </header>
 
-<!-- Pipeline grid: Alpine.js owns the visual state -->
-<div class="pipeline" id="pipeline-container">
-    <template x-for="phase in phases" :key="phase">
-        <div class="column">
-            <div class="column-header">
-                <span x-text="phaseLabels[phase]"></span>
-                <span class="count" x-text="queriesInPhase(phase).length"></span>
+<div style="position: relative;">
+    <button class="add-btn" @click="startDemo()" title="Add query">+</button>
+</div>
+
+<div class="main-layout" id="pipeline-container">
+
+    <!-- Left: vertical pipeline -->
+    <div class="pipeline-area">
+
+        <!-- Column labels -->
+        <div class="col-label">Lifecycle State</div>
+        <div class="col-label" style="padding-left: 50px;">End State</div>
+
+        <!-- Row 1: Queued (no end-state off-ramp) -->
+        <div class="pipeline-row">
+            <div class="phase-box">
+                <div class="phase-label">Queued</div>
+                <template x-for="q in queriesInPhase('Queued')" :key="q.id">
+                    <div class="card"><div class="query-text" x-text="q.text"></div>
+                        <div class="intent" x-text="q.intent || q.id"></div></div>
+                </template>
+                <template x-if="queriesInPhase('Queued').length === 0">
+                    <div class="empty-dash">--</div>
+                </template>
             </div>
-            <template x-for="q in queriesInPhase(phase)" :key="q.id">
-                <div class="card"
-                     :class="{
-                         'active': q.phase !== 'Done' && q.phase !== 'Rejected' && q.phase !== 'Queued',
-                         'done': q.phase === 'Done'
-                     }">
-                    <div class="query-text" x-text="q.text"></div>
-                    <div class="intent" x-text="q.intent || q.id"></div>
-                </div>
-            </template>
         </div>
-    </template>
+        <div></div><!-- empty end-state slot -->
+
+        <!-- Arrow down -->
+        <div class="arrow-down">
+            <svg width="16" height="24" viewBox="0 0 16 24"><path d="M8 0v20M3 16l5 5 5-5" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
+        </div>
+        <div></div>
+
+        <!-- Row 2: Validating -> Rejected -->
+        <div class="pipeline-row">
+            <div class="phase-box">
+                <div class="phase-label">Validating</div>
+                <template x-for="q in queriesInPhase('Validating')" :key="q.id">
+                    <div class="card active"><div class="query-text" x-text="q.text"></div>
+                        <div class="intent" x-text="q.intent || q.id"></div></div>
+                </template>
+                <template x-if="queriesInPhase('Validating').length === 0">
+                    <div class="empty-dash">--</div>
+                </template>
+            </div>
+            <div class="arrow-right">
+                <svg width="32" height="16" viewBox="0 0 32 16"><path d="M0 8h26M22 3l5 5-5 5" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
+            </div>
+            <div class="phase-box end-rejected">
+                <div class="phase-label">Rejected</div>
+                <template x-for="q in queriesInPhase('Rejected')" :key="q.id">
+                    <div class="card rejected"><div class="query-text" x-text="q.text"></div>
+                        <div class="intent" x-text="q.intent || q.id"></div></div>
+                </template>
+                <template x-if="queriesInPhase('Rejected').length === 0">
+                    <div class="empty-dash">--</div>
+                </template>
+            </div>
+        </div>
+        <div></div>
+
+        <!-- Arrow down -->
+        <div class="arrow-down">
+            <svg width="16" height="24" viewBox="0 0 16 24"><path d="M8 0v20M3 16l5 5 5-5" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
+        </div>
+        <div></div>
+
+        <!-- Row 3: Searching -> No Matches -->
+        <div class="pipeline-row">
+            <div class="phase-box">
+                <div class="phase-label">Searching</div>
+                <template x-for="q in queriesInPhase('Searching')" :key="q.id">
+                    <div class="card active"><div class="query-text" x-text="q.text"></div>
+                        <div class="intent" x-text="q.intent || q.id"></div></div>
+                </template>
+                <template x-if="queriesInPhase('Searching').length === 0">
+                    <div class="empty-dash">--</div>
+                </template>
+            </div>
+            <div class="arrow-right">
+                <svg width="32" height="16" viewBox="0 0 32 16"><path d="M0 8h26M22 3l5 5-5 5" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
+            </div>
+            <div class="phase-box end-no-matches">
+                <div class="phase-label">No Matches</div>
+                <template x-for="q in queriesInPhase('NoMatches')" :key="q.id">
+                    <div class="card rejected"><div class="query-text" x-text="q.text"></div>
+                        <div class="intent" x-text="q.intent || q.id"></div></div>
+                </template>
+                <template x-if="queriesInPhase('NoMatches').length === 0">
+                    <div class="empty-dash">--</div>
+                </template>
+            </div>
+        </div>
+        <div></div>
+
+        <!-- Arrow down -->
+        <div class="arrow-down">
+            <svg width="16" height="24" viewBox="0 0 16 24"><path d="M8 0v20M3 16l5 5 5-5" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
+        </div>
+        <div></div>
+
+        <!-- Row 4: Writing Report -> Done -->
+        <div class="pipeline-row">
+            <div class="phase-box">
+                <div class="phase-label">Writing Report</div>
+                <template x-for="q in queriesInPhase('WritingReport')" :key="q.id">
+                    <div class="card active"><div class="query-text" x-text="q.text"></div>
+                        <div class="intent" x-text="q.intent || q.id"></div></div>
+                </template>
+                <template x-if="queriesInPhase('WritingReport').length === 0">
+                    <div class="empty-dash">--</div>
+                </template>
+            </div>
+            <div class="arrow-right">
+                <svg width="32" height="16" viewBox="0 0 32 16"><path d="M0 8h26M22 3l5 5-5 5" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
+            </div>
+            <div class="phase-box end-done">
+                <div class="phase-label">Done</div>
+                <template x-for="q in queriesInPhase('Done')" :key="q.id">
+                    <div class="card done"><div class="query-text" x-text="q.text"></div>
+                        <div class="intent" x-text="q.intent || q.id"></div></div>
+                </template>
+                <template x-if="queriesInPhase('Done').length === 0">
+                    <div class="empty-dash">--</div>
+                </template>
+            </div>
+        </div>
+        <div></div>
+
+    </div>
+
+    <!-- Right: Dashboard -->
+    <div class="dashboard">
+        <h2>Dashboard</h2>
+        <div class="dash-stat">
+            <div class="indicator processing"></div>
+            <div>
+                <div class="number" x-text="processingCount()"></div>
+                <div class="label">Processing</div>
+            </div>
+        </div>
+        <div class="dash-stat">
+            <div class="indicator completed"></div>
+            <div>
+                <div class="number" x-text="queriesInPhase('Done').length"></div>
+                <div class="label">Completed</div>
+            </div>
+        </div>
+        <div class="dash-stat">
+            <div class="indicator rejected"></div>
+            <div>
+                <div class="number" x-text="queriesInPhase('Rejected').length + queriesInPhase('NoMatches').length"></div>
+                <div class="label">Rejected</div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <div class="status-bar">
     <span :class="'ws-status ' + (wsConnected ? '' : 'disconnected')">
         WS: <span x-text="wsConnected ? 'Connected' : 'Disconnected'"></span>
     </span>
-    <span>Updates received: <span x-text="updateCount"></span></span>
-    <span>Last event: <span x-text="lastEvent"></span></span>
+    <span>Updates: <span x-text="updateCount"></span></span>
+    <span>Last: <span x-text="lastEvent"></span></span>
 </div>
 
 <script>
 function pipelineApp() {
     return {
-        // Reactive state (Alpine owns this for immediate visual updates)
         queries: {},
-        phases: ['Queued', 'Validating', 'Searching', 'WritingReport', 'Done'],
-        phaseLabels: {
-            'Queued': 'Queued',
-            'Validating': 'Validating',
-            'Searching': 'Searching',
-            'WritingReport': 'Writing Report',
-            'Done': 'Done',
-            'Rejected': 'Rejected',
-        },
         wsConnected: false,
         updateCount: 0,
         lastEvent: 'none',
         ws: null,
 
-        init() {
-            this.connectWebSocket();
-        },
+        init() { this.connectWebSocket(); },
 
         connectWebSocket() {
-            const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-            this.ws = new WebSocket(`${protocol}//${location.host}/ws/pipeline`);
-
-            this.ws.onopen = () => {
-                this.wsConnected = true;
-                this.lastEvent = 'connected';
-            };
-
+            const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            this.ws = new WebSocket(`${proto}//${location.host}/ws/pipeline`);
+            this.ws.onopen = () => { this.wsConnected = true; this.lastEvent = 'connected'; };
             this.ws.onclose = () => {
-                this.wsConnected = false;
-                this.lastEvent = 'disconnected';
-                // Auto-reconnect after 2s
+                this.wsConnected = false; this.lastEvent = 'disconnected';
                 setTimeout(() => this.connectWebSocket(), 2000);
             };
-
-            this.ws.onmessage = (event) => {
-                const data = JSON.parse(event.data);
-                this.handleMessage(data);
-            };
+            this.ws.onmessage = (event) => this.handleMessage(JSON.parse(event.data));
         },
 
         handleMessage(data) {
-            // Alpine reactive update -- immediate visual feedback
             if (data.type === 'phase_change') {
                 this.updateCount++;
                 this.lastEvent = `${data.queryId} -> ${data.phase}`;
-
-                // Update or create the query in reactive state
                 this.queries[data.queryId] = {
                     id: data.queryId,
                     text: data.text || this.queries[data.queryId]?.text || '',
                     phase: data.phase,
                     intent: data.intent || '',
                 };
-
-                // Force Alpine reactivity (reassign object)
                 this.queries = { ...this.queries };
             }
         },
@@ -479,35 +642,75 @@ function pipelineApp() {
             return Object.values(this.queries).filter(q => q.phase === phase);
         },
 
+        processingCount() {
+            return Object.values(this.queries).filter(q =>
+                !['Done','Rejected','NoMatches'].includes(q.phase)
+            ).length;
+        },
+
         async startDemo() {
-            const resp = await fetch('/api/start-demo', { method: 'POST' });
-            const result = await resp.json();
+            await fetch('/api/start-demo', { method: 'POST' });
             this.lastEvent = 'demo started';
         },
     };
 }
 </script>
-
 </body>
 </html>
 """
 
-PIPELINE_PARTIAL_HTML = r"""<!-- HTMX reconciliation partial: server-truth rendered as HTML -->
-<!-- This replaces the Alpine template when reconciliation is triggered -->
-{% for phase in ['Queued', 'Validating', 'Searching', 'WritingReport', 'Done'] %}
-<div class="column">
-    <div class="column-header">
-        <span>{{ {'Queued':'Queued','Validating':'Validating','Searching':'Searching','WritingReport':'Writing Report','Done':'Done'}[phase] }}</span>
-        <span class="count">{{ state.columns[phase]|length }}</span>
+PIPELINE_PARTIAL_HTML = r"""<!-- HTMX reconciliation partial -->
+<div class="pipeline-area">
+    <div class="col-label">Lifecycle State</div>
+    <div class="col-label" style="padding-left: 50px;">End State</div>
+
+    {% set lifecycle = ['Queued', 'Validating', 'Searching', 'WritingReport'] %}
+    {% set end_map = {'Validating': ('Rejected','end-rejected','rejected'),
+                      'Searching': ('NoMatches','end-no-matches','rejected'),
+                      'WritingReport': ('Done','end-done','done')} %}
+
+    {% for phase in lifecycle %}
+    {% if not loop.first %}
+    <div class="arrow-down"><svg width="16" height="24" viewBox="0 0 16 24"><path d="M8 0v20M3 16l5 5 5-5" stroke="currentColor" stroke-width="1.5" fill="none"/></svg></div>
+    <div></div>
+    {% endif %}
+    <div class="pipeline-row">
+        <div class="phase-box">
+            <div class="phase-label">{{ phase if phase != 'WritingReport' else 'Writing Report' }}</div>
+            {% for q in state.columns.get(phase, []) %}
+            <div class="card {{ 'active' if phase not in ['Queued'] else '' }}">
+                <div class="query-text">{{ q.text }}</div>
+                <div class="intent">{{ q.intent or q.id }}</div>
+            </div>
+            {% endfor %}
+            {% if not state.columns.get(phase, []) %}<div class="empty-dash">--</div>{% endif %}
+        </div>
+        {% if phase in end_map %}
+        {% set end_phase, end_class, card_class = end_map[phase] %}
+        <div class="arrow-right"><svg width="32" height="16" viewBox="0 0 32 16"><path d="M0 8h26M22 3l5 5-5 5" stroke="currentColor" stroke-width="1.5" fill="none"/></svg></div>
+        <div class="phase-box {{ end_class }}">
+            <div class="phase-label">{{ end_phase.replace('NoMatches','No Matches') }}</div>
+            {% for q in state.columns.get(end_phase, []) %}
+            <div class="card {{ card_class }}">
+                <div class="query-text">{{ q.text }}</div>
+                <div class="intent">{{ q.intent or q.id }}</div>
+            </div>
+            {% endfor %}
+            {% if not state.columns.get(end_phase, []) %}<div class="empty-dash">--</div>{% endif %}
+        </div>
+        {% endif %}
     </div>
-    {% for q in state.columns[phase] %}
-    <div class="card {{ 'active' if q.phase not in ['Done','Rejected','Queued'] else '' }} {{ 'done' if q.phase == 'Done' else '' }}">
-        <div class="query-text">{{ q.text }}</div>
-        <div class="intent">{{ q.intent or q.id }}</div>
-    </div>
+    <div></div>
     {% endfor %}
 </div>
-{% endfor %}
+
+<div class="dashboard">
+    <h2>Dashboard</h2>
+    {% set processing = (state.columns.get('Queued',[])|length + state.columns.get('Validating',[])|length + state.columns.get('Searching',[])|length + state.columns.get('WritingReport',[])|length) %}
+    <div class="dash-stat"><div class="indicator processing"></div><div><div class="number">{{ processing }}</div><div class="label">Processing</div></div></div>
+    <div class="dash-stat"><div class="indicator completed"></div><div><div class="number">{{ state.columns.get('Done',[])|length }}</div><div class="label">Completed</div></div></div>
+    <div class="dash-stat"><div class="indicator rejected"></div><div><div class="number">{{ state.columns.get('Rejected',[])|length + state.columns.get('NoMatches',[])|length }}</div><div class="label">Rejected</div></div></div>
+</div>
 """
 
 
