@@ -223,7 +223,45 @@ From the source code, `session.on(callback)` receives `SessionEvent` instances w
 
 **Spike needed:** Confirm there is a `ToolExecutionCompleteData` or equivalent event (for UI showing tool call progress). If not, determine how to detect individual tool call completions for real-time UI updates.
 
-**Resolution:** *(to be filled after spike)*
+**Resolution:**
+
+**✅ RESOLVED (2026-07-17):** Confirmed. Full event observability is available. Spike app: `28-python-agent-demo-remove-before-merge/spike_2_3_detect_tool_call_completions/`.
+
+Key findings:
+
+1. **`ToolExecutionStartData`** — emitted when a tool begins execution. Fields:
+   - `.tool_name` — the tool name (e.g., `"validate_query"`)
+   - `.tool_call_id` — unique ID for correlation
+   - `.arguments` — dict of arguments passed to the tool
+
+2. **`ToolExecutionCompleteData`** — emitted when a tool finishes. Fields:
+   - `.tool_call_id` — correlates with start event
+   - `.success` — bool indicating success/failure
+   - `.tool_description.name` — NOT reliably populated for custom tools (use correlation)
+   - `.result` / `.error` — optional detailed data
+
+3. **Correlation strategy:** Map `tool_call_id` from start to complete events. `ToolExecutionStartData` has the tool name; `ToolExecutionCompleteData` does not always have it directly.
+
+4. **Additional useful events observed:**
+   - `AssistantTurnStartData` / `AssistantTurnEndData` — bracket each model turn
+   - `AssistantMessageData` — fires each turn (intermediate + final)
+   - `AssistantMessageDeltaData` — streaming chunks for the final response
+   - `ExternalToolRequestedData` / `ExternalToolCompletedData` — SDK-internal tool lifecycle
+   - `PermissionRequestedData` / `PermissionCompletedData` — permission flow
+   - `SessionIdleData` — terminal signal
+
+5. **Full event sequence per tool call:**
+   ```
+   AssistantTurnStart -> [streaming deltas] -> AssistantMessage -> 
+   ToolExecutionStart -> [Permission] -> [ExternalTool] -> ToolExecutionComplete ->
+   AssistantTurnEnd
+   ```
+
+6. **For the demo UI, we need:**
+   - `ToolExecutionStartData` — show "tool running" indicator with tool name
+   - `ToolExecutionCompleteData` — show "tool done" with success/failure
+   - `AssistantMessageData` (last one) — show final report
+   - `SessionIdleData` — mark agent as complete
 
 ### 2.4 — WebSocket push from asyncio to browser
 
