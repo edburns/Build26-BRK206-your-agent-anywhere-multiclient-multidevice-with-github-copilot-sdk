@@ -274,7 +274,40 @@ Proposed pattern:
 
 **Spike needed:** Verify that broadcasting from inside a `session.on()` callback works correctly (since the callback may run on a different asyncio context or be synchronous). Determine if we need `asyncio.run_coroutine_threadsafe()` or if the SDK's event dispatch is already on the event loop.
 
-**Resolution:** *(to be filled after spike)*
+**Resolution:**
+
+**✅ RESOLVED (2026-07-17):** Confirmed. FastAPI WebSocket + `asyncio.run_coroutine_threadsafe()` works. Spike app: `28-python-agent-demo-remove-before-merge/spike_2_4_state_of_art_for_dynamic_ui_update/`.
+
+Key findings:
+1. **FastAPI WebSocket is the Python analog to Jakarta WebSocket** — `ConnectionManager` class replaces `@Push PushContext`.
+2. **`session.on()` callbacks are SYNCHRONOUS** — the SDK calls `handler(event)` directly (no await). You cannot `await websocket.send_text()` inside the callback.
+3. **Solution: `asyncio.run_coroutine_threadsafe(coro, loop)`** — schedules the async WebSocket broadcast onto the running event loop from the sync callback. Works reliably.
+4. **All broadcasts arrive in order** — tool_start, tool_complete, assistant_message, session_idle all received correctly by WebSocket clients.
+
+Pattern for the demo:
+```python
+class ConnectionManager:
+    async def broadcast(self, message: dict): ...
+    
+    def schedule_broadcast(self, loop, message: dict):
+        asyncio.run_coroutine_threadsafe(self._do_broadcast(message), loop)
+
+# In agent setup:
+loop = asyncio.get_running_loop()
+
+def on_event(event):  # sync callback
+    match event.data:
+        case ToolExecutionStartData() as data:
+            ws_manager.schedule_broadcast(loop, {"type": "tool_start", ...})
+```
+
+Jakarta equivalence:
+| Jakarta | Python/FastAPI |
+|---------|---------------|
+| `@Inject @Push PushContext` | `ConnectionManager` singleton |
+| `pushContext.send(data)` | `ws_manager.schedule_broadcast(loop, data)` |
+| `<f:websocket channel=...>` | `new WebSocket('ws://host/ws/pipeline')` |
+| `@ServerEndpoint` | `@app.websocket("/ws/pipeline")` |
 
 ### 2.5 — Property database: SQLModel + SQLite in-memory
 
