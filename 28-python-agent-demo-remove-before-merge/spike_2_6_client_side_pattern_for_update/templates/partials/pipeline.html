@@ -1,0 +1,16 @@
+<!-- HTMX reconciliation partial: server-truth rendered as HTML -->
+<!-- This replaces the Alpine template when reconciliation is triggered -->
+{% for phase in ['Queued', 'Validating', 'Searching', 'WritingReport', 'Done'] %}
+<div class="column">
+    <div class="column-header">
+        <span>{{ {'Queued':'Queued','Validating':'Validating','Searching':'Searching','WritingReport':'Writing Report','Done':'Done'}[phase] }}</span>
+        <span class="count">{{ state.columns[phase]|length }}</span>
+    </div>
+    {% for q in state.columns[phase] %}
+    <div class="card {{ 'active' if q.phase not in ['Done','Rejected','Queued'] else '' }} {{ 'done' if q.phase == 'Done' else '' }}">
+        <div class="query-text">{{ q.text }}</div>
+        <div class="intent">{{ q.intent or q.id }}</div>
+    </div>
+    {% endfor %}
+</div>
+{% endfor %}

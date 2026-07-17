@@ -348,7 +348,26 @@ Options:
 
 **Spike needed:** Build a minimal FastAPI + HTMX + Alpine.js + WebSocket prototype that demonstrates an item moving between columns with CSS animation on WebSocket push. Validate that FLIP animation works with HTMX morphing/swapping.
 
-**Resolution:** *(to be filled after spike)*
+**Resolution:**
+
+**RESOLVED (2026-07-17):** Option C confirmed working. Spike app: `28-python-agent-demo-remove-before-merge/spike_2_6_client_side_pattern_for_update/`.
+
+Key findings:
+1. **Alpine.js reactive state + CSS transitions** handle immediate visual updates (card slides between columns, yellow pulse follows active card). DOM nodes persist so CSS `transition` and `animation` fire naturally.
+2. **HTMX `hx-get` reconciliation** fetches server-rendered Jinja2 partial on demand (reconnect, manual button). Server is the single source of truth.
+3. **WebSocket delivers small JSON messages** (`{"type": "phase_change", "queryId": "q-1", "phase": "Searching"}`). Alpine reads JSON and toggles state -- no business logic in the browser.
+4. **CSS animations confirmed working:**
+   - `@keyframes cardEnter` for entrance animation
+   - `@keyframes pulse` for yellow pulsing indicator on active cards
+   - `transition` on border/shadow for smooth state changes
+   - Green checkmark on Done state
+5. **The FLIP technique is NOT needed** -- Alpine's reactive re-rendering preserves DOM identity within `x-for` loops via `:key`, so CSS transitions fire on class changes without explicit FLIP calculations.
+
+Architecture pattern:
+```
+Agent phase change -> WebSocket broadcast -> Alpine reactive update -> CSS transition
+                                          -> HTMX reconciliation (on demand) -> Server-truth HTML
+```
 
 ### 2.7 — Tool definition approach for this demo
 

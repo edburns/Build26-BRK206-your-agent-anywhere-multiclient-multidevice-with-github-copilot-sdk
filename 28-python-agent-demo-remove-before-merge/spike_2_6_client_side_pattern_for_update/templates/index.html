@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Spike 2.6 - Pipeline UI</title>
+    <!-- Alpine.js for reactive state -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- HTMX for server reconciliation -->
+    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: #0f1117;
+            color: #e4e4e7;
+            min-height: 100vh;
+        }
+        header {
+            background: #1a1b26;
+            padding: 16px 24px;
+            border-bottom: 1px solid #2a2b3d;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        header h1 { font-size: 18px; font-weight: 600; }
+        .btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn:hover { background: #2563eb; }
+
+        /* Pipeline columns */
+        .pipeline {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            padding: 24px;
+            min-height: calc(100vh - 60px);
+        }
+        .column {
+            background: #1a1b26;
+            border-radius: 8px;
+            padding: 12px;
+            border: 1px solid #2a2b3d;
+        }
+        .column-header {
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #9ca3af;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #2a2b3d;
+        }
+        .column-header .count {
+            float: right;
+            background: #2a2b3d;
+            padding: 1px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+        }
+
+        /* Query cards */
+        .card {
+            background: #262738;
+            border: 1px solid #3a3b4d;
+            border-radius: 6px;
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            position: relative;
+            /* CSS transition for smooth appearance */
+            transition: transform 0.4s ease, opacity 0.4s ease, box-shadow 0.3s ease;
+            animation: cardEnter 0.4s ease-out;
+        }
+        @keyframes cardEnter {
+            from { opacity: 0; transform: translateY(-10px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .card .query-text {
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+        .card .intent {
+            font-size: 11px;
+            color: #9ca3af;
+            font-style: italic;
+        }
+
+        /* Yellow pulsing indicator for active card */
+        .card.active {
+            border-color: #eab308;
+            box-shadow: 0 0 12px rgba(234, 179, 8, 0.3);
+        }
+        .card.active::before {
+            content: '';
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 10px;
+            height: 10px;
+            background: #eab308;
+            border-radius: 50%;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.3); }
+        }
+
+        /* Done state */
+        .card.done {
+            border-color: #22c55e;
+            opacity: 0.8;
+        }
+        .card.done::before {
+            content: '\2713';
+            position: absolute;
+            top: 8px;
+            right: 10px;
+            color: #22c55e;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        /* Status bar */
+        .status-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #1a1b26;
+            border-top: 1px solid #2a2b3d;
+            padding: 8px 24px;
+            font-size: 12px;
+            color: #6b7280;
+            display: flex;
+            gap: 20px;
+        }
+        .status-bar .ws-status { color: #22c55e; }
+        .status-bar .ws-status.disconnected { color: #ef4444; }
+    </style>
+</head>
+<body x-data="pipelineApp()" x-init="init()">
+
+<header>
+    <h1>Real Estate Agent Pipeline</h1>
+    <div style="display: flex; gap: 10px; align-items: center;">
+        <button class="btn" @click="startDemo()">Start Demo Agent</button>
+        <!-- HTMX reconciliation button (Option C: manual reconcile) -->
+        <button class="btn" style="background: #6b7280;"
+                hx-get="/partials/pipeline"
+                hx-target="#pipeline-container"
+                hx-swap="innerHTML">
+            Reconcile
+        </button>
+    </div>
+</header>
+
+<!-- Pipeline grid: Alpine.js owns the visual state -->
+<div class="pipeline" id="pipeline-container">
+    <template x-for="phase in phases" :key="phase">
+        <div class="column">
+            <div class="column-header">
+                <span x-text="phaseLabels[phase]"></span>
+                <span class="count" x-text="queriesInPhase(phase).length"></span>
+            </div>
+            <template x-for="q in queriesInPhase(phase)" :key="q.id">
+                <div class="card"
+                     :class="{
+                         'active': q.phase !== 'Done' && q.phase !== 'Rejected' && q.phase !== 'Queued',
+                         'done': q.phase === 'Done'
+                     }">
+                    <div class="query-text" x-text="q.text"></div>
+                    <div class="intent" x-text="q.intent || q.id"></div>
+                </div>
+            </template>
+        </div>
+    </template>
+</div>
+
+<div class="status-bar">
+    <span :class="'ws-status ' + (wsConnected ? '' : 'disconnected')">
+        WS: <span x-text="wsConnected ? 'Connected' : 'Disconnected'"></span>
+    </span>
+    <span>Updates received: <span x-text="updateCount"></span></span>
+    <span>Last event: <span x-text="lastEvent"></span></span>
+</div>
+
+<script>
+function pipelineApp() {
+    return {
+        // Reactive state (Alpine owns this for immediate visual updates)
+        queries: {},
+        phases: ['Queued', 'Validating', 'Searching', 'WritingReport', 'Done'],
+        phaseLabels: {
+            'Queued': 'Queued',
+            'Validating': 'Validating',
+            'Searching': 'Searching',
+            'WritingReport': 'Writing Report',
+            'Done': 'Done',
+            'Rejected': 'Rejected',
+        },
+        wsConnected: false,
+        updateCount: 0,
+        lastEvent: 'none',
+        ws: null,
+
+        init() {
+            this.connectWebSocket();
+        },
+
+        connectWebSocket() {
+            const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            this.ws = new WebSocket(`${protocol}//${location.host}/ws/pipeline`);
+
+            this.ws.onopen = () => {
+                this.wsConnected = true;
+                this.lastEvent = 'connected';
+            };
+
+            this.ws.onclose = () => {
+                this.wsConnected = false;
+                this.lastEvent = 'disconnected';
+                // Auto-reconnect after 2s
+                setTimeout(() => this.connectWebSocket(), 2000);
+            };
+
+            this.ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                this.handleMessage(data);
+            };
+        },
+
+        handleMessage(data) {
+            // Alpine reactive update -- immediate visual feedback
+            if (data.type === 'phase_change') {
+                this.updateCount++;
+                this.lastEvent = `${data.queryId} -> ${data.phase}`;
+
+                // Update or create the query in reactive state
+                this.queries[data.queryId] = {
+                    id: data.queryId,
+                    text: data.text || this.queries[data.queryId]?.text || '',
+                    phase: data.phase,
+                    intent: data.intent || '',
+                };
+
+                // Force Alpine reactivity (reassign object)
+                this.queries = { ...this.queries };
+            }
+        },
+
+        queriesInPhase(phase) {
+            return Object.values(this.queries).filter(q => q.phase === phase);
+        },
+
+        async startDemo() {
+            const resp = await fetch('/api/start-demo', { method: 'POST' });
+            const result = await resp.json();
+            this.lastEvent = 'demo started';
+        },
+    };
+}
+</script>
+
+</body>
+</html>
