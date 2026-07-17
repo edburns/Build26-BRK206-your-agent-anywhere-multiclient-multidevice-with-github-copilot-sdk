@@ -317,7 +317,21 @@ SQLModel wraps SQLAlchemy. For async, we'd use `aiosqlite` + `create_async_engin
 
 **Spike needed:** Confirm that SQLModel with `sqlite:///:memory:` (synchronous) works in a FastAPI app without blocking the event loop (given that all queries are fast reads from a pre-seeded in-memory DB). If blocking is a concern, confirm `aiosqlite` works with SQLModel.
 
-**Resolution:** *(to be filled after spike)*
+**Resolution:**
+
+**✅ RESOLVED (2026-07-17):** Synchronous SQLModel is safe for this demo. Spike app: `28-python-agent-demo-remove-before-merge/spike_2_5_sqlmodel_fastapi_blocking_or_aiosqlite/`.
+
+Key findings:
+1. **Single query latency: ~1-2ms** (first query ~2.8ms cold, subsequent ~1.1ms).
+2. **Burst mode: 0.354ms per query** average over 1000 queries.
+3. **For the real demo workload** (1 query per agent, 2-3 concurrent agents), total blocking is <5ms — well within acceptable limits.
+4. **Decision: Use synchronous SQLModel (no aiosqlite)** because:
+   - DB is read-only after startup seeding
+   - In-memory reads are fast enough to be invisible at demo scale
+   - Simpler code, fewer dependencies
+   - Matches C# demo's synchronous `PropertyDatabase` pattern
+   - If ever needed, `run_in_executor()` is a one-line escape hatch
+5. **Seeding 100 properties takes ~100ms** at startup — negligible in a lifespan handler.
 
 ### 2.6 — HTMX + WebSocket real-time UI update pattern
 
