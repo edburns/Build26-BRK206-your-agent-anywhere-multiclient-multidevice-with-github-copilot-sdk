@@ -3,16 +3,25 @@ requires = ["setuptools>=70", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "python_agent_orchestrator"
+name = "python-agent-orchestrator"
 version = "0.1.0"
-description = "Dev Drive-friendly Python project skeleton."
+description = "Python Real Estate Agent Orchestrator — GitHub Copilot SDK demo"
 readme = "README.md"
-requires-python = ">=3.10"
-dependencies = []
+requires-python = ">=3.13"
+dependencies = [
+  "fastapi>=0.115",
+  "uvicorn[standard]>=0.30",
+  "sqlmodel>=0.0.22",
+  "jinja2>=3.1",
+  "github-copilot-sdk",
+  "pydantic>=2.9",
+  "websockets>=13",
+]
 
 [project.optional-dependencies]
 dev = [
   "pytest>=8",
+  "pytest-asyncio>=0.24",
   "ruff>=0.5",
   "pyright>=1.1",
 ]
@@ -22,7 +31,7 @@ testpaths = ["tests"]
 
 [tool.ruff]
 line-length = 100
-target-version = "py310"
+target-version = "py313"
 
 [tool.pyright]
 typeCheckingMode = "basic"
