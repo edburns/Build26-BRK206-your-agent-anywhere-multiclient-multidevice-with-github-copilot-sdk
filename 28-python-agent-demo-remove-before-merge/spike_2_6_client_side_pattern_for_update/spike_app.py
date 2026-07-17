@@ -19,6 +19,7 @@ The server also prints verifiable status messages showing each state push.
 import asyncio
 import json
 import os
+import signal
 import sys
 from datetime import datetime
 
@@ -523,6 +524,9 @@ if __name__ == "__main__":
     print("  Open http://localhost:8043 in a browser")
     print("  Click 'Start Demo Agent' to watch cards animate through phases")
     print("  Watch this console for server-side status messages")
+    print("  Press Ctrl-C to stop")
     print()
     print("=" * 65)
+    # Handle Ctrl-C cleanly on Windows
+    signal.signal(signal.SIGINT, lambda *_: sys.exit(0))
     uvicorn.run(app, host="0.0.0.0", port=8043)
