@@ -132,7 +132,35 @@ The C# demo creates `CopilotClient` as a singleton in `AppState`. In Python, `Co
 
 **Spike needed:** Confirm that `CopilotClient(mode="empty")` works for server-side orchestration without a VS Code host. Verify what `available_tools` / `ToolSet` configuration is required in `"empty"` mode (the `_mode.py` source shows `_require_available_tools_for_empty_mode`).
 
-**Resolution:** *(to be filled after spike)*
+**Resolution:**
+
+**✅ RESOLVED (2026-07-17):** Confirmed. `CopilotClient(mode="empty", base_directory=...)` works for headless server-side orchestration. Spike app: `28-python-agent-demo-remove-before-merge/spike_2_1_fastapi_and_copilotclient/`.
+
+Key findings:
+1. **`mode="empty"` requires `base_directory`** — without it, the SDK raises `ValueError` ("requires base_directory, session_fs, or a UriRuntimeConnection").
+2. **`available_tools` is required per-session** — empty mode raises `ValueError` if `create_session()` is called without `available_tools`. Use `ToolSet().add_custom("*")` to allow all custom tools.
+3. **FastAPI lifespan pattern works perfectly** — `client.start()` on startup, `client.stop()` on shutdown.
+4. **Tool invocation confirmed** — `@define_tool` with Pydantic params works end-to-end; model invokes tools and SDK handles the loop automatically.
+5. **`SessionIdleData` signals completion** — reliable signal that the agentic loop has finished.
+
+Python construction pattern for the demo:
+```python
+from contextlib import asynccontextmanager
+from fastapi import FastAPI
+from copilot import CopilotClient
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    app.state.copilot_client = CopilotClient(
+        mode="empty",
+        base_directory=os.path.join(Path.home(), ".copilot"),
+    )
+    await app.state.copilot_client.start()
+    yield
+    await app.state.copilot_client.stop()
+
+app = FastAPI(lifespan=lifespan)
+```
 
 ### 2.2 — Session send-and-wait pattern in Python SDK
 
