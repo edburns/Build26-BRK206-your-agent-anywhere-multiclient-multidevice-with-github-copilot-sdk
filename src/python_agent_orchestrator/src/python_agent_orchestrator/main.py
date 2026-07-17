@@ -6,7 +6,8 @@ from fastapi import FastAPI
 
 
 @asynccontextmanager
-async def lifespan(_: FastAPI):
+async def lifespan(app: FastAPI):
+    del app
     yield
 
 
