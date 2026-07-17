@@ -522,7 +522,33 @@ The C# demo spawns multiple agents, each with their own session, against the sam
 
 **Spike needed:** Confirm that multiple concurrent sessions work without interference. Test with 2-3 sessions sending messages simultaneously.
 
-**Resolution:** *(to be filled after spike)*
+**Resolution:** RESOLVED (by source code analysis; no spike needed).
+
+The `CopilotClient` source (`client.py`) explicitly supports multiple concurrent sessions:
+
+1. **`self._sessions: dict[str, CopilotSession] = {}`** (line 1250) — sessions stored in a dict keyed by unique session ID.
+2. **`self._sessions_lock = threading.Lock()`** (line 1251) — thread-safe access for concurrent registration/removal.
+3. Each `create_session()` call generates a unique `session_id` and registers the new session in the dict (line 2169-2170).
+4. Event dispatch (lines 3613+) routes incoming events to the correct session by looking up `session_id` — sessions are fully independent.
+
+The pattern for Phase 3:
+```python
+# Multiple concurrent sessions from one client
+async with CopilotClient(mode="empty", base_directory=os.getcwd()) as client:
+    # Each query gets its own session + agent context
+    tasks = []
+    for query in incoming_queries:
+        agent = AgentContext(query_id=query.id)
+        session = await client.create_session(
+            tools=create_tools_for_agent(agent),
+            available_tools=ToolSet().add_custom("*"),
+            on_permission_request=PermissionHandler.approve_all,
+        )
+        tasks.append(asyncio.create_task(run_agent(session, agent, query)))
+    await asyncio.gather(*tasks)
+```
+
+No interference between sessions — each has its own event handlers, tool set, and message history.
 
 ---
 
