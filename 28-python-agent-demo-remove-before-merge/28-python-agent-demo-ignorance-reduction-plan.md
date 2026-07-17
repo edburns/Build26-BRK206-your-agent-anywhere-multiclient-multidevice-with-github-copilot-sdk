@@ -413,7 +413,32 @@ def report_intent(params: ReportIntentParams) -> str:
 
 **Spike needed:** Determine if tools are defined per-session (allowing closure over agent instance) or must be module-level singletons. If per-session, confirm that defining tools inside a method/factory works with `@define_tool`.
 
-**Resolution:** *(to be filled after spike)*
+**Resolution:** RESOLVED (spike `spike_2_7_define_tool_style`).
+
+1. **Factory/closure pattern works.** `@define_tool` inside a factory function (`create_tools_for_agent(agent: AgentContext) -> list[Tool]`) creates closures that bind each tool to a specific agent instance. Two agents get independent tool closures with no cross-contamination.
+
+2. **`overrides_built_in_tool=True`** is accepted by the runtime for `report_intent`.
+
+3. **Multi-field Pydantic model** (`SearchPropertiesParams` with `min_bedrooms`, `max_price`, `city`, `waterfront`) generates correct JSON schema with types, defaults, and `required` fields. Only `city` (no default) appears in `required`.
+
+4. **Both definition styles work:**
+   - Decorator: `@define_tool(description="...")` — recommended for readability.
+   - Function-call: `define_tool("name", handler=fn, params_type=Model)` — useful when name must differ from function name.
+
+5. **Gotcha: Do NOT use `from __future__ import annotations`** in files that define Pydantic models locally inside factory functions. The `get_type_hints()` call in the SDK's decorator needs concrete types, not stringified forward references. Locally-scoped classes are not resolvable as strings.
+
+6. **End-to-end verified:** CopilotClient session with all three tools; model called them in the prompted order (report_intent -> set_current_phase x4 -> search_properties), all closures correctly mutated the agent.
+
+7. **Recommended pattern for the demo:**
+   ```python
+   def create_tools_for_agent(agent: AgentContext) -> list[Tool]:
+       @define_tool(description="Sets the current phase")
+       def set_current_phase(params: SetPhaseParams) -> str:
+           agent.current_phase = Phase(params.phase)
+           return "ok"
+       # ... more tools ...
+       return [set_current_phase, report_intent, search_properties]
+   ```
 
 ### 2.8 — System message customization for the real-estate workflow
 
