@@ -2,6 +2,7 @@
 
 Human DRI: Ed Burns  
 Reference C# demo: `src/AgentOrchestrator/`  
+Reference Java demo: `src/java-agent-orchestrator/`  
 Python project root: `src/python_agent_orchestrator/`  
 Reference Java plan: `BRK206-00/dd-3017826-java-real-estate-demo-remove-before-merge/dd-3017826-java-real-estate-demo-ignorance-reduction-plan.md`
 
@@ -15,7 +16,7 @@ Create a Python analog of the C# Blazor AgentOrchestrator demo that showcases th
 
 | Concern | Technology |
 |---------|-----------|
-| Runtime | CPython 3.12+ (virtualenv project) |
+| Runtime | CPython 3.14 (virtualenv project) |
 | Backend web framework | FastAPI (ASGI, asyncio-native) |
 | ASGI server | Uvicorn |
 | UI framework | Server-rendered Jinja2 + HTMX + Alpine.js + Tailwind CSS |
@@ -37,3 +38,4 @@ Create a Python analog of the C# Blazor AgentOrchestrator demo that showcases th
 7. Multiple concurrent sessions (one per enquiry).
 8. Explicit permission handling strategy for demo-safe automation.
 9. Override/extension behavior for built-in tools where needed to preserve C# demo parity.
+
