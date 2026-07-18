@@ -10,6 +10,7 @@ from fastapi import Body, FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from pydantic import BaseModel
 
 from python_agent_orchestrator.agent import Agent
 from python_agent_orchestrator.app_state import AppState
@@ -39,11 +40,7 @@ _LIFECYCLE_PHASES = [
     Phase.SEARCHING.value,
     Phase.WRITING_REPORT.value,
 ]
-_PIPELINE_PHASES = _LIFECYCLE_PHASES + [
-    Phase.REJECTED.value,
-    Phase.NO_MATCHES.value,
-    Phase.DONE.value,
-]
+_PIPELINE_PHASES = [phase.value for phase in Phase]
 
 
 class QueryState(TypedDict):
@@ -70,6 +67,10 @@ class EndStateMapping(TypedDict):
     label: str
     box_class: str
     card_class: str
+
+
+class SubmitQueryPayload(BaseModel):
+    query: str | None = None
 
 
 _END_STATE_MAPPINGS: dict[str, EndStateMapping] = {
@@ -140,9 +141,9 @@ def _build_pipeline_state(app_state: AppState) -> PipelineState:
     }
 
 
-def _resolve_query_text(payload: dict[str, str] | None, query_number: int) -> str:
-    if payload and payload.get("query"):
-        return payload["query"]
+def _resolve_query_text(payload: SubmitQueryPayload | None, query_number: int) -> str:
+    if payload and payload.query:
+        return payload.query
     return _DEFAULT_QUERY_TEMPLATE.format(query_number=query_number)
 
 
@@ -207,7 +208,7 @@ async def pipeline_partial(request: Request) -> HTMLResponse:
 @app.post("/api/submit-query")
 async def submit_query(
     request: Request,
-    payload: dict[str, str] | None = Body(default=None),
+    payload: SubmitQueryPayload | None = Body(default=None),
 ) -> dict[str, object]:
     app_state = request.app.state.app_state
     query_number = app_state.next_query_number
