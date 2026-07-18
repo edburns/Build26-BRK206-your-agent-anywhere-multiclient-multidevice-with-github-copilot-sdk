@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 from typing import Any
 
+from sqlalchemy import func
 from sqlalchemy.pool import StaticPool
 from sqlmodel import Session, SQLModel, create_engine, select
 
@@ -28,6 +29,12 @@ def _is_waterfront(property_data: dict[str, Any]) -> bool:
 
 
 def seed_database(engine, data_dir: str | Path) -> int:
+    """Seed the database from JSON files. Idempotent — skips if already seeded."""
+    with Session(engine) as session:
+        existing = session.exec(select(func.count()).select_from(Property)).one()
+        if existing > 0:
+            return existing
+
     files = sorted(Path(data_dir).glob("*.json"))
 
     with Session(engine) as session:
@@ -67,12 +74,16 @@ def seed_database(engine, data_dir: str | Path) -> int:
     return seed_count
 
 
+_MAX_RESULTS = 100
+
+
 def search_properties(
     engine,
     city: str | None = None,
     min_beds: int | None = None,
     max_price: int | None = None,
     waterfront: bool | None = None,
+    limit: int | None = None,
 ) -> list[dict[str, Any]]:
     statement = select(Property)
 
@@ -85,7 +96,10 @@ def search_properties(
     if waterfront is not None:
         statement = statement.where(Property.waterfront == waterfront)
 
+    capped = min(limit or _MAX_RESULTS, _MAX_RESULTS)
+    statement = statement.order_by(Property.id).limit(capped)
+
     with Session(engine) as session:
-        properties = session.exec(statement.order_by(Property.id)).all()
+        properties = session.exec(statement).all()
 
     return [property_item.to_api_dict() for property_item in properties]
