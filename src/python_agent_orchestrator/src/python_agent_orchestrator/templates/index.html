@@ -29,7 +29,7 @@
         </div>
     </section>
 
-    <footer class="status-bar">
+    <footer class="status-bar" role="status" aria-live="polite">
         <span :class="'ws-status ' + (wsConnected ? '' : 'disconnected')">
             WS: <span x-text="wsConnected ? 'Connected' : 'Disconnected'"></span>
         </span>

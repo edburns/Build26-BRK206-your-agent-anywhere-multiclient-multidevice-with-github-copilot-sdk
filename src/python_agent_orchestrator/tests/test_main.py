@@ -1,3 +1,5 @@
+import re
+
 from fastapi.testclient import TestClient
 
 from python_agent_orchestrator.agent import Agent
@@ -77,7 +79,10 @@ def test_pipeline_partial_renders_existing_agent_state(monkeypatch) -> None:
     assert "Need a waterfront condo" in response.text
     assert "Write the follow-up report" in response.text
     assert "No Matches" in response.text
-    assert ">1<" in response.text
+    assert re.search(
+        r'<div class="number">1</div>\s*<div class="label">Completed</div>',
+        response.text,
+    )
 
 
 def test_submit_query_stubs_queued_state_and_increments_ids(monkeypatch) -> None:
