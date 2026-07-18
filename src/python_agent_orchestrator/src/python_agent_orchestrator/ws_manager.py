@@ -36,7 +36,7 @@ class ConnectionManager:
         for connection in self.connections:
             try:
                 await connection.send_text(text)
-            except Exception:  # noqa: BLE001
+            except Exception:  # noqa: BLE001 — any send failure means the client disconnected
                 disconnected.append(connection)
         for conn in disconnected:
             self.connections.remove(conn)

@@ -131,6 +131,7 @@ def test_schedule_broadcast_bridges_sync_to_async() -> None:
 
 
 def test_websocket_pipeline_accepts_connection(monkeypatch) -> None:
+    """Verify that /ws/pipeline accepts a WebSocket connection without error."""
     class FakeCopilotClient:
         async def start(self) -> None:
             pass
@@ -142,9 +143,10 @@ def test_websocket_pipeline_accepts_connection(monkeypatch) -> None:
 
     with TestClient(main.app) as client:
         with client.websocket_connect("/ws/pipeline") as ws:
-            # Send a ping to keep the connection alive briefly
+            # The endpoint is a push-only channel; clients can send text (ignored)
+            # and wait for server-pushed JSON messages.  Verify the connection
+            # is accepted without raising.
             ws.send_text("ping")
-            # No reply expected — just verifying connection was accepted
 
 
 def test_websocket_pipeline_endpoint_is_registered() -> None:

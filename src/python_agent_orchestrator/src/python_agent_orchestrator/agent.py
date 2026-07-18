@@ -82,12 +82,9 @@ class Agent:
             },
         )
 
-        tool_call_map: dict[str, str] = {}
-
         def on_event(event) -> None:
             match event.data:
                 case ToolExecutionStartData() as data:
-                    tool_call_map[data.tool_call_id] = data.tool_name
                     ws_manager.schedule_broadcast(loop, {
                         "type": "tool_start",
                         "queryId": self.query_id,
