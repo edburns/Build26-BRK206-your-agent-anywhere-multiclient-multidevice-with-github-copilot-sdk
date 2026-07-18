@@ -1,0 +1,30 @@
+{
+  "id": 96,
+  "bathrooms": 2,
+  "lotSizeSquareFootage": null,
+  "price": 2100000,
+  "status": "For Sale",
+  "keyFeatures": [
+    "Floor-to-ceiling windows",
+    "Bay views",
+    "Resort-style pool",
+    "24-hour concierge",
+    "Italian kitchen cabinetry"
+  ],
+  "listedDate": "2026-05-15",
+  "bedrooms": 3,
+  "parkingSpaces": 1,
+  "address": {
+    "street": "1200 Brickell Bay Drive",
+    "country": "United States",
+    "postalCode": "33131",
+    "city": "Miami",
+    "province": "Florida"
+  },
+  "type": "Condo",
+  "squareFootage": 1800,
+  "yearBuilt": 2019,
+  "currency": "USD",
+  "shortDescription": "Modern luxury 3-bedroom condo in Brickell with stunning bay views and resort-style amenities.",
+  "fullDescription": "This sleek high-rise condo in the heart of Brickell offers breathtaking views of Biscayne Bay. Features include floor-to-ceiling windows, an open-concept kitchen with Italian cabinetry, and a spacious primary suite. Building amenities include an infinity pool, spa, fitness center, and 24-hour concierge."
+}

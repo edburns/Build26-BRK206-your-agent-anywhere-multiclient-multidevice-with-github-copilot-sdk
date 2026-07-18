@@ -1,13 +1,34 @@
 from contextlib import asynccontextmanager
+import logging
 import os
+from pathlib import Path
 
 import uvicorn
 from fastapi import FastAPI
 
+from python_agent_orchestrator.property_database import (
+    create_engine_and_tables,
+    seed_database,
+)
+
+logger = logging.getLogger(__name__)
+
+_DATA_DIR = Path(
+    os.getenv("PROPERTY_DATA_DIR", "")
+    or Path(__file__).resolve().parent.parent.parent / "data" / "properties"
+)
+
 
 @asynccontextmanager
-async def lifespan(_app: FastAPI):
-    yield
+async def lifespan(fastapi_app: FastAPI):
+    engine = create_engine_and_tables()
+    count = seed_database(engine, _DATA_DIR)
+    logger.info("Seeded %d properties from %s", count, _DATA_DIR)
+    fastapi_app.state.engine = engine
+    try:
+        yield
+    finally:
+        engine.dispose()
 
 
 app = FastAPI(lifespan=lifespan)

@@ -1,0 +1,30 @@
+{
+  "id": 97,
+  "bathrooms": 4,
+  "lotSizeSquareFootage": 6000,
+  "price": 3500000,
+  "status": "For Sale",
+  "keyFeatures": [
+    "Direct beach access",
+    "Private pool",
+    "Rooftop terrace",
+    "Smart home technology",
+    "Waterfront location"
+  ],
+  "listedDate": "2026-05-15",
+  "bedrooms": 5,
+  "parkingSpaces": 2,
+  "address": {
+    "street": "340 Ocean Drive",
+    "country": "United States",
+    "postalCode": "33139",
+    "city": "Miami",
+    "province": "Florida"
+  },
+  "type": "Detached",
+  "squareFootage": 3200,
+  "yearBuilt": 2021,
+  "currency": "USD",
+  "shortDescription": "Stunning 5-bedroom waterfront home on Ocean Drive with direct beach access.",
+  "fullDescription": "This contemporary waterfront residence offers the ultimate Miami Beach lifestyle. The open-plan living area flows to a private pool and direct beach access. Gourmet kitchen, smart home technology, and a rooftop terrace with panoramic ocean views."
+}
