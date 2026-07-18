@@ -94,7 +94,9 @@ class Agent:
             await session.disconnect()
 
 
-def create_tools_for_agent(agent: Agent) -> list[Tool]:
+def create_tools_for_agent(agent: Agent, db_engine=None) -> list[Tool]:
+    if db_engine is not None:
+        agent.db_engine = db_engine
     class SetCurrentPhaseParams(BaseModel):
         phase: Phase = Field(description="The phase to transition to.")
 
@@ -136,7 +138,7 @@ def create_tools_for_agent(agent: Agent) -> list[Tool]:
             city=params.city,
             min_beds=params.min_bedrooms,
             max_price=params.max_price,
-            waterfront=params.waterfront,
+            waterfront=True if params.waterfront else None,
         )
 
     return [set_current_phase, report_intent, search_properties]
