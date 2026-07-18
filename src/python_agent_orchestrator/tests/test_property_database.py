@@ -27,12 +27,21 @@ def test_search_properties_filters_match_expected_subsets() -> None:
 
     toronto_results = search_properties(engine, city="Toronto")
     assert toronto_results
-    assert all(result["city"] == "Toronto" for result in toronto_results)
+    assert all(
+        result["address"]["city"] == "Toronto" for result in toronto_results
+    )
 
     waterfront_results = search_properties(engine, min_beds=3, waterfront=True)
     assert waterfront_results
     assert all(result["bedrooms"] >= 3 for result in waterfront_results)
     assert all(result["waterfront"] is True for result in waterfront_results)
+
+    # Verify camelCase nested shape matches C# demo output
+    sample = waterfront_results[0]
+    assert "address" in sample and isinstance(sample["address"], dict)
+    assert "postalCode" in sample["address"]
+    assert "squareFootage" in sample
+    assert "keyFeatures" in sample
 
     json.dumps(waterfront_results)
 

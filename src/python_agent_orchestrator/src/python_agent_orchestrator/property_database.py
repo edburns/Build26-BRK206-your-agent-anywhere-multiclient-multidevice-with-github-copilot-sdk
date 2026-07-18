@@ -88,4 +88,4 @@ def search_properties(
     with Session(engine) as session:
         properties = session.exec(statement.order_by(Property.id)).all()
 
-    return [property_item.model_dump() for property_item in properties]
+    return [property_item.to_api_dict() for property_item in properties]
