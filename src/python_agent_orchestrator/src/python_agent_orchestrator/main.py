@@ -33,7 +33,7 @@ _COPILOT_BASE_DIRECTORY = Path(
 )
 _TEMPLATES_DIR = _PACKAGE_DIR / "templates"
 _STATIC_DIR = _PACKAGE_DIR / "static"
-_DEFAULT_QUERY_TEMPLATE = "Demo query {query_number}"
+_DEFAULT_QUERY_TEMPLATE = "Property search request #{query_number}"
 _LIFECYCLE_PHASES = [
     Phase.QUEUED.value,
     Phase.VALIDATING.value,
@@ -142,8 +142,8 @@ def _build_pipeline_state(app_state: AppState) -> PipelineState:
 
 
 def _resolve_query_text(payload: SubmitQueryPayload | None, query_number: int) -> str:
-    if payload and payload.query:
-        return payload.query
+    if payload and payload.query and payload.query.strip():
+        return payload.query.strip()
     return _DEFAULT_QUERY_TEMPLATE.format(query_number=query_number)
 
 

@@ -173,7 +173,7 @@ body.pipeline-page {
 
 .card.active {
     border-color: var(--active);
-    box-shadow: 0 0 10px rgb(234 179 8 / 25%);
+    box-shadow: 0 0 10px rgba(234, 179, 8, 0.25);
 }
 
 .card.active::before {

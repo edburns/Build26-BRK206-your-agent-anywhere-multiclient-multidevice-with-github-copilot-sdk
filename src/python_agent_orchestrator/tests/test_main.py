@@ -80,7 +80,15 @@ def test_pipeline_partial_renders_existing_agent_state(monkeypatch) -> None:
     assert "Write the follow-up report" in response.text
     assert "No Matches" in response.text
     assert re.search(
+        r'<div class="number">1</div>\s*<div class="label">Processing</div>',
+        response.text,
+    )
+    assert re.search(
         r'<div class="number">1</div>\s*<div class="label">Completed</div>',
+        response.text,
+    )
+    assert re.search(
+        r'<div class="number">0</div>\s*<div class="label">Rejected</div>',
         response.text,
     )
 
