@@ -140,6 +140,12 @@ def _build_pipeline_state(app_state: AppState) -> PipelineState:
     }
 
 
+def _resolve_query_text(payload: dict[str, str] | None, query_number: int) -> str:
+    if payload and payload.get("query"):
+        return payload["query"]
+    return _DEFAULT_QUERY_TEMPLATE.format(query_number=query_number)
+
+
 @asynccontextmanager
 async def lifespan(fastapi_app: FastAPI):
     copilot_client = _create_copilot_client()
@@ -206,9 +212,7 @@ async def submit_query(
     app_state = request.app.state.app_state
     query_number = app_state.next_query_number
     query_id = f"q-{query_number}"
-    query_text = (payload or {}).get("query") or _DEFAULT_QUERY_TEMPLATE.format(
-        query_number=query_number
-    )
+    query_text = _resolve_query_text(payload, query_number)
     app_state.agents[query_id] = Agent(
         query_id=query_id,
         query_text=query_text,
