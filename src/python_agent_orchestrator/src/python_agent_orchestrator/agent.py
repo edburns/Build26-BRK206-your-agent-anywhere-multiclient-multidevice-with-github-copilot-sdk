@@ -16,6 +16,7 @@ from python_agent_orchestrator.property_database import search_properties as sea
 class Agent:
     query_id: str
     query_text: str
+    db_engine: object = None
     current_phase: Phase = Phase.QUEUED
     current_intent: str = ""
     report_text: str = ""
@@ -29,14 +30,14 @@ class Agent:
             "reportText": self.report_text,
         }
 
-    async def run(self, client: CopilotClient, db_engine) -> None:
+    async def run(self, client: CopilotClient) -> None:
         done = asyncio.Event()
         loop = asyncio.get_running_loop()
 
         session = await client.create_session(
             on_permission_request=PermissionHandler.approve_all,
             available_tools=ToolSet().add_custom("*"),
-            tools=create_tools_for_agent(self, db_engine),
+            tools=create_tools_for_agent(self),
             system_message={
                 "mode": "customize",
                 "sections": {
@@ -86,11 +87,14 @@ class Agent:
                     loop.call_soon_threadsafe(done.set)
 
         session.on(on_event)
-        await session.send(f"<enquiry>{self.query_text}</enquiry>")
-        await done.wait()
+        try:
+            await session.send(f"<enquiry>{self.query_text}</enquiry>")
+            await done.wait()
+        finally:
+            await session.disconnect()
 
 
-def create_tools_for_agent(agent: Agent, db_engine) -> list[Tool]:
+def create_tools_for_agent(agent: Agent) -> list[Tool]:
     class SetCurrentPhaseParams(BaseModel):
         phase: Phase = Field(description="The phase to transition to.")
 
@@ -128,7 +132,7 @@ def create_tools_for_agent(agent: Agent, db_engine) -> list[Tool]:
     @define_tool(description="Searches the property database for listings that match user criteria.")
     def search_properties(params: SearchPropertiesParams) -> list[dict[str, Any]]:
         return search_properties_db(
-            db_engine,
+            agent.db_engine,
             city=params.city,
             min_beds=params.min_bedrooms,
             max_price=params.max_price,

@@ -42,16 +42,21 @@ def _create_copilot_client() -> CopilotClient:
 @asynccontextmanager
 async def lifespan(fastapi_app: FastAPI):
     copilot_client = _create_copilot_client()
-    await copilot_client.start()
-    engine = create_engine_and_tables()
-    count = seed_database(engine, _DATA_DIR)
-    logger.info("Seeded %d properties from %s", count, _DATA_DIR)
-    fastapi_app.state.app_state = AppState(copilot_client=copilot_client, db_engine=engine)
+    started = False
+    engine = None
     try:
+        await copilot_client.start()
+        started = True
+        engine = create_engine_and_tables()
+        count = seed_database(engine, _DATA_DIR)
+        logger.info("Seeded %d properties from %s", count, _DATA_DIR)
+        fastapi_app.state.app_state = AppState(copilot_client=copilot_client, db_engine=engine)
         yield
     finally:
-        engine.dispose()
-        await copilot_client.stop()
+        if engine is not None:
+            engine.dispose()
+        if started:
+            await copilot_client.stop()
 
 
 app = FastAPI(lifespan=lifespan)

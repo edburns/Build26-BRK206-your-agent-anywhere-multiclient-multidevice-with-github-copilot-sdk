@@ -16,9 +16,9 @@ DATA_DIR = Path(__file__).resolve().parents[1] / "data" / "properties"
 def test_create_tools_for_agent_has_required_tools_and_schema() -> None:
     engine = create_engine_and_tables()
     seed_database(engine, DATA_DIR)
-    agent = Agent(query_id="q1", query_text="waterfront in toronto")
+    agent = Agent(query_id="q1", query_text="waterfront in toronto", db_engine=engine)
 
-    tools = create_tools_for_agent(agent, engine)
+    tools = create_tools_for_agent(agent)
     names = [tool.name for tool in tools]
     assert names == ["set_current_phase", "report_intent", "search_properties"]
     assert tools[1].overrides_built_in_tool is True
@@ -35,10 +35,10 @@ async def test_tool_closures_are_independent_between_agents() -> None:
     engine = create_engine_and_tables()
     seed_database(engine, DATA_DIR)
 
-    agent_a = Agent(query_id="a", query_text="query a")
-    agent_b = Agent(query_id="b", query_text="query b")
-    tools_a = create_tools_for_agent(agent_a, engine)
-    tools_b = create_tools_for_agent(agent_b, engine)
+    agent_a = Agent(query_id="a", query_text="query a", db_engine=engine)
+    agent_b = Agent(query_id="b", query_text="query b", db_engine=engine)
+    tools_a = create_tools_for_agent(agent_a)
+    tools_b = create_tools_for_agent(agent_b)
 
     await tools_a[0].handler(
         ToolInvocation(
@@ -64,7 +64,7 @@ async def test_tool_closures_are_independent_between_agents() -> None:
 async def test_agent_run_waits_for_session_idle_and_updates_state() -> None:
     engine = create_engine_and_tables()
     seed_database(engine, DATA_DIR)
-    agent = Agent(query_id="q2", query_text="Need 3 bedrooms in toronto")
+    agent = Agent(query_id="q2", query_text="Need 3 bedrooms in toronto", db_engine=engine)
 
     captured_session_args = {}
 
@@ -85,12 +85,15 @@ async def test_agent_run_waits_for_session_idle_and_updates_state() -> None:
             )
             self._callback(SimpleNamespace(data=SessionIdleData()))
 
+        async def disconnect(self) -> None:
+            pass
+
     class MockCopilotClient:
         async def create_session(self, **kwargs):
             captured_session_args.update(kwargs)
             return MockSession()
 
-    await agent.run(MockCopilotClient(), engine)
+    await agent.run(MockCopilotClient())
 
     assert captured_session_args["available_tools"] is not None
     assert captured_session_args["on_permission_request"] is not None
