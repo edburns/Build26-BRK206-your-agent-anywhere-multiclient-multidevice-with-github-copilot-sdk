@@ -4,12 +4,18 @@ from typing import Any
 
 from copilot import CopilotClient, ToolSet, define_tool
 from copilot.session import PermissionHandler
-from copilot.session_events import AssistantMessageData, SessionIdleData
+from copilot.session_events import (
+    AssistantMessageData,
+    SessionIdleData,
+    ToolExecutionCompleteData,
+    ToolExecutionStartData,
+)
 from copilot.tools import Tool
 from pydantic import BaseModel, Field, field_validator
 
 from python_agent_orchestrator.phase import Phase
 from python_agent_orchestrator.property_database import search_properties as search_properties_db
+from python_agent_orchestrator.ws_manager import ws_manager
 
 
 @dataclass
@@ -37,7 +43,7 @@ class Agent:
         session = await client.create_session(
             on_permission_request=PermissionHandler.approve_all,
             available_tools=ToolSet().add_custom("*"),
-            tools=create_tools_for_agent(self),
+            tools=create_tools_for_agent(self, loop=loop),
             system_message={
                 "mode": "customize",
                 "sections": {
@@ -78,6 +84,19 @@ class Agent:
 
         def on_event(event) -> None:
             match event.data:
+                case ToolExecutionStartData() as data:
+                    ws_manager.schedule_broadcast(loop, {
+                        "type": "tool_start",
+                        "queryId": self.query_id,
+                        "toolName": data.tool_name,
+                    })
+                case ToolExecutionCompleteData() as data:
+                    ws_manager.schedule_broadcast(loop, {
+                        "type": "tool_complete",
+                        "queryId": self.query_id,
+                        "toolCallId": data.tool_call_id,
+                        "success": data.success,
+                    })
                 case AssistantMessageData() as data:
                     if data.content:
                         self.report_text = (
@@ -85,7 +104,16 @@ class Agent:
                             if self.report_text
                             else data.content
                         )
+                        ws_manager.schedule_broadcast(loop, {
+                            "type": "assistant_message",
+                            "queryId": self.query_id,
+                            "content": data.content,
+                        })
                 case SessionIdleData():
+                    ws_manager.schedule_broadcast(loop, {
+                        "type": "session_idle",
+                        "queryId": self.query_id,
+                    })
                     loop.call_soon_threadsafe(done.set)
 
         session.on(on_event)
@@ -96,7 +124,11 @@ class Agent:
             await session.disconnect()
 
 
-def create_tools_for_agent(agent: Agent, db_engine=None) -> list[Tool]:
+def create_tools_for_agent(
+    agent: "Agent",
+    db_engine=None,
+    loop: asyncio.AbstractEventLoop | None = None,
+) -> list[Tool]:
     if db_engine is not None:
         agent.db_engine = db_engine
     if agent.db_engine is None:
@@ -108,6 +140,13 @@ def create_tools_for_agent(agent: Agent, db_engine=None) -> list[Tool]:
     @define_tool(description="Sets the current phase of the agent. Use this to report progress.")
     def set_current_phase(params: SetCurrentPhaseParams) -> str:
         agent.current_phase = params.phase
+        if loop is not None:
+            ws_manager.schedule_broadcast(loop, {
+                "type": "phase_change",
+                "queryId": agent.query_id,
+                "phase": agent.current_phase.value,
+                "intent": agent.current_intent,
+            })
         return f"Phase set to {agent.current_phase.value}"
 
     class ReportIntentParams(BaseModel):
