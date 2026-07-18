@@ -5,13 +5,14 @@ from pathlib import Path
 
 import uvicorn
 from copilot import CopilotClient
-from fastapi import FastAPI
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 
 from python_agent_orchestrator.app_state import AppState
 from python_agent_orchestrator.property_database import (
     create_engine_and_tables,
     seed_database,
 )
+from python_agent_orchestrator.ws_manager import ws_manager
 
 logger = logging.getLogger(__name__)
 
@@ -65,6 +66,16 @@ app = FastAPI(lifespan=lifespan)
 @app.get("/health")
 async def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@app.websocket("/ws/pipeline")
+async def websocket_endpoint(websocket: WebSocket) -> None:
+    await ws_manager.connect(websocket)
+    try:
+        while True:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        ws_manager.disconnect(websocket)
 
 
 if __name__ == "__main__":
