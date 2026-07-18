@@ -82,7 +82,7 @@ function pipelinePage(initialState) {
         async submitQuery() {
             const response = await fetch("/api/submit-query", { method: "POST" });
             if (!response.ok) {
-                this.lastEvent = "submit failed";
+                this.lastEvent = `submit failed (${response.status})`;
                 return;
             }
             const data = await response.json();
