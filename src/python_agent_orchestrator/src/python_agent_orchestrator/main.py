@@ -75,6 +75,8 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
         while True:
             await websocket.receive_text()
     except WebSocketDisconnect:
+        pass
+    finally:
         ws_manager.disconnect(websocket)
 
 
