@@ -22,7 +22,10 @@ async def lifespan(fastapi_app: FastAPI):
     count = seed_database(engine, _DATA_DIR)
     logger.info("Seeded %d properties from %s", count, _DATA_DIR)
     fastapi_app.state.engine = engine
-    yield
+    try:
+        yield
+    finally:
+        engine.dispose()
 
 
 app = FastAPI(lifespan=lifespan)
