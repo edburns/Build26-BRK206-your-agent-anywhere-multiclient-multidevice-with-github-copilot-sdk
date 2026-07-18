@@ -31,6 +31,12 @@ def test_search_properties_filters_match_expected_subsets() -> None:
         result["address"]["city"] == "Toronto" for result in toronto_results
     )
 
+    miami_results = search_properties(engine, city="Miami")
+    assert miami_results
+    assert all(
+        result["address"]["city"] == "Miami" for result in miami_results
+    )
+
     waterfront_results = search_properties(engine, min_beds=3, waterfront=True)
     assert waterfront_results
     assert all(result["bedrooms"] >= 3 for result in waterfront_results)

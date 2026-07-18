@@ -1,31 +1,30 @@
 {
   "id": 97,
-  "type": "Condo",
+  "bathrooms": 4,
+  "lotSizeSquareFootage": 6000,
+  "price": 3500000,
   "status": "For Sale",
-  "price": 733000,
-  "currency": "CAD",
-  "address": {
-    "street": "1 Bedford Road, Unit PH02",
-    "city": "Toronto",
-    "province": "Ontario",
-    "postalCode": "M5R 2B4",
-    "country": "Canada"
-  },
-  "bedrooms": 2,
-  "bathrooms": 1,
-  "squareFootage": 803,
-  "lotSizeSquareFootage": null,
-  "yearBuilt": 1999,
-  "parkingSpaces": 1,
-  "shortDescription": "Modern 2-bedroom suite in Yorkville with premium finishes and full building amenities.",
-  "fullDescription": "Welcome to 1 Bedford Road, Unit PH02 in the vibrant Yorkville neighbourhood. This well-appointed condominium suite delivers effortless urban living with premium amenities. The main living area showcases original architectural details alongside tasteful modern updates. The kitchen has been fully renovated with soft-close cabinetry, stone counters, and a breakfast bar. All 2 bedrooms are generously sized, and the primary offers a spa-inspired four-piece ensuite. Smart-home features, updated plumbing, and a newer roof provide peace of mind for years to come. This coveted pocket puts you within walking distance of top schools, green spaces, and vibrant dining.",
   "keyFeatures": [
-    "Landscaped front and rear gardens",
-    "Walk-in closet in primary bedroom",
-    "Surrounded by cafes, galleries, and boutiques",
-    "Private driveway with detached garage",
-    "Chef’s kitchen with granite countertops and premium appliances",
-    "In-suite laundry with full-size washer and dryer"
+    "Direct beach access",
+    "Private pool",
+    "Rooftop terrace",
+    "Smart home technology",
+    "Waterfront location"
   ],
-  "listedDate": "2026-05-01"
+  "listedDate": "2026-05-15",
+  "bedrooms": 5,
+  "parkingSpaces": 2,
+  "address": {
+    "street": "340 Ocean Drive",
+    "country": "United States",
+    "postalCode": "33139",
+    "city": "Miami",
+    "province": "Florida"
+  },
+  "type": "Detached",
+  "squareFootage": 3200,
+  "yearBuilt": 2021,
+  "currency": "USD",
+  "shortDescription": "Stunning 5-bedroom waterfront home on Ocean Drive with direct beach access.",
+  "fullDescription": "This contemporary waterfront residence offers the ultimate Miami Beach lifestyle. The open-plan living area flows to a private pool and direct beach access. Gourmet kitchen, smart home technology, and a rooftop terrace with panoramic ocean views."
 }

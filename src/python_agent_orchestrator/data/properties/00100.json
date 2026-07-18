@@ -1,31 +1,30 @@
 {
   "id": 100,
-  "type": "Detached",
+  "bathrooms": 4,
+  "lotSizeSquareFootage": null,
+  "price": 4200000,
   "status": "For Sale",
-  "price": 1584000,
-  "currency": "CAD",
-  "address": {
-    "street": "15 Lowther Avenue",
-    "city": "Toronto",
-    "province": "Ontario",
-    "postalCode": "M5R 1C5",
-    "country": "Canada"
-  },
-  "bedrooms": 2,
-  "bathrooms": 2,
-  "squareFootage": 2242,
-  "lotSizeSquareFootage": 2524,
-  "yearBuilt": 1908,
-  "parkingSpaces": 1,
-  "shortDescription": "Bright and airy 2-bedroom detached home in the heart of The Annex, move-in ready with generous lot.",
-  "fullDescription": "Welcome to 15 Lowther Avenue in the vibrant The Annex neighbourhood. This beautifully presented detached home offers generous living space across multiple levels. The main living area impresses with nine-foot ceilings, designer fixtures, and a seamless flow between rooms. The kitchen offers ample counter space, premium fixtures, and a convenient eat-in dining area. The sleeping quarters comprise 2 comfortable bedrooms, the largest enjoying a private ensuite bathroom. Smart-home features, updated plumbing, and a newer roof provide peace of mind for years to come. Transit, cycling infrastructure, and the best of Toronto’s cultural scene are right at your doorstep.",
   "keyFeatures": [
-    "Private south-facing backyard with patio",
-    "Modern eat-in kitchen with stainless steel appliances",
-    "Minutes to parks, shops, and restaurants",
-    "Private driveway with detached garage",
-    "Cosy living room with gas fireplace",
-    "Ensuite bathroom with heated floors"
+    "Private elevator",
+    "Wraparound terrace",
+    "Waterfront infinity pool",
+    "Private beach club",
+    "Panoramic ocean views"
   ],
-  "listedDate": "2026-03-10"
+  "listedDate": "2026-05-15",
+  "bedrooms": 4,
+  "parkingSpaces": 3,
+  "address": {
+    "street": "2100 Collins Avenue",
+    "country": "United States",
+    "postalCode": "33140",
+    "city": "Miami",
+    "province": "Florida"
+  },
+  "type": "Penthouse",
+  "squareFootage": 4000,
+  "yearBuilt": 2022,
+  "currency": "USD",
+  "shortDescription": "Luxurious 4-bedroom penthouse on Collins Avenue with panoramic ocean and city views.",
+  "fullDescription": "This spectacular penthouse offers unparalleled views from its wraparound terrace. Features include a private elevator, chef's kitchen with top-of-the-line appliances, a spa-like primary bath, and a waterfront infinity-edge pool. Full-service building with valet, concierge, and private beach club."
 }

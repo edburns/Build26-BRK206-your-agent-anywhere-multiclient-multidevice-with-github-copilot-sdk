@@ -96,7 +96,7 @@ def search_properties(
     if waterfront is not None:
         statement = statement.where(Property.waterfront == waterfront)
 
-    capped = min(limit or _MAX_RESULTS, _MAX_RESULTS)
+    capped = max(1, min(limit, _MAX_RESULTS)) if limit is not None else _MAX_RESULTS
     statement = statement.order_by(Property.id).limit(capped)
 
     with Session(engine) as session:
