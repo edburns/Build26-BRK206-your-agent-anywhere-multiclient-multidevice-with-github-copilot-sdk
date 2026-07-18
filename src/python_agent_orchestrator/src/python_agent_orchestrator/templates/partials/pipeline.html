@@ -1,0 +1,80 @@
+<div class="pipeline-area">
+    <div class="column-headings">
+        <div class="col-label">Lifecycle State</div>
+        <div class="col-label end-state-label">End State</div>
+    </div>
+
+    {% for phase in lifecycle_phases %}
+    {% set end_state = end_state_mappings.get(phase) %}
+    <div class="phase-pair">
+        <div class="phase-box">
+            <div class="phase-label">{{ "Writing Report" if phase == "WritingReport" else phase }}</div>
+            {% for query in state.columns.get(phase, []) %}
+            <article class="card {{ '' if phase == 'Queued' else 'active' }}">
+                <div class="query-text">{{ query.text }}</div>
+                <div class="intent">{{ query.intent or query.id }}</div>
+            </article>
+            {% endfor %}
+            {% if not state.columns.get(phase, []) %}
+            <div class="empty-dash">--</div>
+            {% endif %}
+        </div>
+
+        {% if end_state %}
+        <div class="arrow-right">
+            <svg width="32" height="16" viewBox="0 0 32 16" aria-hidden="true">
+                <path d="M0 8h26M22 3l5 5-5 5" stroke="currentColor" stroke-width="1.5" fill="none"/>
+            </svg>
+        </div>
+        <div class="phase-box {{ end_state.box_class }}">
+            <div class="phase-label">{{ end_state.label }}</div>
+            {% for query in state.columns.get(end_state.phase, []) %}
+            <article class="card {{ end_state.card_class }}">
+                <div class="query-text">{{ query.text }}</div>
+                <div class="intent">{{ query.intent or query.id }}</div>
+            </article>
+            {% endfor %}
+            {% if not state.columns.get(end_state.phase, []) %}
+            <div class="empty-dash">--</div>
+            {% endif %}
+        </div>
+        {% else %}
+        <div></div>
+        <div></div>
+        {% endif %}
+    </div>
+
+    {% if not loop.last %}
+    <div class="arrow-down">
+        <svg width="16" height="24" viewBox="0 0 16 24" aria-hidden="true">
+            <path d="M8 0v20M3 16l5 5 5-5" stroke="currentColor" stroke-width="1.5" fill="none"/>
+        </svg>
+    </div>
+    {% endif %}
+    {% endfor %}
+</div>
+
+<aside class="dashboard">
+    <h2>Dashboard</h2>
+    <div class="dash-stat">
+        <div class="indicator processing"></div>
+        <div>
+            <div class="number">{{ state.dashboard.processing }}</div>
+            <div class="label">Processing</div>
+        </div>
+    </div>
+    <div class="dash-stat">
+        <div class="indicator completed"></div>
+        <div>
+            <div class="number">{{ state.dashboard.completed }}</div>
+            <div class="label">Completed</div>
+        </div>
+    </div>
+    <div class="dash-stat">
+        <div class="indicator rejected"></div>
+        <div>
+            <div class="number">{{ state.dashboard.rejected }}</div>
+            <div class="label">Rejected</div>
+        </div>
+    </div>
+</aside>

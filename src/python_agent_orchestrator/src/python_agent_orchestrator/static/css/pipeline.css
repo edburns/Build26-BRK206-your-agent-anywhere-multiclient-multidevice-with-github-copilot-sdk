@@ -1,0 +1,379 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+:root {
+    color-scheme: dark;
+    --page-bg: #0f1117;
+    --panel-bg: #1a1b26;
+    --panel-bg-muted: #1e1f2e;
+    --card-bg: #262738;
+    --border: #2a2b3d;
+    --border-strong: #3a3b4d;
+    --text: #e4e4e7;
+    --text-muted: #9ca3af;
+    --text-subtle: #6b7280;
+    --arrow: #4b5563;
+    --processing: #6366f1;
+    --done: #22c55e;
+    --rejected: #ef4444;
+    --active: #eab308;
+}
+
+body.pipeline-page {
+    min-height: 100vh;
+    background: var(--page-bg);
+    color: var(--text);
+    font-family: "Segoe UI", system-ui, sans-serif;
+}
+
+.page-header {
+    padding: 24px 32px 8px;
+}
+
+.page-header h1 {
+    font-size: 22px;
+    font-weight: 600;
+}
+
+.subtitle {
+    margin-top: 4px;
+    color: var(--text-subtle);
+    font-size: 13px;
+}
+
+.pipeline-shell {
+    position: relative;
+    padding: 16px 32px 64px;
+}
+
+.main-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 200px;
+    gap: 24px;
+    align-items: start;
+}
+
+.pipeline-area {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.column-headings {
+    display: grid;
+    grid-template-columns: 200px 248px;
+    margin-bottom: 12px;
+}
+
+.col-label {
+    color: var(--text-subtle);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.end-state-label {
+    padding-left: 48px;
+}
+
+.phase-pair {
+    display: grid;
+    grid-template-columns: 200px 48px 200px;
+    align-items: start;
+}
+
+.phase-box {
+    min-height: 90px;
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--panel-bg);
+}
+
+.phase-label {
+    margin-bottom: 8px;
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.end-rejected {
+    border-color: var(--rejected);
+}
+
+.end-rejected .phase-label,
+.end-no-matches .phase-label {
+    color: var(--rejected);
+}
+
+.end-no-matches {
+    border-color: var(--rejected);
+}
+
+.end-done {
+    border-color: var(--done);
+}
+
+.end-done .phase-label {
+    color: var(--done);
+}
+
+.empty-dash {
+    color: var(--border-strong);
+    font-size: 18px;
+}
+
+.arrow-down {
+    display: flex;
+    justify-content: center;
+    width: 200px;
+    padding: 6px 0;
+    color: var(--arrow);
+}
+
+.arrow-right {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--arrow);
+}
+
+.card {
+    position: relative;
+    margin-bottom: 6px;
+    padding: 8px 10px;
+    border: 1px solid var(--border-strong);
+    border-radius: 5px;
+    background: var(--card-bg);
+    animation: cardEnter 0.4s ease-out;
+    transition: transform 0.4s ease, opacity 0.4s ease, box-shadow 0.3s ease;
+}
+
+.card:last-child {
+    margin-bottom: 0;
+}
+
+.query-text {
+    margin-bottom: 2px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.intent {
+    color: var(--text-muted);
+    font-size: 10px;
+    font-style: italic;
+}
+
+.card.active {
+    border-color: var(--active);
+    box-shadow: 0 0 10px rgb(234 179 8 / 25%);
+}
+
+.card.active::before {
+    content: "";
+    position: absolute;
+    top: 7px;
+    right: 7px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--active);
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+.card.done {
+    border-color: var(--done);
+    opacity: 0.85;
+}
+
+.card.rejected {
+    border-color: var(--rejected);
+    opacity: 0.85;
+}
+
+.dashboard {
+    position: sticky;
+    top: 24px;
+    padding: 16px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--panel-bg-muted);
+}
+
+.dashboard h2 {
+    margin-bottom: 16px;
+    color: var(--text-subtle);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.dash-stat {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.dash-stat:last-child {
+    margin-bottom: 0;
+}
+
+.indicator {
+    width: 3px;
+    height: 36px;
+    border-radius: 2px;
+}
+
+.indicator.processing {
+    background: var(--processing);
+}
+
+.indicator.completed {
+    background: var(--done);
+}
+
+.indicator.rejected {
+    background: var(--rejected);
+}
+
+.number {
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.label {
+    color: var(--text-muted);
+    font-size: 11px;
+}
+
+.add-btn {
+    position: absolute;
+    top: 16px;
+    right: 252px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--border-strong);
+    border-radius: 50%;
+    background: var(--border);
+    color: var(--text-muted);
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.add-btn:hover {
+    border-color: var(--processing);
+    background: var(--processing);
+    color: #fff;
+}
+
+.status-bar {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    display: flex;
+    gap: 20px;
+    padding: 6px 24px;
+    border-top: 1px solid var(--border);
+    background: var(--panel-bg);
+    color: var(--text-subtle);
+    font-size: 11px;
+}
+
+.ws-status {
+    color: var(--done);
+}
+
+.ws-status.disconnected {
+    color: var(--rejected);
+}
+
+@keyframes pulse {
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.5;
+        transform: scale(1.3);
+    }
+}
+
+@keyframes cardEnter {
+    from {
+        opacity: 0;
+        transform: translateY(-8px) scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@media (max-width: 1100px) {
+    .main-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .add-btn {
+        right: 32px;
+    }
+
+    .dashboard {
+        position: static;
+    }
+}
+
+@media (max-width: 760px) {
+    .pipeline-shell {
+        padding-inline: 16px;
+    }
+
+    .page-header {
+        padding-inline: 16px;
+    }
+
+    .phase-pair,
+    .column-headings {
+        grid-template-columns: 1fr;
+    }
+
+    .end-state-label {
+        padding-left: 0;
+        margin-top: 8px;
+    }
+
+    .arrow-right {
+        justify-content: flex-start;
+        padding: 6px 0;
+    }
+
+    .arrow-down {
+        justify-content: flex-start;
+        width: auto;
+    }
+
+    .phase-box {
+        width: 100%;
+    }
+
+    .status-bar {
+        flex-wrap: wrap;
+    }
+}
