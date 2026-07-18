@@ -104,6 +104,7 @@ def test_schedule_broadcast_bridges_sync_to_async() -> None:
     """schedule_broadcast() must deliver the message via the event loop."""
     manager = ConnectionManager()
     received: list[str] = []
+    broadcast_done = None  # will be an asyncio.Event once the loop is running
 
     class FakeWS:
         async def accept(self) -> None:
@@ -111,14 +112,17 @@ def test_schedule_broadcast_bridges_sync_to_async() -> None:
 
         async def send_text(self, text: str) -> None:
             received.append(text)
+            broadcast_done.set()
 
     async def run() -> None:
+        nonlocal broadcast_done
+        broadcast_done = asyncio.Event()
         loop = asyncio.get_running_loop()
         await manager.connect(FakeWS())
         # simulate a sync SDK callback calling schedule_broadcast
         manager.schedule_broadcast(loop, {"type": "phase_change", "queryId": "q-1", "phase": "Searching"})
-        # give the threadsafe coroutine time to execute
-        await asyncio.sleep(0.05)
+        # wait for broadcast to complete with a timeout instead of an arbitrary sleep
+        await asyncio.wait_for(broadcast_done.wait(), timeout=5.0)
 
     asyncio.run(run())
     assert len(received) == 1
