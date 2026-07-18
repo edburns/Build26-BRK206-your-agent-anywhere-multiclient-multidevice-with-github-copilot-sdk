@@ -30,12 +30,18 @@ def _is_waterfront(property_data: dict[str, Any]) -> bool:
 
 def seed_database(engine, data_dir: str | Path) -> int:
     """Seed the database from JSON files. Idempotent — skips if already seeded."""
+    data_path = Path(data_dir)
+    if not data_path.is_dir():
+        raise FileNotFoundError(f"Seed data directory does not exist: {data_path}")
+
+    files = sorted(data_path.glob("*.json"))
+    if not files:
+        raise FileNotFoundError(f"No JSON seed files found in: {data_path}")
+
     with Session(engine) as session:
         existing = session.exec(select(func.count()).select_from(Property)).one()
         if existing > 0:
             return existing
-
-    files = sorted(Path(data_dir).glob("*.json"))
 
     with Session(engine) as session:
         seed_count = 0
