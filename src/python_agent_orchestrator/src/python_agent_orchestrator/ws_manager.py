@@ -18,6 +18,7 @@ class ConnectionManager:
 
     def __init__(self) -> None:
         self.connections: list[Any] = []
+        self._broadcast_lock = asyncio.Lock()
 
     async def connect(self, ws: Any) -> None:
         """Accept and register a new WebSocket connection."""
@@ -30,17 +31,22 @@ class ConnectionManager:
             self.connections.remove(ws)
 
     async def broadcast(self, message: dict) -> None:
-        """Broadcast a JSON message to all connected WebSocket clients."""
-        text = json.dumps(message)
-        disconnected = []
-        for connection in list(self.connections):
-            try:
-                await connection.send_text(text)
-            except Exception:  # noqa: BLE001 — any send failure means the client disconnected
-                disconnected.append(connection)
-        for conn in disconnected:
-            if conn in self.connections:
-                self.connections.remove(conn)
+        """Broadcast a JSON message to all connected WebSocket clients.
+
+        Serialized with an async lock so concurrent schedule_broadcast() calls
+        do not interleave send_text() on the same WebSocket.
+        """
+        async with self._broadcast_lock:
+            text = json.dumps(message)
+            disconnected = []
+            for connection in list(self.connections):
+                try:
+                    await connection.send_text(text)
+                except Exception:  # noqa: BLE001 — any send failure means the client disconnected
+                    disconnected.append(connection)
+            for conn in disconnected:
+                if conn in self.connections:
+                    self.connections.remove(conn)
 
     def schedule_broadcast(self, loop: asyncio.AbstractEventLoop, message: dict) -> None:
         """Bridge from sync SDK callback to async WebSocket broadcast.
