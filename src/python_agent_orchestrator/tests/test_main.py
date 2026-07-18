@@ -9,7 +9,7 @@ def test_app_importable() -> None:
     assert main.app is not None
 
 
-def _patch_fake_copilot_client(monkeypatch):
+def _create_and_patch_fake_copilot_client(monkeypatch):
     class FakeCopilotClient:
         def __init__(self):
             self.started = False
@@ -27,7 +27,7 @@ def _patch_fake_copilot_client(monkeypatch):
 
 
 def test_health_endpoint(monkeypatch) -> None:
-    mock_copilot_client = _patch_fake_copilot_client(monkeypatch)
+    mock_copilot_client = _create_and_patch_fake_copilot_client(monkeypatch)
 
     with TestClient(main.app) as client:
         response = client.get("/health")
@@ -41,7 +41,7 @@ def test_health_endpoint(monkeypatch) -> None:
 
 
 def test_index_renders_pipeline_page(monkeypatch) -> None:
-    _patch_fake_copilot_client(monkeypatch)
+    _create_and_patch_fake_copilot_client(monkeypatch)
 
     with TestClient(main.app) as client:
         response = client.get("/")
@@ -54,7 +54,7 @@ def test_index_renders_pipeline_page(monkeypatch) -> None:
 
 
 def test_pipeline_partial_renders_existing_agent_state(monkeypatch) -> None:
-    _patch_fake_copilot_client(monkeypatch)
+    _create_and_patch_fake_copilot_client(monkeypatch)
 
     with TestClient(main.app) as client:
         app_state = main.app.state.app_state
@@ -81,7 +81,7 @@ def test_pipeline_partial_renders_existing_agent_state(monkeypatch) -> None:
 
 
 def test_submit_query_stubs_queued_state_and_increments_ids(monkeypatch) -> None:
-    _patch_fake_copilot_client(monkeypatch)
+    _create_and_patch_fake_copilot_client(monkeypatch)
 
     with TestClient(main.app) as client:
         first = client.post("/api/submit-query")

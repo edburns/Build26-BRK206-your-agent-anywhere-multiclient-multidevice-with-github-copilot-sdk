@@ -32,6 +32,7 @@ _COPILOT_BASE_DIRECTORY = Path(
 )
 _TEMPLATES_DIR = _PACKAGE_DIR / "templates"
 _STATIC_DIR = _PACKAGE_DIR / "static"
+_DEFAULT_QUERY_TEMPLATE = "Demo query {query_number}"
 _LIFECYCLE_PHASES = [
     Phase.QUEUED.value,
     Phase.VALIDATING.value,
@@ -126,7 +127,7 @@ def _build_pipeline_state(app_state: AppState) -> PipelineState:
     for agent in app_state.agents.values():
         query_state = _serialize_agent(agent)
         queries[query_state["id"]] = query_state
-        columns.setdefault(query_state["phase"], []).append(query_state)
+        columns[query_state["phase"]].append(query_state)
 
     return {
         "queries": queries,
@@ -205,7 +206,9 @@ async def submit_query(
     app_state = request.app.state.app_state
     query_number = app_state.next_query_number
     query_id = f"q-{query_number}"
-    query_text = (payload or {}).get("query") or f"Demo query {query_number}"
+    query_text = (payload or {}).get("query") or _DEFAULT_QUERY_TEMPLATE.format(
+        query_number=query_number
+    )
     app_state.agents[query_id] = Agent(
         query_id=query_id,
         query_text=query_text,
