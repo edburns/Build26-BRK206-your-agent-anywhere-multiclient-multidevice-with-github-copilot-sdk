@@ -13,7 +13,10 @@ from python_agent_orchestrator.property_database import (
 
 logger = logging.getLogger(__name__)
 
-_DATA_DIR = Path(__file__).resolve().parent.parent.parent / "data" / "properties"
+_DATA_DIR = Path(
+    os.getenv("PROPERTY_DATA_DIR", "")
+    or Path(__file__).resolve().parent.parent.parent / "data" / "properties"
+)
 
 
 @asynccontextmanager
