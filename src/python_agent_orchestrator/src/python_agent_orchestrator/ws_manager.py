@@ -33,13 +33,14 @@ class ConnectionManager:
         """Broadcast a JSON message to all connected WebSocket clients."""
         text = json.dumps(message)
         disconnected = []
-        for connection in self.connections:
+        for connection in list(self.connections):
             try:
                 await connection.send_text(text)
             except Exception:  # noqa: BLE001 — any send failure means the client disconnected
                 disconnected.append(connection)
         for conn in disconnected:
-            self.connections.remove(conn)
+            if conn in self.connections:
+                self.connections.remove(conn)
 
     def schedule_broadcast(self, loop: asyncio.AbstractEventLoop, message: dict) -> None:
         """Bridge from sync SDK callback to async WebSocket broadcast.
