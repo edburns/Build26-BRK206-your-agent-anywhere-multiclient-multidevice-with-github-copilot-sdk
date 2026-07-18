@@ -2,13 +2,18 @@ import json
 from pathlib import Path
 from typing import Any
 
+from sqlalchemy.pool import StaticPool
 from sqlmodel import Session, SQLModel, create_engine, select
 
 from python_agent_orchestrator.models import Property
 
 
 def create_engine_and_tables():
-    engine = create_engine("sqlite:///:memory:")
+    engine = create_engine(
+        "sqlite:///:memory:",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
     SQLModel.metadata.create_all(engine)
     return engine
 
