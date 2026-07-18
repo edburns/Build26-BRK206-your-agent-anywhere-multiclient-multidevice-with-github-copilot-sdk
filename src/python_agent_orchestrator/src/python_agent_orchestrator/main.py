@@ -10,7 +10,7 @@ from fastapi import Body, FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator
 
 from python_agent_orchestrator.agent import Agent
 from python_agent_orchestrator.app_state import AppState
@@ -70,7 +70,12 @@ class EndStateMapping(TypedDict):
 
 
 class SubmitQueryPayload(BaseModel):
-    query: str | None = None
+    query: str | None = Field(default=None, max_length=200)
+
+    @field_validator("query")
+    @classmethod
+    def normalize_query(cls, value: str | None) -> str | None:
+        return value.strip() if value else value
 
 
 _END_STATE_MAPPINGS: dict[str, EndStateMapping] = {
@@ -169,6 +174,18 @@ async def lifespan(fastapi_app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 app.mount("/static", StaticFiles(directory=str(_STATIC_DIR)), name="static")
+
+
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("X-Frame-Options", "DENY")
+    if request.url.path.startswith("/static/"):
+        response.headers.setdefault("Cache-Control", "public, max-age=3600")
+    else:
+        response.headers.setdefault("Cache-Control", "no-store")
+    return response
 
 
 @app.get("/health")

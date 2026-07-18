@@ -47,12 +47,18 @@ def test_index_renders_pipeline_page(monkeypatch) -> None:
 
     with TestClient(main.app) as client:
         response = client.get("/")
+        static_response = client.get("/static/css/pipeline.css")
 
     assert response.status_code == 200
     assert "Real Estate Agent Pipeline" in response.text
     assert "GitHub Copilot SDK for Python -- BRK206 Demo" in response.text
     assert 'hx-get="/partials/pipeline"' in response.text
     assert 'x-data="pipelinePage(' in response.text
+    assert 'integrity="sha384-9Ax3MmS9AClxJyd5/zafcXXjxmwFhZCdsT6HJoJjarvCaAkJlk5QDzjLJm+Wdx5F"' in response.text
+    assert response.headers["x-content-type-options"] == "nosniff"
+    assert response.headers["x-frame-options"] == "DENY"
+    assert response.headers["cache-control"] == "no-store"
+    assert static_response.headers["cache-control"] == "public, max-age=3600"
 
 
 def test_pipeline_partial_renders_existing_agent_state(monkeypatch) -> None:
