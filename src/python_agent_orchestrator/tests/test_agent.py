@@ -66,14 +66,14 @@ async def test_agent_run_waits_for_session_idle_and_updates_state() -> None:
     seed_database(engine, DATA_DIR)
     agent = Agent(query_id="q2", query_text="Need 3 bedrooms in toronto")
 
-    created = {}
+    captured_session_args = {}
 
-    class FakeSession:
+    class MockSession:
         def on(self, callback):
             self._callback = callback
 
         async def send(self, prompt: str) -> None:
-            created["prompt"] = prompt
+            captured_session_args["prompt"] = prompt
             self._callback(
                 SimpleNamespace(
                     data=ToolExecutionStartData(
@@ -85,19 +85,19 @@ async def test_agent_run_waits_for_session_idle_and_updates_state() -> None:
             )
             self._callback(SimpleNamespace(data=SessionIdleData()))
 
-    class FakeClient:
+    class MockCopilotClient:
         async def create_session(self, **kwargs):
-            created.update(kwargs)
-            return FakeSession()
+            captured_session_args.update(kwargs)
+            return MockSession()
 
-    await agent.run(FakeClient(), engine)
+    await agent.run(MockCopilotClient(), engine)
 
-    assert created["available_tools"] is not None
-    assert created["on_permission_request"] is not None
-    assert created["tools"][0].name == "set_current_phase"
-    assert created["prompt"] == "<enquiry>Need 3 bedrooms in toronto</enquiry>"
+    assert captured_session_args["available_tools"] is not None
+    assert captured_session_args["on_permission_request"] is not None
+    assert captured_session_args["tools"][0].name == "set_current_phase"
+    assert captured_session_args["prompt"] == "<enquiry>Need 3 bedrooms in toronto</enquiry>"
     assert agent.to_dict()["phase"] == Phase.QUEUED.value
-    assert "identity" in created["system_message"]["sections"]
+    assert "identity" in captured_session_args["system_message"]["sections"]
 
 
 def test_agent_to_dict_is_json_serializable_shape() -> None:

@@ -6,7 +6,7 @@ from copilot import CopilotClient, ToolSet, define_tool
 from copilot.session import PermissionHandler
 from copilot.session_events import AssistantMessageData, SessionIdleData
 from copilot.tools import Tool
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from python_agent_orchestrator.phase import Phase
 from python_agent_orchestrator.property_database import search_properties as search_properties_db
@@ -77,7 +77,11 @@ class Agent:
             match event.data:
                 case AssistantMessageData() as data:
                     if data.content:
-                        self.report_text = data.content
+                        self.report_text = (
+                            f"{self.report_text}\n{data.content}".strip()
+                            if self.report_text
+                            else data.content
+                        )
                 case SessionIdleData():
                     loop.call_soon_threadsafe(done.set)
 
@@ -97,6 +101,14 @@ def create_tools_for_agent(agent: Agent, db_engine) -> list[Tool]:
 
     class ReportIntentParams(BaseModel):
         intent: str = Field(description="Intent in max 4 words")
+
+        @field_validator("intent")
+        @classmethod
+        def validate_intent_length(cls, value: str) -> str:
+            word_count = len(value.strip().split())
+            if word_count > 4:
+                raise ValueError("intent must not exceed 4 words")
+            return value
 
     @define_tool(
         name="report_intent",

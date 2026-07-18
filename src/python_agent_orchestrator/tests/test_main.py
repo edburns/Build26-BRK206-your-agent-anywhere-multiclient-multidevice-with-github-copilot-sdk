@@ -19,16 +19,15 @@ def test_health_endpoint(monkeypatch) -> None:
         async def stop(self) -> None:
             self.stopped = True
 
-    fake_client = FakeCopilotClient()
-    monkeypatch.setattr(main, "_create_copilot_client", lambda: fake_client)
+    mock_copilot_client = FakeCopilotClient()
+    monkeypatch.setattr(main, "_create_copilot_client", lambda: mock_copilot_client)
 
     with TestClient(main.app) as client:
         response = client.get("/health")
 
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
-    assert fake_client.started is True
-    assert fake_client.stopped is True
-    assert main.app.state.copilot_client is fake_client
-    assert main.app.state.app_state.copilot_client is fake_client
+    assert mock_copilot_client.started is True
+    assert mock_copilot_client.stopped is True
+    assert main.app.state.app_state.copilot_client is mock_copilot_client
     assert isinstance(main.app.state.app_state.agents, dict)
