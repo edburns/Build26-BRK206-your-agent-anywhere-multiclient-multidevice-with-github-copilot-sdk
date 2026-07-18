@@ -97,6 +97,9 @@ class Agent:
 def create_tools_for_agent(agent: Agent, db_engine=None) -> list[Tool]:
     if db_engine is not None:
         agent.db_engine = db_engine
+    if agent.db_engine is None:
+        raise ValueError("Agent.db_engine must be set before creating tools")
+
     class SetCurrentPhaseParams(BaseModel):
         phase: Phase = Field(description="The phase to transition to.")
 
