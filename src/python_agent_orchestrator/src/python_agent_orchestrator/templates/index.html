@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Real Estate Agent Pipeline{% endblock %}
+
+{% block body %}
+<main x-data="pipelinePage({{ initial_state | tojson }})" x-init="init()">
+    <header class="page-header">
+        <h1>Real Estate Agent Pipeline</h1>
+        <p class="subtitle">GitHub Copilot SDK for Python -- BRK206 Demo</p>
+    </header>
+
+    <section class="pipeline-shell">
+        <button
+            type="button"
+            class="add-btn"
+            title="Add query"
+            aria-label="Add query"
+            @click="submitQuery()"
+        >+</button>
+
+        <div
+            id="pipeline-content"
+            class="main-layout"
+            hx-get="/partials/pipeline"
+            hx-trigger="pipeline-reconcile from:body"
+            hx-swap="innerHTML"
+        >
+            {% include "partials/pipeline.html" %}
+        </div>
+    </section>
+
+    <footer class="status-bar" role="status" aria-live="polite">
+        <span :class="'ws-status ' + (wsConnected ? '' : 'disconnected')">
+            WS: <span x-text="wsConnected ? 'Connected' : 'Disconnected'"></span>
+        </span>
+        <span>Updates: <span x-text="updateCount"></span></span>
+        <span>Last: <span x-text="lastEvent"></span></span>
+    </footer>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function pipelinePage(initialState) {
+    return {
+        state: initialState,
+        wsConnected: false,
+        updateCount: 0,
+        lastEvent: "none",
+        ws: null,
+
+        init() {
+            this.connectWebSocket();
+        },
+
+        connectWebSocket() {
+            const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+            this.ws = new WebSocket(`${protocol}//${window.location.host}/ws/pipeline`);
+            this.ws.onopen = () => {
+                this.wsConnected = true;
+                this.lastEvent = "connected";
+            };
+            this.ws.onclose = () => {
+                this.wsConnected = false;
+                this.lastEvent = "disconnected";
+                window.setTimeout(() => this.connectWebSocket(), 2000);
+            };
+            this.ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                this.updateCount += 1;
+                this.lastEvent = data.phase
+                    ? `${data.queryId} -> ${data.phase}`
+                    : (data.type || "message");
+                this.refreshPipeline();
+            };
+        },
+
+        refreshPipeline() {
+            document.body.dispatchEvent(new CustomEvent("pipeline-reconcile"));
+        },
+
+        async submitQuery() {
+            const response = await fetch("/api/submit-query", { method: "POST" });
+            if (!response.ok) {
+                this.lastEvent = `submit failed (${response.status})`;
+                return;
+            }
+            const data = await response.json();
+            this.state = data.state;
+            this.updateCount += 1;
+            this.lastEvent = `${data.queryId} -> ${data.phase}`;
+            this.refreshPipeline();
+        },
+    };
+}
+</script>
+{% endblock %}

@@ -2,12 +2,19 @@ from contextlib import asynccontextmanager
 import logging
 import os
 from pathlib import Path
+from typing import TypedDict
 
 import uvicorn
 from copilot import CopilotClient
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import Body, FastAPI, Request, WebSocket, WebSocketDisconnect
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+from pydantic import BaseModel, Field, field_validator
 
+from python_agent_orchestrator.agent import Agent
 from python_agent_orchestrator.app_state import AppState
+from python_agent_orchestrator.phase import Phase
 from python_agent_orchestrator.property_database import (
     create_engine_and_tables,
     seed_database,
@@ -16,13 +23,83 @@ from python_agent_orchestrator.ws_manager import ws_manager
 
 logger = logging.getLogger(__name__)
 
+_PACKAGE_DIR = Path(__file__).resolve().parent
 _DATA_DIR = Path(
     os.getenv("PROPERTY_DATA_DIR", "")
-    or Path(__file__).resolve().parent.parent.parent / "data" / "properties"
+    or _PACKAGE_DIR.parent.parent / "data" / "properties"
 )
 _COPILOT_BASE_DIRECTORY = Path(
     os.getenv("COPILOT_BASE_DIRECTORY") or Path.home() / ".copilot"
 )
+_TEMPLATES_DIR = _PACKAGE_DIR / "templates"
+_STATIC_DIR = _PACKAGE_DIR / "static"
+_DEFAULT_QUERY_PREFIX = "Property search request #"
+_LIFECYCLE_PHASES = [
+    Phase.QUEUED.value,
+    Phase.VALIDATING.value,
+    Phase.SEARCHING.value,
+    Phase.WRITING_REPORT.value,
+]
+_PIPELINE_PHASES = [phase.value for phase in Phase]
+
+
+class QueryState(TypedDict):
+    id: str
+    text: str
+    phase: str
+    intent: str
+
+
+class DashboardState(TypedDict):
+    processing: int
+    completed: int
+    rejected: int
+
+
+class PipelineState(TypedDict):
+    queries: dict[str, QueryState]
+    columns: dict[str, list[QueryState]]
+    dashboard: DashboardState
+
+
+class EndStateMapping(TypedDict):
+    phase: str
+    label: str
+    box_class: str
+    card_class: str
+
+
+class SubmitQueryPayload(BaseModel):
+    query: str | None = Field(default=None, max_length=200)
+
+    @field_validator("query")
+    @classmethod
+    def normalize_query(cls, value: str | None) -> str | None:
+        return value.strip() if value else value
+
+
+_END_STATE_MAPPINGS: dict[str, EndStateMapping] = {
+    Phase.VALIDATING.value: {
+        "phase": Phase.REJECTED.value,
+        "label": "Rejected",
+        "box_class": "end-rejected",
+        "card_class": "rejected",
+    },
+    Phase.SEARCHING.value: {
+        "phase": Phase.NO_MATCHES.value,
+        "label": "No Matches",
+        "box_class": "end-no-matches",
+        "card_class": "rejected",
+    },
+    Phase.WRITING_REPORT.value: {
+        "phase": Phase.DONE.value,
+        "label": "Done",
+        "box_class": "end-done",
+        "card_class": "done",
+    },
+}
+
+templates = Jinja2Templates(directory=str(_TEMPLATES_DIR))
 
 
 def _resolve_copilot_base_directory() -> Path:
@@ -38,6 +115,41 @@ def _resolve_copilot_base_directory() -> Path:
 
 def _create_copilot_client() -> CopilotClient:
     return CopilotClient(mode="empty", base_directory=str(_resolve_copilot_base_directory()))
+
+
+def _serialize_agent(agent: Agent) -> QueryState:
+    return {
+        "id": agent.query_id,
+        "text": agent.query_text,
+        "phase": agent.current_phase.value,
+        "intent": agent.current_intent,
+    }
+
+
+def _build_pipeline_state(app_state: AppState) -> PipelineState:
+    columns = {phase: [] for phase in _PIPELINE_PHASES}
+    queries: dict[str, QueryState] = {}
+
+    for agent in app_state.agents.values():
+        query_state = _serialize_agent(agent)
+        queries[query_state["id"]] = query_state
+        columns[query_state["phase"]].append(query_state)
+
+    return {
+        "queries": queries,
+        "columns": columns,
+        "dashboard": {
+            "processing": sum(len(columns[phase]) for phase in _LIFECYCLE_PHASES),
+            "completed": len(columns[Phase.DONE.value]),
+            "rejected": len(columns[Phase.REJECTED.value]) + len(columns[Phase.NO_MATCHES.value]),
+        },
+    }
+
+
+def _resolve_query_text(payload: SubmitQueryPayload | None, query_number: int) -> str:
+    if payload and payload.query:
+        return payload.query
+    return f"{_DEFAULT_QUERY_PREFIX}{query_number}"
 
 
 @asynccontextmanager
@@ -61,11 +173,80 @@ async def lifespan(fastapi_app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+app.mount("/static", StaticFiles(directory=str(_STATIC_DIR)), name="static")
+
+
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("X-Frame-Options", "DENY")
+    if request.url.path.startswith("/static/"):
+        response.headers.setdefault("Cache-Control", "public, max-age=3600")
+    else:
+        response.headers.setdefault("Cache-Control", "no-store")
+    return response
 
 
 @app.get("/health")
 async def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@app.get("/", response_class=HTMLResponse)
+async def index(request: Request) -> HTMLResponse:
+    state = _build_pipeline_state(request.app.state.app_state)
+    return templates.TemplateResponse(
+        request=request,
+        name="index.html",
+        context={
+            "state": state,
+            "initial_state": state,
+            "lifecycle_phases": _LIFECYCLE_PHASES,
+            "end_state_mappings": _END_STATE_MAPPINGS,
+        },
+    )
+
+
+@app.get("/partials/pipeline", response_class=HTMLResponse)
+async def pipeline_partial(request: Request) -> HTMLResponse:
+    state = _build_pipeline_state(request.app.state.app_state)
+    return templates.TemplateResponse(
+        request=request,
+        name="partials/pipeline.html",
+        context={
+            "state": state,
+            "lifecycle_phases": _LIFECYCLE_PHASES,
+            "end_state_mappings": _END_STATE_MAPPINGS,
+        },
+    )
+
+
+@app.post("/api/submit-query")
+async def submit_query(
+    request: Request,
+    payload: SubmitQueryPayload | None = Body(default=None),
+) -> dict[str, object]:
+    app_state = request.app.state.app_state
+    async with app_state.query_lock:
+        query_number = app_state.next_query_number
+        query_id = f"q-{query_number}"
+        query_text = _resolve_query_text(payload, query_number)
+        app_state.agents[query_id] = Agent(
+            query_id=query_id,
+            query_text=query_text,
+            db_engine=app_state.db_engine,
+        )
+        app_state.next_query_number += 1
+    state = _build_pipeline_state(app_state)
+    return {
+        "status": "queued",
+        "queryId": query_id,
+        "queryText": query_text,
+        "phase": Phase.QUEUED.value,
+        "intent": "",
+        "state": state,
+    }
 
 
 @app.websocket("/ws/pipeline")

@@ -8,3 +8,4 @@ class Phase(str, Enum):
     WRITING_REPORT = "WritingReport"
     DONE = "Done"
     REJECTED = "Rejected"
+    NO_MATCHES = "NoMatches"
