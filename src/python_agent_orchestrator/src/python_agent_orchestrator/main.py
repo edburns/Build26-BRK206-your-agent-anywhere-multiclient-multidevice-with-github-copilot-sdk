@@ -331,10 +331,25 @@ async def submit_query(
             agent = app_state.agents[query_id]
             agent.current_phase = Phase.REJECTED
             agent.current_intent = "Runtime unavailable"
-            _record_agent_error(
-                agent,
-                app_state.startup_error or "Copilot runtime is unavailable",
-            )
+            phase_event = {
+                "type": "phase_change",
+                "timestamp": _now_iso(),
+                "phase": agent.current_phase.value,
+                "intent": agent.current_intent,
+            }
+            agent.events.append(phase_event)
+            error_msg = app_state.startup_error or "Copilot runtime is unavailable"
+            _record_agent_error(agent, error_msg)
+            ws_manager.schedule_broadcast(asyncio.get_running_loop(), {
+                **phase_event,
+                "queryId": query_id,
+            })
+            ws_manager.schedule_broadcast(asyncio.get_running_loop(), {
+                "type": "error",
+                "timestamp": _now_iso(),
+                "message": error_msg,
+                "queryId": query_id,
+            })
     state = _build_pipeline_state(app_state)
     return {
         "status": "queued" if app_state.copilot_client is not None else "rejected",

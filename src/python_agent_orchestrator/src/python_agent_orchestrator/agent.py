@@ -125,7 +125,7 @@ class Agent:
             )
         except Exception as exc:  # noqa: BLE001
             logger.exception("Session creation failed for agent %s", self.query_id)
-            set_phase(Phase.REJECTED, intent="Runtime unavailable")
+            set_phase(Phase.REJECTED, intent="Session creation failed")
             record_error(f"Session creation failed ({type(exc).__name__}): {exc}")
             return
 
