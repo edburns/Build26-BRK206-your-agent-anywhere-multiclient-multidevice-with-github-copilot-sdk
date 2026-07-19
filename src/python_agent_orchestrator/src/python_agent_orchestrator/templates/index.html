@@ -232,7 +232,7 @@ function pipelinePage(initialState) {
                 // Merge: keep server history, then append any WS events that arrived during the fetch
                 const serverTimestamps = new Set(serverEvents.map(e => e.timestamp));
                 const newWsEvents = (this.queryEvents[queryId] || [])
-                    .filter(e => !preFetchEvents.includes(e) || !serverTimestamps.has(e.timestamp));
+                    .filter(e => !preFetchEvents.includes(e) && !serverTimestamps.has(e.timestamp));
                 this.queryEvents[queryId] = [...serverEvents, ...newWsEvents];
             } catch (_) {
                 this.detailAgent = { queryId, queryText: "", phase: "Unknown", intent: "", reportText: "", events: [] };
