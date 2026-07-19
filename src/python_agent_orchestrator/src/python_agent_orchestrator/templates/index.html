@@ -222,12 +222,15 @@ function pipelinePage(initialState) {
             const preFetchEvents = [...(this.queryEvents[queryId] || [])];
             try {
                 const response = await fetch(`/api/agent/${queryId}`);
+                // Discard stale response if user navigated away during fetch
+                if (this.selectedQueryId !== queryId) return;
                 if (!response.ok) {
                     this.detailAgent = { queryId, queryText: "", phase: "Unknown", intent: "", reportText: "", events: [] };
                     this.queryEvents[queryId] = [];
                     return;
                 }
                 const data = await response.json();
+                if (this.selectedQueryId !== queryId) return;
                 this.detailAgent = data;
                 const serverEvents = data.events || [];
                 // Merge: keep server history, then append any WS events that arrived during the fetch
@@ -236,6 +239,7 @@ function pipelinePage(initialState) {
                     .filter(e => !preFetchEvents.includes(e) && !serverTimestamps.has(e.timestamp));
                 this.queryEvents[queryId] = [...serverEvents, ...newWsEvents];
             } catch (_) {
+                if (this.selectedQueryId !== queryId) return;
                 this.detailAgent = { queryId, queryText: "", phase: "Unknown", intent: "", reportText: "", events: [] };
                 this.queryEvents[queryId] = [];
             }
