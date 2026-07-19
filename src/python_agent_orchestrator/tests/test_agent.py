@@ -121,6 +121,13 @@ def test_agent_to_dict_is_json_serializable_shape() -> None:
     }
 
 
+def test_agent_instantiation_with_valid_query() -> None:
+    agent = Agent(query_id="q-inst", query_text="Waterfront property in Toronto")
+    assert agent.query_id == "q-inst"
+    assert agent.query_text == "Waterfront property in Toronto"
+    assert agent.current_phase == Phase.QUEUED
+
+
 @pytest.mark.asyncio
 async def test_agent_run_appends_events_to_history() -> None:
     """Agent.events receives tool_start and tool_complete entries from on_event."""
@@ -234,3 +241,98 @@ async def test_set_current_phase_tool_appends_phase_change_event() -> None:
     assert ev["type"] == "phase_change"
     assert ev["phase"] == "Searching"
     assert "timestamp" in ev
+
+
+@pytest.mark.asyncio
+async def test_phase_transitions_fire_in_expected_order() -> None:
+    engine = create_engine_and_tables()
+    seed_database(engine, DATA_DIR)
+    agent = Agent(query_id="q-order", query_text="phase order test", db_engine=engine)
+    tools = create_tools_for_agent(agent)
+
+    await tools[0].handler(
+        ToolInvocation(
+            session_id="s-order",
+            tool_call_id="tc-1",
+            tool_name="set_current_phase",
+            arguments={"phase": "Validating"},
+        )
+    )
+    await tools[0].handler(
+        ToolInvocation(
+            session_id="s-order",
+            tool_call_id="tc-2",
+            tool_name="set_current_phase",
+            arguments={"phase": "Searching"},
+        )
+    )
+    await tools[0].handler(
+        ToolInvocation(
+            session_id="s-order",
+            tool_call_id="tc-3",
+            tool_name="set_current_phase",
+            arguments={"phase": "WritingReport"},
+        )
+    )
+    await tools[0].handler(
+        ToolInvocation(
+            session_id="s-order",
+            tool_call_id="tc-4",
+            tool_name="set_current_phase",
+            arguments={"phase": "Done"},
+        )
+    )
+
+    phases = [event["phase"] for event in agent.events if event["type"] == "phase_change"]
+    assert phases == ["Validating", "Searching", "WritingReport", "Done"]
+    assert all(event.get("timestamp") for event in agent.events if event["type"] == "phase_change")
+    assert all("intent" in event for event in agent.events if event["type"] == "phase_change")
+
+
+@pytest.mark.asyncio
+async def test_agent_run_handles_session_creation_failure() -> None:
+    engine = create_engine_and_tables()
+    seed_database(engine, DATA_DIR)
+    agent = Agent(query_id="q-fail", query_text="runtime fail", db_engine=engine)
+
+    class FailingClient:
+        async def create_session(self, **_kwargs):
+            raise RuntimeError("session create failed")
+
+    await agent.run(FailingClient())
+    assert agent.current_phase == Phase.REJECTED
+    errors = [event for event in agent.events if event["type"] == "error"]
+    assert errors
+    assert "Session creation failed" in errors[-1]["message"]
+
+
+@pytest.mark.asyncio
+async def test_agent_run_handles_timeout(monkeypatch) -> None:
+    engine = create_engine_and_tables()
+    seed_database(engine, DATA_DIR)
+    agent = Agent(query_id="q-timeout", query_text="timeout", db_engine=engine)
+
+    class MockSession:
+        def on(self, callback):
+            self._callback = callback
+
+        async def send(self, _prompt: str) -> None:
+            return
+
+        async def disconnect(self) -> None:
+            pass
+
+    class MockClient:
+        async def create_session(self, **_kwargs):
+            return MockSession()
+
+    async def raise_timeout(awaitable, timeout):
+        close = getattr(awaitable, "close", None)
+        if callable(close):
+            close()
+        raise TimeoutError(f"timed out after {timeout}")
+
+    monkeypatch.setattr("python_agent_orchestrator.agent.asyncio.wait_for", raise_timeout)
+    await agent.run(MockClient())
+    assert agent.current_phase == Phase.REJECTED
+    assert any(event["type"] == "error" and "timed out" in event["message"] for event in agent.events)

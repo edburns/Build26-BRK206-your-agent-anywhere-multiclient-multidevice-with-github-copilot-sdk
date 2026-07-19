@@ -28,6 +28,9 @@ dev = [
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = [
+  "integration: tests that require a real Copilot CLI runtime",
+]
 
 [tool.setuptools]
 package-dir = {"" = "src"}

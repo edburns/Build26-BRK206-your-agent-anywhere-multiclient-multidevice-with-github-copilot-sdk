@@ -1,4 +1,6 @@
+import asyncio
 from contextlib import asynccontextmanager
+from datetime import UTC, datetime
 import logging
 import os
 from pathlib import Path
@@ -102,6 +104,10 @@ _END_STATE_MAPPINGS: dict[str, EndStateMapping] = {
 templates = Jinja2Templates(directory=str(_TEMPLATES_DIR))
 
 
+def _now_iso() -> str:
+    return datetime.now(UTC).isoformat(timespec="milliseconds")
+
+
 def _resolve_copilot_base_directory() -> Path:
     trusted_root = Path.home().resolve()
     base_directory = _COPILOT_BASE_DIRECTORY.expanduser().resolve()
@@ -152,23 +158,92 @@ def _resolve_query_text(payload: SubmitQueryPayload | None, query_number: int) -
     return f"{_DEFAULT_QUERY_PREFIX}{query_number}"
 
 
+def _record_agent_error(agent: Agent, message: str) -> None:
+    entry = {
+        "type": "error",
+        "timestamp": _now_iso(),
+        "message": message,
+    }
+    agent.events.append(entry)
+
+
+async def _run_agent_task(app_state: AppState, query_id: str) -> None:
+    loop = asyncio.get_running_loop()
+    agent = app_state.agents[query_id]
+    # This task is isolated per query: trap all exceptions so one failed background
+    # agent never becomes an unhandled task exception or impacts other queries.
+    try:
+        if app_state.copilot_client is None:
+            raise RuntimeError("Copilot runtime is unavailable")
+        await agent.run(app_state.copilot_client)
+    except asyncio.CancelledError:
+        raise
+    except Exception as exc:  # noqa: BLE001
+        logger.exception("Agent %s failed for query %r", query_id, agent.query_text)
+        agent.current_phase = Phase.REJECTED
+        agent.current_intent = "Failed"
+        phase_event = {
+            "type": "phase_change",
+            "timestamp": _now_iso(),
+            "phase": agent.current_phase.value,
+            "intent": agent.current_intent,
+        }
+        agent.events.append(phase_event)
+        ws_manager.schedule_broadcast(loop, {
+            **phase_event,
+            "queryId": query_id,
+        })
+        _record_agent_error(agent, f"{type(exc).__name__}: {exc}")
+        ws_manager.schedule_broadcast(loop, {
+            "type": "error",
+            "timestamp": _now_iso(),
+            "message": f"{type(exc).__name__}: {exc}",
+            "queryId": query_id,
+        })
+    finally:
+        app_state.agent_tasks.pop(query_id, None)
+
+
 @asynccontextmanager
 async def lifespan(fastapi_app: FastAPI):
-    copilot_client = _create_copilot_client()
-    started = False
+    copilot_client = None
+    startup_error: str | None = None
     engine = None
     try:
+        copilot_client = _create_copilot_client()
         await copilot_client.start()
-        started = True
+    except Exception as exc:  # noqa: BLE001
+        startup_error = f"Copilot runtime startup failed ({type(exc).__name__}): {exc}"
+        logger.exception(startup_error)
+        copilot_client = None
+    try:
         engine = create_engine_and_tables()
         count = seed_database(engine, _DATA_DIR)
         logger.info("Seeded %d properties from %s", count, _DATA_DIR)
-        fastapi_app.state.app_state = AppState(copilot_client=copilot_client, db_engine=engine)
+        fastapi_app.state.app_state = AppState(
+            copilot_client=copilot_client,
+            db_engine=engine,
+            startup_error=startup_error,
+        )
         yield
     finally:
+        app_state = getattr(fastapi_app.state, "app_state", None)
+        if app_state is not None:
+            tasks = list(app_state.agent_tasks.values())
+            # Iterate over a snapshot because tasks remove themselves from
+            # app_state.agent_tasks when their finally blocks execute.
+            for task in tasks:
+                # Cancellation is non-blocking; asyncio.gather below waits for task cleanup.
+                task.cancel()
+            if tasks:
+                # Keep shutdown graceful: wait for all task cleanup paths and ignore cancellation
+                # exceptions from individual tasks. return_exceptions=True prevents one task's
+                # failure from interrupting cleanup of the rest.
+                await asyncio.gather(*tasks, return_exceptions=True)
+            app_state.agent_tasks.clear()
         if engine is not None:
             engine.dispose()
-        if started:
+        if copilot_client is not None:
             await copilot_client.stop()
 
 
@@ -247,13 +322,26 @@ async def submit_query(
             db_engine=app_state.db_engine,
         )
         app_state.next_query_number += 1
+        if app_state.copilot_client is not None:
+            app_state.agent_tasks[query_id] = asyncio.create_task(
+                _run_agent_task(app_state, query_id),
+                name=f"agent-{query_id}",
+            )
+        else:
+            agent = app_state.agents[query_id]
+            agent.current_phase = Phase.REJECTED
+            agent.current_intent = "Runtime unavailable"
+            _record_agent_error(
+                agent,
+                app_state.startup_error or "Copilot runtime is unavailable",
+            )
     state = _build_pipeline_state(app_state)
     return {
-        "status": "queued",
+        "status": "queued" if app_state.copilot_client is not None else "rejected",
         "queryId": query_id,
         "queryText": query_text,
-        "phase": Phase.QUEUED.value,
-        "intent": "",
+        "phase": app_state.agents[query_id].current_phase.value,
+        "intent": app_state.agents[query_id].current_intent,
         "state": state,
     }
 
