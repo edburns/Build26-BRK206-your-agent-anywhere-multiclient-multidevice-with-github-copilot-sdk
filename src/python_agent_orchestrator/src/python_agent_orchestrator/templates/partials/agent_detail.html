@@ -1,0 +1,53 @@
+{# Agent detail partial — rendered by GET /api/agent/<query_id> or included directly.
+   Variables expected: agent (dict with queryId, queryText, phase, intent, reportText, events) #}
+<div class="detail-header">
+    <div class="detail-id">{{ agent.queryId }}</div>
+    <div class="detail-query">{{ agent.queryText }}</div>
+    <div class="detail-meta">
+        <span class="detail-phase">{{ agent.phase }}</span>
+        {% if agent.intent %}
+        <span class="detail-intent">{{ agent.intent }}</span>
+        {% endif %}
+    </div>
+</div>
+
+<div class="detail-timeline">
+    <div class="timeline-heading">Event Timeline</div>
+    {% if agent.events %}
+    {% for event in agent.events %}
+    <div class="timeline-entry timeline-{{ event.type }}">
+        <span class="timeline-time">{{ event.timestamp }}</span>
+        {% if event.type == "phase_change" %}
+        <span class="timeline-badge badge-phase">Phase</span>
+        <span class="timeline-summary">→ {{ event.phase }}</span>
+        {% if event.intent %}
+        <span class="timeline-detail">{{ event.intent }}</span>
+        {% endif %}
+        {% elif event.type == "tool_start" %}
+        <span class="timeline-badge badge-tool">Tool</span>
+        <span class="timeline-summary">{{ event.toolName }}</span>
+        {% if event.args %}
+        <span class="timeline-detail">{{ event.args | tojson }}</span>
+        {% endif %}
+        {% elif event.type == "tool_complete" %}
+        <span class="timeline-badge {{ 'badge-success' if event.success else 'badge-error' }}">
+            {{ "✓" if event.success else "✗" }}
+        </span>
+        <span class="timeline-summary">{{ event.toolCallId }}</span>
+        {% elif event.type == "assistant_message" %}
+        <span class="timeline-badge badge-msg">Msg</span>
+        <span class="timeline-summary">{{ event.content[:80] }}{% if event.content | length > 80 %}…{% endif %}</span>
+        {% endif %}
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="timeline-empty">No events yet.</div>
+    {% endif %}
+</div>
+
+{% if agent.reportText %}
+<div class="detail-report">
+    <div class="report-heading">Report</div>
+    <div class="report-body">{{ agent.reportText }}</div>
+</div>
+{% endif %}

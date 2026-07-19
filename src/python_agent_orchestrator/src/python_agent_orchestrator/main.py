@@ -6,7 +6,7 @@ from typing import TypedDict
 
 import uvicorn
 from copilot import CopilotClient
-from fastapi import Body, FastAPI, Request, WebSocket, WebSocketDisconnect
+from fastapi import Body, FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -220,6 +220,15 @@ async def pipeline_partial(request: Request) -> HTMLResponse:
             "end_state_mappings": _END_STATE_MAPPINGS,
         },
     )
+
+
+@app.get("/api/agent/{query_id}")
+async def agent_detail(query_id: str, request: Request) -> dict[str, object]:
+    app_state = request.app.state.app_state
+    agent = app_state.agents.get(query_id)
+    if agent is None:
+        raise HTTPException(status_code=404, detail="Agent not found")
+    return agent.to_dict()
 
 
 @app.post("/api/submit-query")

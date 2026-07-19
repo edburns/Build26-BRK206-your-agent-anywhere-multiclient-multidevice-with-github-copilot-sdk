@@ -115,3 +115,65 @@ def test_submit_query_stubs_queued_state_and_increments_ids(monkeypatch) -> None
     assert second.json()["queryText"] == "Lakefront villa"
     assert main.app.state.app_state.agents["q-2"].current_phase == Phase.QUEUED
     assert second.json()["state"]["dashboard"]["processing"] == 2
+
+
+def test_agent_detail_endpoint_returns_404_for_missing_query(monkeypatch) -> None:
+    create_and_patch_fake_copilot_client(monkeypatch)
+
+    with TestClient(main.app) as client:
+        response = client.get("/api/agent/nonexistent")
+
+    assert response.status_code == 404
+
+
+def test_agent_detail_endpoint_returns_agent_json(monkeypatch) -> None:
+    create_and_patch_fake_copilot_client(monkeypatch)
+
+    with TestClient(main.app) as client:
+        app_state = main.app.state.app_state
+        app_state.agents["q-d1"] = Agent(
+            query_id="q-d1",
+            query_text="Waterfront property",
+            current_phase=Phase.DONE,
+            current_intent="Complete",
+        )
+        response = client.get("/api/agent/q-d1")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["queryId"] == "q-d1"
+    assert data["queryText"] == "Waterfront property"
+    assert data["phase"] == "Done"
+    assert data["intent"] == "Complete"
+    assert "events" in data
+    assert isinstance(data["events"], list)
+
+
+def test_index_renders_detail_panel_overlay(monkeypatch) -> None:
+    create_and_patch_fake_copilot_client(monkeypatch)
+
+    with TestClient(main.app) as client:
+        response = client.get("/")
+
+    assert response.status_code == 200
+    assert "detail-overlay" in response.text
+    assert "detail-panel" in response.text
+    assert "openDetail" in response.text
+    assert "closeDetail" in response.text
+    assert "selectedQueryId" in response.text
+
+
+def test_pipeline_partial_cards_have_data_query_id(monkeypatch) -> None:
+    create_and_patch_fake_copilot_client(monkeypatch)
+
+    with TestClient(main.app) as client:
+        app_state = main.app.state.app_state
+        app_state.agents["q-click"] = Agent(
+            query_id="q-click",
+            query_text="Clickable card test",
+            current_phase=Phase.VALIDATING,
+        )
+        response = client.get("/partials/pipeline")
+
+    assert response.status_code == 200
+    assert 'data-query-id="q-click"' in response.text
