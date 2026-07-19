@@ -1,4 +1,6 @@
-{# Agent detail partial — rendered by GET /api/agent/<query_id> or included directly.
+{# Agent detail partial — optional server-side renderable template for agent details.
+   The /api/agent/<query_id> endpoint returns JSON; this partial is available for
+   future SSR use or direct Jinja2 inclusion.
    Variables expected: agent (dict with queryId, queryText, phase, intent, reportText, events) #}
 <div class="detail-header">
     <div class="detail-id">{{ agent.queryId }}</div>
