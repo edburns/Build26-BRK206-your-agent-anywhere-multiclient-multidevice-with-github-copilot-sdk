@@ -1,5 +1,6 @@
 import re
 
+from copilot.session_events import SessionIdleData
 from fastapi.testclient import TestClient
 
 from python_agent_orchestrator.agent import Agent
@@ -12,6 +13,16 @@ def test_app_importable() -> None:
 
 
 def create_and_patch_fake_copilot_client(monkeypatch):
+    class FakeSession:
+        def on(self, callback):
+            self._callback = callback
+
+        async def send(self, _prompt: str) -> None:
+            self._callback(type("SessionEvent", (), {"data": SessionIdleData()})())
+
+        async def disconnect(self) -> None:
+            pass
+
     class FakeCopilotClient:
         def __init__(self):
             self.started = False
@@ -22,6 +33,9 @@ def create_and_patch_fake_copilot_client(monkeypatch):
 
         async def stop(self) -> None:
             self.stopped = True
+
+        async def create_session(self, **_kwargs):
+            return FakeSession()
 
     mock_copilot_client = FakeCopilotClient()
     monkeypatch.setattr(main, "_create_copilot_client", lambda: mock_copilot_client)
@@ -113,8 +127,29 @@ def test_submit_query_stubs_queued_state_and_increments_ids(monkeypatch) -> None
     assert second.status_code == 200
     assert second.json()["queryId"] == "q-2"
     assert second.json()["queryText"] == "Lakefront villa"
+    assert "q-2" in main.app.state.app_state.agents
     assert main.app.state.app_state.agents["q-2"].current_phase == Phase.QUEUED
     assert second.json()["state"]["dashboard"]["processing"] == 2
+
+
+def test_submit_query_rejects_when_runtime_unavailable(monkeypatch) -> None:
+    class FakeCopilotClient:
+        async def start(self) -> None:
+            raise RuntimeError("runtime unavailable")
+
+        async def stop(self) -> None:
+            pass
+
+    monkeypatch.setattr(main, "_create_copilot_client", lambda: FakeCopilotClient())
+
+    with TestClient(main.app) as client:
+        response = client.post("/api/submit-query", json={"query": "Need a condo"})
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "rejected"
+    assert body["phase"] == Phase.REJECTED.value
+    assert body["intent"] == "Runtime unavailable"
 
 
 def test_agent_detail_endpoint_returns_404_for_missing_query(monkeypatch) -> None:
