@@ -158,13 +158,14 @@ def _resolve_query_text(payload: SubmitQueryPayload | None, query_number: int) -
     return f"{_DEFAULT_QUERY_PREFIX}{query_number}"
 
 
-def _record_agent_error(agent: Agent, message: str) -> None:
+def _record_agent_error(agent: Agent, message: str) -> dict[str, str]:
     entry = {
         "type": "error",
         "timestamp": _now_iso(),
         "message": message,
     }
     agent.events.append(entry)
+    return entry
 
 
 async def _run_agent_task(app_state: AppState, query_id: str) -> None:
@@ -195,9 +196,7 @@ async def _run_agent_task(app_state: AppState, query_id: str) -> None:
         })
         _record_agent_error(agent, f"{type(exc).__name__}: {exc}")
         ws_manager.schedule_broadcast(loop, {
-            "type": "error",
-            "timestamp": _now_iso(),
-            "message": f"{type(exc).__name__}: {exc}",
+            **agent.events[-1],
             "queryId": query_id,
         })
     finally:
@@ -352,9 +351,7 @@ async def submit_query(
                 "queryId": query_id,
             })
             ws_manager.schedule_broadcast(asyncio.get_running_loop(), {
-                "type": "error",
-                "timestamp": _now_iso(),
-                "message": error_msg,
+                **agent.events[-1],
                 "queryId": query_id,
             })
     state = _build_pipeline_state(app_state)
