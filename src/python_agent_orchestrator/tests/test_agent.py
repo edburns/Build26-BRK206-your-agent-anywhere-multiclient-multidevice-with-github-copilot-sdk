@@ -180,6 +180,40 @@ async def test_agent_run_appends_events_to_history() -> None:
 
 
 @pytest.mark.asyncio
+async def test_multi_turn_assistant_messages_report_text_is_last() -> None:
+    """When multiple AssistantMessageData events fire, report_text equals the last one."""
+    engine = create_engine_and_tables()
+    seed_database(engine, DATA_DIR)
+    agent = Agent(query_id="q-mt", query_text="multi-turn test", db_engine=engine)
+
+    class MockSession:
+        def on(self, callback):
+            self._callback = callback
+
+        async def send(self, _prompt: str) -> None:
+            self._callback(SimpleNamespace(
+                data=AssistantMessageData(content="Intermediate turn 1.", message_id="msg-1")
+            ))
+            self._callback(SimpleNamespace(
+                data=AssistantMessageData(content="Final answer.", message_id="msg-2")
+            ))
+            self._callback(SimpleNamespace(data=SessionIdleData()))
+
+        async def disconnect(self) -> None:
+            pass
+
+    class MockCopilotClient:
+        async def create_session(self, **kwargs):
+            return MockSession()
+
+    await agent.run(MockCopilotClient())
+
+    assert agent.report_text == "Final answer."
+    assistant_events = [e for e in agent.events if e["type"] == "assistant_message"]
+    assert len(assistant_events) == 2
+
+
+@pytest.mark.asyncio
 async def test_set_current_phase_tool_appends_phase_change_event() -> None:
     engine = create_engine_and_tables()
     seed_database(engine, DATA_DIR)

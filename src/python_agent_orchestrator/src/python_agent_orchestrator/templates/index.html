@@ -186,9 +186,7 @@ function pipelinePage(initialState) {
                             this.detailAgent.phase = data.phase;
                             this.detailAgent.intent = data.intent || this.detailAgent.intent;
                         } else if (data.type === "assistant_message") {
-                            this.detailAgent.reportText = this.detailAgent.reportText
-                                ? this.detailAgent.reportText + "\n" + data.content
-                                : data.content;
+                            this.detailAgent.reportText = data.content;
                         }
                     }
                 }

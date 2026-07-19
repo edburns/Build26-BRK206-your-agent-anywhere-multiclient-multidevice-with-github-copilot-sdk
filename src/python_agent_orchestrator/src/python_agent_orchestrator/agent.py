@@ -119,11 +119,7 @@ class Agent:
                     })
                 case AssistantMessageData() as data:
                     if data.content:
-                        self.report_text = (
-                            f"{self.report_text}\n{data.content}".strip()
-                            if self.report_text
-                            else data.content
-                        )
+                        self.report_text = data.content
                         entry = {
                             "type": "assistant_message",
                             "timestamp": _now_iso(),
