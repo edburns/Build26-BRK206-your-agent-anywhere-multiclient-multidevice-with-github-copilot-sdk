@@ -65,7 +65,7 @@ class Agent:
                             "    You may call it multiple times with different filters to refine "
                             "results.\n"
                             "  - At the end of this phase, if you don't find any relevant properties, "
-                            "set phase to \"Rejected\" and stop.\n"
+                            "set phase to \"NoMatches\" and stop.\n"
                             "- Report phase\n"
                             "  - Set phase to \"WritingReport\".\n"
                             "  - Write up a report for our salesperson to use when calling the "
