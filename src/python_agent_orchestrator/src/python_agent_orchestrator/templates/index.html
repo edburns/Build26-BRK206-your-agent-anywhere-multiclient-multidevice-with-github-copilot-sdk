@@ -9,7 +9,7 @@
         <p class="subtitle">GitHub Copilot SDK for Python -- BRK206 Demo</p>
     </header>
 
-    <section class="pipeline-shell" @click="handlePipelineClick($event)" @keydown.enter="handlePipelineKeydown($event)">
+    <section class="pipeline-shell" @click="handlePipelineClick($event)" @keydown.enter="handlePipelineKeydown($event)" @keydown.space.prevent="handlePipelineKeydown($event)">
         <button
             type="button"
             class="add-btn"
