@@ -213,8 +213,8 @@ async def lifespan(fastapi_app: FastAPI):
         copilot_client = _create_copilot_client()
         await copilot_client.start()
     except Exception as exc:  # noqa: BLE001
-        startup_error = f"Copilot runtime startup failed ({type(exc).__name__}): {exc}"
-        logger.exception(startup_error)
+        logger.exception("Copilot runtime startup failed (%s): %s", type(exc).__name__, exc)
+        startup_error = "Copilot runtime is unavailable"
         # Best-effort cleanup of partially-started client to avoid leaked
         # subprocesses/tasks, then discard the reference.
         if copilot_client is not None:

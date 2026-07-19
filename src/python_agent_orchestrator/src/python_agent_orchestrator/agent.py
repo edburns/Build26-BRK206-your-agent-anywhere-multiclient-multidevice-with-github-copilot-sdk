@@ -202,7 +202,7 @@ class Agent:
             set_phase(Phase.REJECTED, intent="Session failed")
             record_error(f"Session execution failed ({type(exc).__name__}): {exc}")
         finally:
-            await session.disconnect()
+            await asyncio.shield(session.disconnect())
 
 
 def create_tools_for_agent(
