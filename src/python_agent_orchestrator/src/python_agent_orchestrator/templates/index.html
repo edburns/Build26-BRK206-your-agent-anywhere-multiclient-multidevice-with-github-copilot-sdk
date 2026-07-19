@@ -217,18 +217,26 @@ function pipelinePage(initialState) {
         async openDetail(queryId) {
             this.selectedQueryId = queryId;
             this.detailAgent = null;
+            // Snapshot existing WS events so we can merge after fetch
+            const preFetchEvents = [...(this.queryEvents[queryId] || [])];
             try {
                 const response = await fetch(`/api/agent/${queryId}`);
                 if (!response.ok) {
                     this.detailAgent = { queryId, queryText: "", phase: "Unknown", intent: "", reportText: "", events: [] };
+                    this.queryEvents[queryId] = [];
                     return;
                 }
                 const data = await response.json();
                 this.detailAgent = data;
-                // Server history is authoritative; subsequent WebSocket events will be appended
-                this.queryEvents[queryId] = data.events || [];
+                const serverEvents = data.events || [];
+                // Merge: keep server history, then append any WS events that arrived during the fetch
+                const serverTimestamps = new Set(serverEvents.map(e => e.timestamp));
+                const newWsEvents = (this.queryEvents[queryId] || [])
+                    .filter(e => !preFetchEvents.includes(e) || !serverTimestamps.has(e.timestamp));
+                this.queryEvents[queryId] = [...serverEvents, ...newWsEvents];
             } catch (_) {
                 this.detailAgent = { queryId, queryText: "", phase: "Unknown", intent: "", reportText: "", events: [] };
+                this.queryEvents[queryId] = [];
             }
         },
 
