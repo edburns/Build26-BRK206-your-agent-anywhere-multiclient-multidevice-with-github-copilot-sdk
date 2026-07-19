@@ -215,6 +215,13 @@ async def lifespan(fastapi_app: FastAPI):
     except Exception as exc:  # noqa: BLE001
         startup_error = f"Copilot runtime startup failed ({type(exc).__name__}): {exc}"
         logger.exception(startup_error)
+        # Best-effort cleanup of partially-started client to avoid leaked
+        # subprocesses/tasks, then discard the reference.
+        if copilot_client is not None:
+            try:
+                await copilot_client.stop()
+            except Exception:  # noqa: BLE001
+                logger.debug("Ignoring error during cleanup of failed client", exc_info=True)
         copilot_client = None
     try:
         engine = create_engine_and_tables()
