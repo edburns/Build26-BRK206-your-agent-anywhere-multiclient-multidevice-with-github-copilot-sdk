@@ -225,12 +225,8 @@ function pipelinePage(initialState) {
                 }
                 const data = await response.json();
                 this.detailAgent = data;
-                // Seed queryEvents with historical events from server
-                if (data.events && data.events.length > 0) {
-                    this.queryEvents[queryId] = [...data.events, ...(this.queryEvents[queryId] || []).filter(
-                        e => !data.events.some(se => se.timestamp === e.timestamp && se.type === e.type)
-                    )];
-                }
+                // Server history is authoritative; subsequent WebSocket events will be appended
+                this.queryEvents[queryId] = data.events || [];
             } catch (_) {
                 this.detailAgent = { queryId, queryText: "", phase: "Unknown", intent: "", reportText: "", events: [] };
             }
