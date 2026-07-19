@@ -333,6 +333,13 @@ async def submit_query(
                 _run_agent_task(app_state, query_id),
                 name=f"agent-{query_id}",
             )
+            ws_manager.schedule_broadcast(asyncio.get_running_loop(), {
+                "type": "query_created",
+                "queryId": query_id,
+                "queryText": query_text,
+                "phase": app_state.agents[query_id].current_phase.value,
+                "intent": app_state.agents[query_id].current_intent,
+            })
         else:
             agent = app_state.agents[query_id]
             agent.current_phase = Phase.REJECTED
