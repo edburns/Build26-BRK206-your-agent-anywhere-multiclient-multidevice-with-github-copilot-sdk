@@ -228,15 +228,16 @@ async def submit_query(
     payload: SubmitQueryPayload | None = Body(default=None),
 ) -> dict[str, object]:
     app_state = request.app.state.app_state
-    query_number = app_state.next_query_number
-    query_id = f"q-{query_number}"
-    query_text = _resolve_query_text(payload, query_number)
-    app_state.agents[query_id] = Agent(
-        query_id=query_id,
-        query_text=query_text,
-        db_engine=app_state.db_engine,
-    )
-    app_state.next_query_number += 1
+    async with app_state.query_lock:
+        query_number = app_state.next_query_number
+        query_id = f"q-{query_number}"
+        query_text = _resolve_query_text(payload, query_number)
+        app_state.agents[query_id] = Agent(
+            query_id=query_id,
+            query_text=query_text,
+            db_engine=app_state.db_engine,
+        )
+        app_state.next_query_number += 1
     state = _build_pipeline_state(app_state)
     return {
         "status": "queued",
