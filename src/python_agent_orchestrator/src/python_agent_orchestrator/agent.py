@@ -1,5 +1,6 @@
 import asyncio
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from datetime import UTC, datetime
 from typing import Any
 
 from copilot import CopilotClient, ToolSet, define_tool
@@ -18,6 +19,10 @@ from python_agent_orchestrator.property_database import search_properties as sea
 from python_agent_orchestrator.ws_manager import ws_manager
 
 
+def _now_iso() -> str:
+    return datetime.now(UTC).isoformat(timespec="milliseconds")
+
+
 @dataclass
 class Agent:
     query_id: str
@@ -26,6 +31,7 @@ class Agent:
     current_phase: Phase = Phase.QUEUED
     current_intent: str = ""
     report_text: str = ""
+    events: list[dict[str, Any]] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -34,6 +40,7 @@ class Agent:
             "intent": self.current_intent,
             "queryText": self.query_text,
             "reportText": self.report_text,
+            "events": list(self.events),
         }
 
     async def run(self, client: CopilotClient) -> None:
@@ -85,29 +92,43 @@ class Agent:
         def on_event(event) -> None:
             match event.data:
                 case ToolExecutionStartData() as data:
-                    ws_manager.schedule_broadcast(loop, {
+                    args = data.arguments if isinstance(data.arguments, dict) else {}
+                    entry: dict[str, Any] = {
                         "type": "tool_start",
-                        "queryId": self.query_id,
+                        "timestamp": _now_iso(),
                         "toolName": data.tool_name,
+                        "toolCallId": data.tool_call_id,
+                        "args": args,
+                    }
+                    self.events.append(entry)
+                    ws_manager.schedule_broadcast(loop, {
+                        **entry,
+                        "queryId": self.query_id,
                     })
                 case ToolExecutionCompleteData() as data:
-                    ws_manager.schedule_broadcast(loop, {
+                    entry = {
                         "type": "tool_complete",
-                        "queryId": self.query_id,
+                        "timestamp": _now_iso(),
                         "toolCallId": data.tool_call_id,
                         "success": data.success,
+                    }
+                    self.events.append(entry)
+                    ws_manager.schedule_broadcast(loop, {
+                        **entry,
+                        "queryId": self.query_id,
                     })
                 case AssistantMessageData() as data:
                     if data.content:
-                        self.report_text = (
-                            f"{self.report_text}\n{data.content}".strip()
-                            if self.report_text
-                            else data.content
-                        )
-                        ws_manager.schedule_broadcast(loop, {
+                        self.report_text = data.content
+                        entry = {
                             "type": "assistant_message",
-                            "queryId": self.query_id,
+                            "timestamp": _now_iso(),
                             "content": data.content,
+                        }
+                        self.events.append(entry)
+                        ws_manager.schedule_broadcast(loop, {
+                            **entry,
+                            "queryId": self.query_id,
                         })
                 case SessionIdleData():
                     ws_manager.schedule_broadcast(loop, {
@@ -140,12 +161,17 @@ def create_tools_for_agent(
     @define_tool(description="Sets the current phase of the agent. Use this to report progress.")
     def set_current_phase(params: SetCurrentPhaseParams) -> str:
         agent.current_phase = params.phase
+        entry: dict[str, Any] = {
+            "type": "phase_change",
+            "timestamp": _now_iso(),
+            "phase": agent.current_phase.value,
+            "intent": agent.current_intent,
+        }
+        agent.events.append(entry)
         if loop is not None:
             ws_manager.schedule_broadcast(loop, {
-                "type": "phase_change",
+                **entry,
                 "queryId": agent.query_id,
-                "phase": agent.current_phase.value,
-                "intent": agent.current_intent,
             })
         return f"Phase set to {agent.current_phase.value}"
 

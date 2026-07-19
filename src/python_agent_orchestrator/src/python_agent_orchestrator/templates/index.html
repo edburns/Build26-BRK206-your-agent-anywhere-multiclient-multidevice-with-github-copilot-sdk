@@ -9,13 +9,13 @@
         <p class="subtitle">GitHub Copilot SDK for Python -- BRK206 Demo</p>
     </header>
 
-    <section class="pipeline-shell">
+    <section class="pipeline-shell" @click="handlePipelineClick($event)" @keydown.enter="handlePipelineKeydown($event)" @keydown.space="handlePipelineKeydown($event)">
         <button
             type="button"
             class="add-btn"
             title="Add query"
             aria-label="Add query"
-            @click="submitQuery()"
+            @click.stop="submitQuery()"
         >+</button>
 
         <div
@@ -28,6 +28,98 @@
             {% include "partials/pipeline.html" %}
         </div>
     </section>
+
+    <!-- Detail panel overlay -->
+    <div
+        class="detail-overlay"
+        x-show="selectedQueryId !== null"
+        x-transition:enter="detail-overlay-enter"
+        x-transition:enter-start="detail-overlay-enter-start"
+        x-transition:enter-end="detail-overlay-enter-end"
+        @click.self="closeDetail()"
+        @keydown.escape.window="if (selectedQueryId !== null) closeDetail()"
+        aria-modal="true"
+        role="dialog"
+        aria-label="Agent detail"
+        style="display:none"
+    >
+        <aside class="detail-panel">
+            <div class="detail-panel-header">
+                <span class="detail-panel-title">Agent Detail</span>
+                <button
+                    type="button"
+                    class="detail-close-btn"
+                    aria-label="Close detail panel"
+                    @click="closeDetail()"
+                >✕</button>
+            </div>
+            <div class="detail-panel-body">
+                <!-- Header -->
+                <template x-if="detailAgent">
+                    <div>
+                        <div class="detail-header">
+                            <div class="detail-id" x-text="detailAgent.queryId"></div>
+                            <div class="detail-query" x-text="detailAgent.queryText"></div>
+                            <div class="detail-meta">
+                                <span class="detail-phase" x-text="detailAgent.phase"></span>
+                                <span class="detail-intent" x-show="detailAgent.intent" x-text="detailAgent.intent"></span>
+                            </div>
+                        </div>
+
+                        <!-- Event timeline -->
+                        <div class="detail-timeline">
+                            <div class="timeline-heading">Event Timeline</div>
+                            <template x-if="detailEvents.length === 0">
+                                <div class="timeline-empty">No events yet.</div>
+                            </template>
+                            <template x-for="(event, idx) in detailEvents" :key="idx">
+                                <div :class="'timeline-entry timeline-' + event.type">
+                                    <span class="timeline-time" x-text="event.timestamp"></span>
+                                    <template x-if="event.type === 'phase_change'">
+                                        <span>
+                                            <span class="timeline-badge badge-phase">Phase</span>
+                                            <span class="timeline-summary" x-text="'→ ' + event.phase"></span>
+                                            <span class="timeline-detail" x-show="event.intent" x-text="event.intent"></span>
+                                        </span>
+                                    </template>
+                                    <template x-if="event.type === 'tool_start'">
+                                        <span>
+                                            <span class="timeline-badge badge-tool">Tool</span>
+                                            <span class="timeline-summary" x-text="event.toolName"></span>
+                                            <span class="timeline-detail" x-show="event.args && Object.keys(event.args).length > 0" x-text="JSON.stringify(event.args)"></span>
+                                        </span>
+                                    </template>
+                                    <template x-if="event.type === 'tool_complete'">
+                                        <span>
+                                            <span :class="'timeline-badge ' + (event.success ? 'badge-success' : 'badge-error')" x-text="event.success ? '✓' : '✗'"></span>
+                                            <span class="timeline-summary" x-text="event.toolCallId"></span>
+                                        </span>
+                                    </template>
+                                    <template x-if="event.type === 'assistant_message'">
+                                        <span>
+                                            <span class="timeline-badge badge-msg">Msg</span>
+                                            <span class="timeline-summary" x-text="event.content.length > 80 ? event.content.slice(0, 80) + '…' : event.content"></span>
+                                        </span>
+                                    </template>
+                                </div>
+                            </template>
+                        </div>
+
+                        <!-- Report section -->
+                        <template x-if="detailAgent.reportText">
+                            <div class="detail-report">
+                                <div class="report-heading">Report</div>
+                                <div class="report-body" x-text="detailAgent.reportText"></div>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+                <template x-if="!detailAgent">
+                    <div class="detail-loading">Loading…</div>
+                </template>
+            </div>
+        </aside>
+    </div>
 
     <footer class="status-bar" role="status" aria-live="polite">
         <span :class="'ws-status ' + (wsConnected ? '' : 'disconnected')">
@@ -48,6 +140,14 @@ function pipelinePage(initialState) {
         updateCount: 0,
         lastEvent: "none",
         ws: null,
+        selectedQueryId: null,
+        detailAgent: null,
+        queryEvents: {},
+
+        get detailEvents() {
+            if (!this.selectedQueryId) return [];
+            return this.queryEvents[this.selectedQueryId] || [];
+        },
 
         init() {
             this.connectWebSocket();
@@ -71,12 +171,82 @@ function pipelinePage(initialState) {
                 this.lastEvent = data.phase
                     ? `${data.queryId} -> ${data.phase}`
                     : (data.type || "message");
+
+                // Collect timeline events per query
+                const timelineTypes = ["tool_start", "tool_complete", "assistant_message", "phase_change"];
+                if (data.queryId && timelineTypes.includes(data.type)) {
+                    if (!this.queryEvents[data.queryId]) {
+                        this.queryEvents[data.queryId] = [];
+                    }
+                    this.queryEvents[data.queryId].push(data);
+
+                    // Update live detail panel if open for this query
+                    if (this.selectedQueryId === data.queryId && this.detailAgent) {
+                        if (data.type === "phase_change") {
+                            this.detailAgent.phase = data.phase;
+                            this.detailAgent.intent = data.intent || this.detailAgent.intent;
+                        } else if (data.type === "assistant_message") {
+                            this.detailAgent.reportText = data.content;
+                        }
+                    }
+                }
+
                 this.refreshPipeline();
             };
         },
 
         refreshPipeline() {
             document.body.dispatchEvent(new CustomEvent("pipeline-reconcile"));
+        },
+
+        handlePipelineClick(event) {
+            const card = event.target.closest("[data-query-id]");
+            if (card) {
+                this.openDetail(card.dataset.queryId);
+            }
+        },
+
+        handlePipelineKeydown(event) {
+            const card = event.target.closest("[data-query-id]");
+            if (card) {
+                event.preventDefault();
+                this.openDetail(card.dataset.queryId);
+            }
+        },
+
+        async openDetail(queryId) {
+            this.selectedQueryId = queryId;
+            this.detailAgent = null;
+            // Snapshot existing WS events so we can merge after fetch
+            const preFetchEvents = [...(this.queryEvents[queryId] || [])];
+            try {
+                const response = await fetch(`/api/agent/${queryId}`);
+                // Discard stale response if user navigated away during fetch
+                if (this.selectedQueryId !== queryId) return;
+                if (!response.ok) {
+                    this.detailAgent = { queryId, queryText: "", phase: "Unknown", intent: "", reportText: "", events: [] };
+                    this.queryEvents[queryId] = [];
+                    return;
+                }
+                const data = await response.json();
+                if (this.selectedQueryId !== queryId) return;
+                this.detailAgent = data;
+                const serverEvents = data.events || [];
+                // Merge: keep server history, then append any WS events that arrived during the fetch
+                const serverTimestamps = new Set(serverEvents.map(e => e.timestamp));
+                const newWsEvents = (this.queryEvents[queryId] || [])
+                    .filter(e => !preFetchEvents.includes(e) && !serverTimestamps.has(e.timestamp));
+                this.queryEvents[queryId] = [...serverEvents, ...newWsEvents];
+            } catch (_) {
+                if (this.selectedQueryId !== queryId) return;
+                this.detailAgent = { queryId, queryText: "", phase: "Unknown", intent: "", reportText: "", events: [] };
+                this.queryEvents[queryId] = [];
+            }
+        },
+
+        closeDetail() {
+            this.selectedQueryId = null;
+            this.detailAgent = null;
         },
 
         async submitQuery() {
@@ -95,3 +265,4 @@ function pipelinePage(initialState) {
 }
 </script>
 {% endblock %}
+

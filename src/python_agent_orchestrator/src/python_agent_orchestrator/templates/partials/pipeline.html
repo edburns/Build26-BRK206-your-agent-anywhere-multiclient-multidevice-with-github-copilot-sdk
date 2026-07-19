@@ -10,7 +10,11 @@
         <div class="phase-box">
             <div class="phase-label">{{ "Writing Report" if phase == "WritingReport" else phase }}</div>
             {% for query in state.columns.get(phase, []) %}
-            <article class="card {{ '' if phase == 'Queued' else 'active' }}">
+            <article class="card {{ '' if phase == 'Queued' else 'active' }}"
+                     data-query-id="{{ query.id }}"
+                     role="button"
+                     tabindex="0"
+                     aria-label="View details for {{ query.text }}">
                 <div class="query-text">{{ query.text }}</div>
                 <div class="intent">{{ query.intent or query.id }}</div>
             </article>
@@ -29,7 +33,11 @@
         <div class="phase-box {{ end_state.box_class }}">
             <div class="phase-label">{{ end_state.label }}</div>
             {% for query in state.columns.get(end_state.phase, []) %}
-            <article class="card {{ end_state.card_class }}">
+            <article class="card {{ end_state.card_class }}"
+                     data-query-id="{{ query.id }}"
+                     role="button"
+                     tabindex="0"
+                     aria-label="View details for {{ query.text }}">
                 <div class="query-text">{{ query.text }}</div>
                 <div class="intent">{{ query.intent or query.id }}</div>
             </article>
