@@ -27,6 +27,12 @@ async def _create_client_or_skip() -> CopilotClient:
     try:
         await client.start()
     except Exception as exc:
+        # Best-effort cleanup of partially-started client to avoid leaked
+        # subprocesses/tasks before skipping the test.
+        try:
+            await client.stop()
+        except Exception:  # noqa: BLE001
+            pass
         pytest.skip(f"Copilot runtime unavailable: {exc}")
     return client
 
