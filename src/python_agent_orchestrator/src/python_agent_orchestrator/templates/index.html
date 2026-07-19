@@ -37,6 +37,7 @@
         x-transition:enter-start="detail-overlay-enter-start"
         x-transition:enter-end="detail-overlay-enter-end"
         @click.self="closeDetail()"
+        @keydown.escape.window="if (selectedQueryId !== null) closeDetail()"
         aria-modal="true"
         role="dialog"
         aria-label="Agent detail"
