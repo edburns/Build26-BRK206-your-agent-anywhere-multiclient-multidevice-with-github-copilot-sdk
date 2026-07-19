@@ -2,7 +2,12 @@ from types import SimpleNamespace
 from pathlib import Path
 
 import pytest
-from copilot.session_events import AssistantMessageData, SessionIdleData, ToolExecutionCompleteData, ToolExecutionStartData
+from copilot.session_events import (
+    AssistantMessageData,
+    SessionIdleData,
+    ToolExecutionCompleteData,
+    ToolExecutionStartData,
+)
 from copilot.tools import ToolInvocation
 
 from python_agent_orchestrator.agent import Agent, create_tools_for_agent
