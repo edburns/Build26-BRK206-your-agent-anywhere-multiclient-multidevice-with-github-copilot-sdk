@@ -20,7 +20,7 @@ from python_agent_orchestrator.ws_manager import ws_manager
 
 
 def _now_iso() -> str:
-    return datetime.now(UTC).isoformat(timespec="seconds")
+    return datetime.now(UTC).isoformat(timespec="milliseconds")
 
 
 @dataclass
