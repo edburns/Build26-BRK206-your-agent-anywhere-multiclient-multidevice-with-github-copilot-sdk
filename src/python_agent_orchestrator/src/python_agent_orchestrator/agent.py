@@ -202,7 +202,10 @@ class Agent:
             set_phase(Phase.REJECTED, intent="Session failed")
             record_error(f"Session execution failed ({type(exc).__name__}): {exc}")
         finally:
-            await asyncio.shield(session.disconnect())
+            try:
+                await asyncio.shield(session.disconnect())
+            except Exception:  # noqa: BLE001
+                logger.debug("Ignoring error during session disconnect for agent %s", self.query_id, exc_info=True)
 
 
 def create_tools_for_agent(
