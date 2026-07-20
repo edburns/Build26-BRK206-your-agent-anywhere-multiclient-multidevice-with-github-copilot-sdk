@@ -1,3 +1,7 @@
+param(
+    [int]$N = 10
+)
+
 function Get-Fibonacci {
     [CmdletBinding()]
     param(
@@ -29,6 +33,6 @@ function Get-Fibonacci {
 }
 
 if ($MyInvocation.InvocationName -ne '.') {
-    $result = Get-Fibonacci -N 10
-    Write-Output "Fibonacci(10) = $result"
+    $result = Get-Fibonacci -N $N
+    Write-Output "Fibonacci($N) = $result"
 }
