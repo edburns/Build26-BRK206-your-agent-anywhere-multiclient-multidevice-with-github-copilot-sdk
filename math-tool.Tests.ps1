@@ -8,9 +8,14 @@ Describe 'Get-Fibonacci' {
         $output | Should -BeNullOrEmpty
     }
 
-    It 'prints Fibonacci(10) = 55 when executed as script' {
-        $result = & "$PSScriptRoot/math-tool.ps1"
+    It 'prints Fibonacci(10) = 55 when invoked with no arguments' {
+        $result = pwsh -NoLogo -NoProfile -File "$PSScriptRoot/math-tool.ps1"
         $result | Should -Be 'Fibonacci(10) = 55'
+    }
+
+    It 'prints Fibonacci(15) = 610 when invoked with -N 15' {
+        $result = & "$PSScriptRoot/math-tool.ps1" -N 15
+        $result | Should -Be 'Fibonacci(15) = 610'
     }
 
     It 'throws for negative N' {
