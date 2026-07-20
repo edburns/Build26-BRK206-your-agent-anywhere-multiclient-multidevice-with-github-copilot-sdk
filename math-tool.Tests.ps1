@@ -90,12 +90,19 @@ Describe 'Input validation' {
     It 'rejects -N 101 with a ParameterArgumentValidationError' {
         { & "$PSScriptRoot/math-tool.ps1" -N 101 } | Should -Throw -ErrorId '*ParameterArgumentValidationError*'
     }
+
+    It 'exits with non-zero code when -N is out of range via CLI' {
+        pwsh -NoLogo -NoProfile -File "$PSScriptRoot/math-tool.ps1" -N 101 2>&1 | Out-Null
+        $LASTEXITCODE | Should -Not -Be 0
+    }
 }
 
 Describe 'Verbose output' {
-    It 'includes Computing in verbose stream when -Verbose -N 5 is passed' {
-        $result = & "$PSScriptRoot/math-tool.ps1" -Verbose -N 5 4>&1
-        ($result | Out-String) | Should -Match 'Computing'
+    It 'includes Computing in verbose stream and produces correct result' {
+        $allOutput = & "$PSScriptRoot/math-tool.ps1" -Verbose -N 5 4>&1
+        ($allOutput | Out-String) | Should -Match 'Computing'
+        $result = & "$PSScriptRoot/math-tool.ps1" -N 5
+        $result | Should -Be 'Fibonacci(5) = 5'
     }
 }
 

@@ -43,15 +43,15 @@ function Get-Fibonacci {
     }
 
     if ($N -eq 0) {
-        return 0
+        return [bigint]0
     }
 
     if ($N -eq 1) {
-        return 1
+        return [bigint]1
     }
 
-    $previous = 0
-    $current = 1
+    $previous = [bigint]0
+    $current = [bigint]1
 
     for ($i = 2; $i -le $N; $i++) {
         $next = $previous + $current
