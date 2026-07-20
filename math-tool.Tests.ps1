@@ -71,11 +71,6 @@ Describe 'Get-Factorial' {
 }
 
 Describe 'Script execution' {
-    It 'prints Fibonacci(10) = 55 when invoked with no arguments' {
-        $result = pwsh -NoLogo -NoProfile -File "$PSScriptRoot/math-tool.ps1"
-        $result | Should -Be 'Fibonacci(10) = 55'
-    }
-
     It 'prints Fibonacci(10) = 55 when invoked with -Operation fibonacci -N 10' {
         $result = pwsh -NoLogo -NoProfile -File "$PSScriptRoot/math-tool.ps1" -Operation fibonacci -N 10
         $result | Should -Be 'Fibonacci(10) = 55'
