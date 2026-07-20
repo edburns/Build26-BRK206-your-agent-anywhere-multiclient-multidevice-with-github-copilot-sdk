@@ -18,6 +18,11 @@ Describe 'Get-Fibonacci' {
         $result | Should -Be 'Fibonacci(15) = 610'
     }
 
+    It 'prints Fibonacci(0) = 0 when invoked with -N 0' {
+        $result = pwsh -NoLogo -NoProfile -File "$PSScriptRoot/math-tool.ps1" -N 0
+        $result | Should -Be 'Fibonacci(0) = 0'
+    }
+
     It 'throws for negative N' {
         { Get-Fibonacci -N -1 } | Should -Throw '*non-negative*'
     }
