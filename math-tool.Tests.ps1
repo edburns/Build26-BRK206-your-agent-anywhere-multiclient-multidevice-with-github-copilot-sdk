@@ -42,11 +42,6 @@ Describe 'Get-Fibonacci' {
     It 'returns 6765 for N=20' {
         Get-Fibonacci -N 20 | Should -Be 6765
     }
-
-    It 'prints Fibonacci(10) = 55 when invoked with -Operation fibonacci -N 10' {
-        $result = pwsh -NoLogo -NoProfile -File "$PSScriptRoot/math-tool.ps1" -Operation fibonacci -N 10
-        $result | Should -Be 'Fibonacci(10) = 55'
-    }
 }
 
 Describe 'Get-Factorial' {
@@ -68,6 +63,22 @@ Describe 'Get-Factorial' {
 
     It 'returns 2432902008176640000 for N=20' {
         Get-Factorial -N 20 | Should -Be 2432902008176640000
+    }
+
+    It 'throws for negative N' {
+        { Get-Factorial -N -1 } | Should -Throw '*non-negative*'
+    }
+}
+
+Describe 'Script execution' {
+    It 'prints Fibonacci(10) = 55 when invoked with no arguments' {
+        $result = pwsh -NoLogo -NoProfile -File "$PSScriptRoot/math-tool.ps1"
+        $result | Should -Be 'Fibonacci(10) = 55'
+    }
+
+    It 'prints Fibonacci(10) = 55 when invoked with -Operation fibonacci -N 10' {
+        $result = pwsh -NoLogo -NoProfile -File "$PSScriptRoot/math-tool.ps1" -Operation fibonacci -N 10
+        $result | Should -Be 'Fibonacci(10) = 55'
     }
 
     It 'prints Factorial(5) = 120 when invoked with -Operation factorial -N 5' {
