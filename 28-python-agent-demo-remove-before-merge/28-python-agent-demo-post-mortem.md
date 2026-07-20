@@ -14,12 +14,12 @@
   - [2.3 Local Copilot CLI (Shepherd)](#23-local-copilot-cli-shepherd)
 - [Section 3: Per-Task Metrics](#section-3-per-task-metrics)
   - [Issue Legend](#issue-legend)
-  - [3.1 — Issue #34 / PR #44](#31--issue-34--pr-44)
-  - [3.2 — Issue #35 / PR #45](#32--issue-35--pr-45)
-  - [3.3 — Issue #36 / PR #46](#33--issue-36--pr-46)
-  - [3.4 — Issue #37 / PR #47](#34--issue-37--pr-47)
-  - [3.5 — Issue #38 / PR #48](#35--issue-38--pr-48)
-  - [3.6 — Issue #39 / PR #49](#36--issue-39--pr-49)
+  - [3.1 — Issue [#34](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/34) / PR [#44](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/pull/44)](#31--issue-34--pr-44)
+  - [3.2 — Issue [#35](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/35) / PR [#45](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/pull/45)](#32--issue-35--pr-45)
+  - [3.3 — Issue [#36](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/36) / PR [#46](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/pull/46)](#33--issue-36--pr-46)
+  - [3.4 — Issue [#37](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/37) / PR [#47](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/pull/47)](#34--issue-37--pr-47)
+  - [3.5 — Issue [#38](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/38) / PR [#48](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/pull/48)](#35--issue-38--pr-48)
+  - [3.6 — Issue [#39](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/39) / PR [#49](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/pull/49)](#36--issue-39--pr-49)
 - [Section 4: Aggregate Statistics](#section-4-aggregate-statistics)
   - [4.1 Final Batch Summary](#41-final-batch-summary)
   - [4.2 Cross-Batch Outcomes](#42-cross-batch-outcomes)
@@ -44,11 +44,11 @@
 
 ## Section 1: Executive Summary
 
-The shepherding campaign converged to full success after three failed/partial iterations. The final run (`shepherd-tasks-20260718-1827`) merged all target Python tasks (#34-#39), with terminal output `=== All tasks shepherded successfully ===` in `20260718-1826-job-logs.txt`.
+The shepherding campaign converged to full success after three failed/partial iterations. The final run (`shepherd-tasks-20260718-1827`) merged all target Python tasks ([#34](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/34), [#35](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/35), [#36](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/36), [#37](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/37), [#38](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/38), [#39](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/39)), with terminal output `=== All tasks shepherded successfully ===` in `20260718-1826-job-logs.txt`.
 
 | Metric | Value |
 |--------|-------|
-| Target tasks in final run | 6 (#34-#39) |
+| Target tasks in final run | 6 ([#34](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/34)-[#39](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/39)) |
 | Completed and merged | 6/6 (100%) |
 | Final run elapsed | ~4h 07m (18:27 -> 22:34 ET) |
 | Total CCRA rounds (final run) | 20 |
@@ -65,7 +65,7 @@ Earlier runs (`20260717-1936`, `20260717-2022`, `20260718-1648`) provided failur
 
 ### 2.1 Copilot Coding Agent (CCA)
 
-CCA created/updated task PRs and performed initial implementation on GitHub infrastructure. In these runs, relevant PRs were #42-#49.
+CCA created/updated task PRs and performed initial implementation on GitHub infrastructure. In these runs, relevant PRs were [#42](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/pull/42)-[#49](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/pull/49).
 
 ### 2.2 Copilot Code Review Agent (CCRA)
 
@@ -83,14 +83,14 @@ CCRA (`copilot-pull-request-reviewer[bot]`) produced iterative review rounds wit
 
 | Issue | PR | Notes |
 |------:|---:|-------|
-| 34 | 44 | Phase 1 skipped; PR pre-existed from earlier run |
-| 35 | 45 | Transient local path lookup errors recovered |
-| 36 | 46 | Longest phase 1 in final run before #39 |
-| 37 | 47 | Fastest end-to-end completion |
-| 38 | 48 | Long phase 2 despite low comment count |
-| 39 | 49 | Deepest review loop in final run |
+| [#34](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/34) | [#44](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/pull/44) | Phase 1 skipped; PR pre-existed from earlier run |
+| [#35](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/35) | [#45](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/pull/45) | Transient local path lookup errors recovered |
+| [#36](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/36) | [#46](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/pull/46) | Longest phase 1 in final run before [#39](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/39) |
+| [#37](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/37) | [#47](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/pull/47) | Fastest end-to-end completion |
+| [#38](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/38) | [#48](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/pull/48) | Long phase 2 despite low comment count |
+| [#39](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/39) | [#49](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/pull/49) | Deepest review loop in final run |
 
-### 3.1 — Issue #34 / PR #44
+### 3.1 — Issue [#34](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/34) / PR [#44](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/pull/44)
 
 | Metric | Value |
 |--------|-------|
@@ -101,7 +101,7 @@ CCRA (`copilot-pull-request-reviewer[bot]`) produced iterative review rounds wit
 | CCRA comments | 8 |
 | Outcome | merged |
 
-### 3.2 — Issue #35 / PR #45
+### 3.2 — Issue [#35](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/35) / PR [#45](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/pull/45)
 
 | Metric | Value |
 |--------|-------|
@@ -114,7 +114,7 @@ CCRA (`copilot-pull-request-reviewer[bot]`) produced iterative review rounds wit
 
 Phase 2 logs include four transient `Path does not exist` tool failures during local reads; run still converged and merged.
 
-### 3.3 — Issue #36 / PR #46
+### 3.3 — Issue [#36](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/36) / PR [#46](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/pull/46)
 
 | Metric | Value |
 |--------|-------|
@@ -125,7 +125,7 @@ Phase 2 logs include four transient `Path does not exist` tool failures during l
 | CCRA comments | 5 |
 | Outcome | merged |
 
-### 3.4 — Issue #37 / PR #47
+### 3.4 — Issue [#37](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/37) / PR [#47](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/pull/47)
 
 | Metric | Value |
 |--------|-------|
@@ -136,7 +136,7 @@ Phase 2 logs include four transient `Path does not exist` tool failures during l
 | CCRA comments | 0 |
 | Outcome | merged |
 
-### 3.5 — Issue #38 / PR #48
+### 3.5 — Issue [#38](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/38) / PR [#48](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/pull/48)
 
 | Metric | Value |
 |--------|-------|
@@ -147,7 +147,7 @@ Phase 2 logs include four transient `Path does not exist` tool failures during l
 | CCRA comments | 2 |
 | Outcome | merged |
 
-### 3.6 — Issue #39 / PR #49
+### 3.6 — Issue [#39](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/39) / PR [#49](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/pull/49)
 
 | Metric | Value |
 |--------|-------|
@@ -173,24 +173,24 @@ Phase 2 logs include four transient `Path does not exist` tool failures during l
 | Avg rounds/task | 3.33 |
 | Avg comments/task | 5.00 |
 | Avg comments/round | 1.50 |
-| Tasks with zero comments | 1 (#37) |
-| Longest task | #39 (1h 07m 13s) |
-| Shortest task | #37 (15m 49s) |
+| Tasks with zero comments | 1 ([#37](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/37)) |
+| Longest task | [#39](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/39) (1h 07m 13s) |
+| Shortest task | [#37](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/37) (15m 49s) |
 
 ### 4.2 Cross-Batch Outcomes
 
 | Directory | JSON sessions | Outcome |
 |-----------|---------------|---------|
-| `shepherd-tasks-20260717-1936` | 2 | failed (PR #42 left OPEN) |
+| `shepherd-tasks-20260717-1936` | 2 | failed (PR [#42](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/pull/42) left OPEN) |
 | `shepherd-tasks-20260717-2022` | 1 | failed (idle-kill while waiting for review) |
-| `shepherd-tasks-20260718-1648` | 5 (+ one empty phase2 JSON) | partial success (#41 and #33 merged) |
-| `shepherd-tasks-20260718-1827` | 11 | full success (#34-#39 merged) |
+| `shepherd-tasks-20260718-1648` | 5 (+ one empty phase2 JSON) | partial success ([#41](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/41) and [#33](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/33) merged) |
+| `shepherd-tasks-20260718-1827` | 11 | full success ([#34](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/34)-[#39](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/39) merged) |
 
 ### 4.3 Convergence Snapshot
 
-- **Strong convergence:** #37 (0 comments), #36 (3 rounds, 5 comments).
-- **Moderate convergence:** #34 and #35.
-- **Long convergence tail:** #39 (7 rounds).
+- **Strong convergence:** [#37](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/37) (0 comments), [#36](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/36) (3 rounds, 5 comments).
+- **Moderate convergence:** [#34](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/34) and [#35](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/35).
+- **Long convergence tail:** [#39](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/39) (7 rounds).
 - **Throughput bottleneck:** strictly serialized issue processing; wall clock scales with per-issue sum.
 
 ---
@@ -208,7 +208,7 @@ Phase 2 logs include four transient `Path does not exist` tool failures during l
 
 CCA/CCRA billing-credit totals were not present in local artifacts. This report uses rounds/comments and local token usage as measurable proxies.
 
-Additional observability limitation: `20260718-1855-copilot-cli-otel-not-working.md` documents OTEL file export not flushing in piped-stdin mode (`copilot-agent-runtime#13047`).
+Additional observability limitation: `20260718-1855-copilot-cli-otel-not-working.md` documents OTEL file export not flushing in piped-stdin mode ([copilot-agent-runtime#13047](https://github.com/github/copilot-agent-runtime/issues/13047)).
 
 ---
 
@@ -218,10 +218,10 @@ Additional observability limitation: `20260718-1855-copilot-cli-otel-not-working
 
 | Batch | Window (ET) | Summary |
 |------|--------------|---------|
-| `20260717-1936` | ~19:36-19:59 | First phase 2 failure on #41 |
+| `20260717-1936` | ~19:36-19:59 | First phase 2 failure on [#41](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/41) |
 | `20260717-2022` | ~20:23-20:26 | Retry failed despite review arrival |
-| `20260718-1648` | ~16:49-18:09 | Stabilization run; #41 and #33 merged |
-| `20260718-1827` | ~18:27-22:34 | Final full success for #34-#39 |
+| `20260718-1648` | ~16:49-18:09 | Stabilization run; [#41](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/41) and [#33](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/33) merged |
+| `20260718-1827` | ~18:27-22:34 | Final full success for [#34](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/34)-[#39](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/39) |
 
 ### 6.2 Final Batch Timeline
 
@@ -252,8 +252,8 @@ Applied fix: explicit `gh pr edit $PR_NUMBER --add-reviewer "copilot-pull-reques
 
 `shepherd-tasks-20260718-1648` validated key fixes:
 
-- #41 merged with `Comments generated: 0`.
-- #33 converged through 8 review rounds then merged.
+- [#41](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/41) merged with `Comments generated: 0`.
+- [#33](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/33) converged through 8 review rounds then merged.
 
 That run reduced unknowns and set up the final successful batch.
 
@@ -283,4 +283,4 @@ That run reduced unknowns and set up the final successful batch.
 
 ### 8.4 Comparison to Prior Java Run
 
-The Java post-mortem (`dd-3029269-post-mortem-report.md`) showed long-lived sessions and deep review cycles (for example, 7 rounds on PR #43). After stabilization, the Python campaign reached comparable convergence behavior (notably #39 with 7 rounds) and delivered full merge completion for its target set.
+The Java post-mortem (`dd-3029269-post-mortem-report.md`) showed long-lived sessions and deep review cycles (for example, 7 rounds on PR [#43](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/pull/43)). After stabilization, the Python campaign reached comparable convergence behavior (notably [#39](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/39) with 7 rounds) and delivered full merge completion for its target set.
