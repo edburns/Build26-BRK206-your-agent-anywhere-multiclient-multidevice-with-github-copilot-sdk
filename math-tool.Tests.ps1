@@ -14,7 +14,7 @@ Describe 'Get-Fibonacci' {
     }
 
     It 'prints Fibonacci(15) = 610 when invoked with -N 15' {
-        $result = & "$PSScriptRoot/math-tool.ps1" -N 15
+        $result = pwsh -NoLogo -NoProfile -File "$PSScriptRoot/math-tool.ps1" -N 15
         $result | Should -Be 'Fibonacci(15) = 610'
     }
 
