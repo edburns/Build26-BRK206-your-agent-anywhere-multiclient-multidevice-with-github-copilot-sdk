@@ -4,8 +4,13 @@ Describe 'Get-Fibonacci' {
     }
 
     It 'produces no output when dot-sourced' {
-        $output = . "$PSScriptRoot/math-tool.ps1" 6>&1
+        $output = . "$PSScriptRoot/math-tool.ps1" *>&1
         $output | Should -BeNullOrEmpty
+    }
+
+    It 'prints Fibonacci(10) = 55 when executed as script' {
+        $result = & "$PSScriptRoot/math-tool.ps1"
+        $result | Should -Be 'Fibonacci(10) = 55'
     }
 
     It 'throws for negative N' {
