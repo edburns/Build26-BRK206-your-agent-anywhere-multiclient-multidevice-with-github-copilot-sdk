@@ -4,6 +4,10 @@ function Get-Fibonacci {
         [int]$N
     )
 
+    if ($N -lt 0) {
+        throw "N must be a non-negative integer. Got: $N"
+    }
+
     if ($N -eq 0) {
         return 0
     }

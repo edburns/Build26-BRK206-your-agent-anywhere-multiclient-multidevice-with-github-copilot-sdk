@@ -3,6 +3,15 @@ Describe 'Get-Fibonacci' {
         . "$PSScriptRoot/math-tool.ps1"
     }
 
+    It 'produces no output when dot-sourced' {
+        $output = . "$PSScriptRoot/math-tool.ps1" 6>&1
+        $output | Should -BeNullOrEmpty
+    }
+
+    It 'throws for negative N' {
+        { Get-Fibonacci -N -1 } | Should -Throw '*non-negative*'
+    }
+
     It 'returns 0 for N=0' {
         Get-Fibonacci -N 0 | Should -Be 0
     }
