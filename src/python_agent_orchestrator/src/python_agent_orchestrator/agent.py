@@ -2,6 +2,7 @@ import asyncio
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 import logging
+import os
 from typing import Any
 
 from copilot import CopilotClient, ToolSet, define_tool
@@ -20,8 +21,29 @@ from python_agent_orchestrator.phase import Phase
 from python_agent_orchestrator.property_database import search_properties as search_properties_db
 from python_agent_orchestrator.ws_manager import ws_manager
 
-_SESSION_COMPLETION_TIMEOUT_SECONDS = 60.0
 logger = logging.getLogger(__name__)
+_DEFAULT_SESSION_COMPLETION_TIMEOUT_SECONDS = 180.0
+
+
+def _resolve_session_completion_timeout_seconds() -> float:
+    raw_value = os.getenv("PYTHON_AGENT_ORCHESTRATOR_SESSION_TIMEOUT_SECONDS")
+    if raw_value is None:
+        return _DEFAULT_SESSION_COMPLETION_TIMEOUT_SECONDS
+    try:
+        parsed = float(raw_value)
+        if parsed <= 0:
+            raise ValueError("timeout must be > 0")
+        return parsed
+    except Exception:  # noqa: BLE001
+        logger.warning(
+            "Invalid PYTHON_AGENT_ORCHESTRATOR_SESSION_TIMEOUT_SECONDS=%r; using %.0f",
+            raw_value,
+            _DEFAULT_SESSION_COMPLETION_TIMEOUT_SECONDS,
+        )
+        return _DEFAULT_SESSION_COMPLETION_TIMEOUT_SECONDS
+
+
+_SESSION_COMPLETION_TIMEOUT_SECONDS = _resolve_session_completion_timeout_seconds()
 
 
 def _now_iso() -> str:
@@ -49,6 +71,12 @@ class Agent:
         }
 
     async def run(self, client: CopilotClient) -> None:
+        logger.info(
+            "Agent %s starting run (query=%r, timeout=%.0fs)",
+            self.query_id,
+            self.query_text,
+            _SESSION_COMPLETION_TIMEOUT_SECONDS,
+        )
         done = asyncio.Event()
         loop = asyncio.get_running_loop()
         tool_names_by_call_id: dict[str, str] = {}
@@ -57,6 +85,12 @@ class Agent:
             self.current_phase = phase
             if intent is not None:
                 self.current_intent = intent
+            logger.info(
+                "Agent %s phase -> %s (intent=%r)",
+                self.query_id,
+                self.current_phase.value,
+                self.current_intent,
+            )
             entry: dict[str, Any] = {
                 "type": "phase_change",
                 "timestamp": _now_iso(),
@@ -70,6 +104,7 @@ class Agent:
             })
 
         def record_error(message: str) -> None:
+            logger.warning("Agent %s error: %s", self.query_id, message)
             entry = {
                 "type": "error",
                 "timestamp": _now_iso(),
@@ -133,6 +168,13 @@ class Agent:
             match event.data:
                 case ToolExecutionStartData() as data:
                     args = data.arguments if isinstance(data.arguments, dict) else {}
+                    logger.info(
+                        "Agent %s tool start: %s call=%s args=%s",
+                        self.query_id,
+                        data.tool_name,
+                        data.tool_call_id,
+                        args,
+                    )
                     entry: dict[str, Any] = {
                         "type": "tool_start",
                         "timestamp": _now_iso(),
@@ -148,6 +190,13 @@ class Agent:
                     })
                 case ToolExecutionCompleteData() as data:
                     tool_name = tool_names_by_call_id.pop(data.tool_call_id, "unknown_tool")
+                    logger.info(
+                        "Agent %s tool complete: %s call=%s success=%s",
+                        self.query_id,
+                        tool_name,
+                        data.tool_call_id,
+                        data.success,
+                    )
                     entry = {
                         "type": "tool_complete",
                         "timestamp": _now_iso(),
@@ -164,6 +213,8 @@ class Agent:
                         record_error(f"Tool execution failed for {tool_name} ({data.tool_call_id})")
                 case AssistantMessageData() as data:
                     if data.content:
+                        snippet = data.content.strip().replace("\n", " ")[:200]
+                        logger.info("Agent %s assistant message: %s", self.query_id, snippet)
                         self.report_text = data.content
                         entry = {
                             "type": "assistant_message",
@@ -176,12 +227,14 @@ class Agent:
                             "queryId": self.query_id,
                         })
                 case SessionIdleData():
+                    logger.info("Agent %s session idle/completed", self.query_id)
                     ws_manager.schedule_broadcast(loop, {
                         "type": "session_idle",
                         "queryId": self.query_id,
                     })
                     loop.call_soon_threadsafe(done.set)
                 case SessionErrorData() as data:
+                    logger.warning("Agent %s session error event: %s", self.query_id, data.error)
                     set_phase(Phase.REJECTED, intent="Session error")
                     record_error(data.error)
                     loop.call_soon_threadsafe(done.set)
@@ -206,6 +259,7 @@ class Agent:
                 await asyncio.shield(session.disconnect())
             except Exception:  # noqa: BLE001
                 logger.debug("Ignoring error during session disconnect for agent %s", self.query_id, exc_info=True)
+            logger.info("Agent %s finished run (final phase=%s)", self.query_id, self.current_phase.value)
 
 
 def create_tools_for_agent(
@@ -224,6 +278,7 @@ def create_tools_for_agent(
     @define_tool(description="Sets the current phase of the agent. Use this to report progress.")
     def set_current_phase(params: SetCurrentPhaseParams) -> str:
         agent.current_phase = params.phase
+        logger.info("Agent %s set_current_phase -> %s", agent.query_id, agent.current_phase.value)
         entry: dict[str, Any] = {
             "type": "phase_change",
             "timestamp": _now_iso(),
@@ -256,22 +311,51 @@ def create_tools_for_agent(
     )
     def report_intent(params: ReportIntentParams) -> str:
         agent.current_intent = params.intent
+        logger.info("Agent %s report_intent -> %r", agent.query_id, agent.current_intent)
         return f"Intent set to {agent.current_intent}"
 
     class SearchPropertiesParams(BaseModel):
-        city: str = Field(description="City to search in")
-        min_bedrooms: int = Field(default=1, description="Minimum number of bedrooms")
-        max_price: int = Field(default=1_000_000, description="Maximum price in CAD")
-        waterfront: bool = Field(default=False, description="Whether waterfront is required")
+        city: str = Field(
+            default="",
+            description="City to search in. Leave empty when the enquiry does not specify a city.",
+        )
+        min_bedrooms: int | None = Field(
+            default=None,
+            description="Minimum number of bedrooms. Leave unset if not specified in the enquiry.",
+        )
+        max_price: int | None = Field(
+            default=None,
+            description="Maximum price in CAD. Leave unset if the enquiry does not include a budget cap.",
+        )
+        waterfront: bool | None = Field(
+            default=None,
+            description="Whether waterfront is required. Leave unset unless explicitly requested.",
+        )
+        text_contains: str = Field(
+            default="",
+            description="Optional free-text substring to match against description fields.",
+        )
 
     @define_tool(description="Searches the property database for listings that match user criteria.")
     def search_properties(params: SearchPropertiesParams) -> list[dict[str, Any]]:
-        return search_properties_db(
+        logger.info(
+            "Agent %s search_properties(city=%r, min_bedrooms=%s, max_price=%s, waterfront=%s, text_contains=%r)",
+            agent.query_id,
+            params.city,
+            params.min_bedrooms,
+            params.max_price,
+            params.waterfront,
+            params.text_contains,
+        )
+        results = search_properties_db(
             agent.db_engine,
             city=params.city,
             min_beds=params.min_bedrooms,
             max_price=params.max_price,
-            waterfront=True if params.waterfront else None,
+            waterfront=params.waterfront,
+            text_contains=params.text_contains,
         )
+        logger.info("Agent %s search_properties returned %d result(s)", agent.query_id, len(results))
+        return results
 
     return [set_current_phase, report_intent, search_properties]

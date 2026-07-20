@@ -1,12 +1,16 @@
 import json
+import logging
 from pathlib import Path
 from typing import Any
 
+from sqlalchemy import or_
 from sqlalchemy import func
 from sqlalchemy.pool import StaticPool
 from sqlmodel import Session, SQLModel, create_engine, select
 
 from python_agent_orchestrator.models import Property
+
+logger = logging.getLogger(__name__)
 
 
 def create_engine_and_tables():
@@ -41,6 +45,7 @@ def seed_database(engine, data_dir: str | Path) -> int:
     with Session(engine) as session:
         existing = session.exec(select(func.count()).select_from(Property)).one()
         if existing > 0:
+            logger.info("Property database already seeded with %d record(s)", existing)
             return existing
 
     with Session(engine) as session:
@@ -76,11 +81,42 @@ def seed_database(engine, data_dir: str | Path) -> int:
             seed_count += 1
 
         session.commit()
+    logger.info("Seeded property database with %d record(s) from %s", seed_count, data_path)
 
     return seed_count
 
 
 _MAX_RESULTS = 100
+_NO_CITY_FILTER_TOKENS = {
+    "any",
+    "any city",
+    "all",
+    "n/a",
+    "na",
+    "none",
+    "no preference",
+    "doesn't matter",
+    "dont care",
+    "does not matter",
+}
+
+
+def _normalize_city_filter(city: str | None) -> str | None:
+    if city is None:
+        return None
+    normalized = city.strip()
+    if not normalized:
+        return None
+    if normalized.lower() in _NO_CITY_FILTER_TOKENS:
+        return None
+    return normalized
+
+
+def _normalize_text_filter(text: str | None) -> str | None:
+    if text is None:
+        return None
+    normalized = text.strip()
+    return normalized or None
 
 
 def search_properties(
@@ -89,18 +125,33 @@ def search_properties(
     min_beds: int | None = None,
     max_price: int | None = None,
     waterfront: bool | None = None,
+    text_contains: str | None = None,
     limit: int | None = None,
 ) -> list[dict[str, Any]]:
     statement = select(Property)
 
-    if city:
-        statement = statement.where(Property.city.ilike(f"%{city}%"))
+    city_filter = _normalize_city_filter(city)
+    text_filter = _normalize_text_filter(text_contains)
+
+    if city_filter:
+        statement = statement.where(Property.city.ilike(f"%{city_filter}%"))
     if min_beds is not None:
         statement = statement.where(Property.bedrooms >= min_beds)
     if max_price is not None:
         statement = statement.where(Property.price <= max_price)
     if waterfront is not None:
         statement = statement.where(Property.waterfront == waterfront)
+    if text_filter:
+        pattern = f"%{text_filter}%"
+        statement = statement.where(
+            or_(
+                Property.short_description.ilike(pattern),
+                Property.full_description.ilike(pattern),
+                Property.street.ilike(pattern),
+                Property.city.ilike(pattern),
+                Property.type.ilike(pattern),
+            )
+        )
 
     capped = max(1, min(limit, _MAX_RESULTS)) if limit is not None else _MAX_RESULTS
     statement = statement.order_by(Property.id).limit(capped)

@@ -65,3 +65,32 @@ def test_search_properties_returns_empty_list_for_no_matches() -> None:
     )
 
     assert no_results == []
+
+
+def test_search_properties_treats_any_city_as_no_city_filter() -> None:
+    engine = create_engine_and_tables()
+    seed_database(engine, DATA_DIR)
+
+    any_city_results = search_properties(engine, city="Any")
+    unfiltered_results = search_properties(engine)
+
+    assert any_city_results
+    assert len(any_city_results) == len(unfiltered_results)
+
+
+def test_search_properties_supports_text_contains() -> None:
+    engine = create_engine_and_tables()
+    seed_database(engine, DATA_DIR)
+
+    victorian_results = search_properties(engine, text_contains="Victorian")
+
+    assert victorian_results
+    assert all(
+        "victorian" in (
+            (
+                f"{result['shortDescription']} {result['fullDescription']} "
+                f"{result['address']['street']} {result['address']['city']} {result['type']}"
+            ).lower()
+        )
+        for result in victorian_results
+    )

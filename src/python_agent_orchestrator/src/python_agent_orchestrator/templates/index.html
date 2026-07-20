@@ -3,20 +3,40 @@
 {% block title %}Real Estate Agent Pipeline{% endblock %}
 
 {% block body %}
-<main x-data="pipelinePage({{ initial_state | tojson }})" x-init="init()">
+<main x-data='pipelinePage({{ initial_state | tojson }})' x-init="init()">
     <header class="page-header">
         <h1>Real Estate Agent Pipeline</h1>
         <p class="subtitle">GitHub Copilot SDK for Python -- BRK206 Demo</p>
     </header>
 
     <section class="pipeline-shell" @click="handlePipelineClick($event)" @keydown.enter="handlePipelineKeydown($event)" @keydown.space="handlePipelineKeydown($event)">
-        <button
-            type="button"
-            class="add-btn"
-            title="Add query"
-            aria-label="Add query"
-            @click.stop="submitQuery()"
-        >+</button>
+        <div class="add-menu-container" @click.outside="showAddMenu = false">
+            <button
+                type="button"
+                class="add-btn"
+                title="Add query"
+                aria-label="Add query"
+                :aria-expanded="showAddMenu ? 'true' : 'false'"
+                @click.stop="toggleAddMenu()"
+            >+</button>
+
+            <div
+                class="add-menu"
+                x-show="showAddMenu"
+                x-transition
+                style="display:none"
+            >
+                <div class="add-menu-title">Sample queries</div>
+                <template x-for="query in cannedQueries" :key="query">
+                    <button
+                        type="button"
+                        class="add-menu-item"
+                        @click.stop="submitCannedQuery(query)"
+                        x-text="query"
+                    ></button>
+                </template>
+            </div>
+        </div>
 
         <div
             id="pipeline-content"
@@ -143,6 +163,19 @@ function pipelinePage(initialState) {
         selectedQueryId: null,
         detailAgent: null,
         queryEvents: {},
+        showAddMenu: false,
+        cannedQueries: [
+            "Looking for a 3-bed family home near good schools in the suburbs, budget around $500k",
+            "Need a downtown condo with parking, 1-2 bedrooms, under $350k",
+            "Seeking waterfront property with at least 4 bedrooms for retirement",
+            "Budget max $450k, want to be near Sugar Wharf Podium School",
+            "Want a rural property with land, at least 5 acres, horse-friendly",
+            "asdkjh asdkjhasd this is spam garbage text!!!",
+            "Investor looking for multi-unit rental property near university campus",
+            "Need an accessible single-story home with wheelchair modifications, 2+ bed",
+            "Looking for a fixer-upper Victorian in the historic district",
+            "BUY CRYPTO NOW!!! Not actually looking for property lol",
+        ],
 
         get detailEvents() {
             if (!this.selectedQueryId) return [];
@@ -249,8 +282,22 @@ function pipelinePage(initialState) {
             this.detailAgent = null;
         },
 
-        async submitQuery() {
-            const response = await fetch("/api/submit-query", { method: "POST" });
+        toggleAddMenu() {
+            this.showAddMenu = !this.showAddMenu;
+        },
+
+        async submitCannedQuery(queryText) {
+            this.showAddMenu = false;
+            await this.submitQuery(queryText);
+        },
+
+        async submitQuery(queryText = null) {
+            const requestInit = { method: "POST" };
+            if (queryText) {
+                requestInit.headers = { "Content-Type": "application/json" };
+                requestInit.body = JSON.stringify({ query: queryText });
+            }
+            const response = await fetch("/api/submit-query", requestInit);
             if (!response.ok) {
                 this.lastEvent = `submit failed (${response.status})`;
                 return;
@@ -265,4 +312,3 @@ function pipelinePage(initialState) {
 }
 </script>
 {% endblock %}
-

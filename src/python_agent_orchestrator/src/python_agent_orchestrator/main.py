@@ -24,6 +24,9 @@ from python_agent_orchestrator.property_database import (
 from python_agent_orchestrator.ws_manager import ws_manager
 
 logger = logging.getLogger(__name__)
+_DEFAULT_LOG_LEVEL = "INFO"
+_LOG_FORMAT = "%(asctime)s %(levelname)s %(name)s: %(message)s"
+_DEFAULT_REJECTED_CARD_LINGER_SECONDS = 15.0
 
 _PACKAGE_DIR = Path(__file__).resolve().parent
 _DATA_DIR = Path(
@@ -43,6 +46,56 @@ _LIFECYCLE_PHASES = [
     Phase.WRITING_REPORT.value,
 ]
 _PIPELINE_PHASES = [phase.value for phase in Phase]
+
+
+def _resolve_rejected_card_linger_seconds() -> float:
+    raw_value = os.getenv("PYTHON_AGENT_ORCHESTRATOR_REJECTED_LINGER_SECONDS")
+    if raw_value is None:
+        return _DEFAULT_REJECTED_CARD_LINGER_SECONDS
+    try:
+        parsed = float(raw_value)
+        if parsed < 0:
+            raise ValueError("linger must be >= 0")
+        return parsed
+    except Exception:  # noqa: BLE001
+        logger.warning(
+            "Invalid PYTHON_AGENT_ORCHESTRATOR_REJECTED_LINGER_SECONDS=%r; using %.0f",
+            raw_value,
+            _DEFAULT_REJECTED_CARD_LINGER_SECONDS,
+        )
+        return _DEFAULT_REJECTED_CARD_LINGER_SECONDS
+
+
+_REJECTED_CARD_LINGER_SECONDS = _resolve_rejected_card_linger_seconds()
+
+
+def _resolve_log_level_name() -> str:
+    value = (
+        os.getenv("PYTHON_AGENT_ORCHESTRATOR_LOG_LEVEL")
+        or os.getenv("LOG_LEVEL")
+        or _DEFAULT_LOG_LEVEL
+    )
+    return value.strip().upper()
+
+
+def configure_logging() -> str:
+    level_name = _resolve_log_level_name()
+    level = logging.getLevelName(level_name)
+    if not isinstance(level, int):
+        logging.basicConfig(level=logging.INFO, format=_LOG_FORMAT)
+        logger.warning(
+            "Invalid log level %r; defaulting to %s",
+            level_name,
+            _DEFAULT_LOG_LEVEL,
+        )
+        return _DEFAULT_LOG_LEVEL
+
+    root_logger = logging.getLogger()
+    if not root_logger.handlers:
+        logging.basicConfig(level=level, format=_LOG_FORMAT)
+    else:
+        root_logger.setLevel(level)
+    return level_name
 
 
 class QueryState(TypedDict):
@@ -168,9 +221,82 @@ def _record_agent_error(agent: Agent, message: str) -> dict[str, str]:
     return entry
 
 
+def _is_ephemeral_terminal_phase(phase: Phase) -> bool:
+    return phase in {Phase.REJECTED, Phase.NO_MATCHES}
+
+
+async def _expire_terminal_agent_after_delay(
+    app_state: AppState,
+    query_id: str,
+    expected_phase: Phase,
+    linger_seconds: float,
+) -> None:
+    try:
+        await asyncio.sleep(linger_seconds)
+        async with app_state.query_lock:
+            agent = app_state.agents.get(query_id)
+            if agent is None:
+                return
+            if agent.current_phase != expected_phase:
+                return
+            if query_id in app_state.agent_tasks:
+                return
+            app_state.agents.pop(query_id, None)
+            logger.info(
+                "Expired %s card for %s after %.0fs linger",
+                expected_phase.value,
+                query_id,
+                linger_seconds,
+            )
+            ws_manager.schedule_broadcast(asyncio.get_running_loop(), {
+                "type": "query_expired",
+                "queryId": query_id,
+                "phase": expected_phase.value,
+            })
+    except asyncio.CancelledError:
+        raise
+    finally:
+        app_state.agent_expiry_tasks.pop(query_id, None)
+
+
+def _schedule_terminal_agent_expiry(
+    app_state: AppState,
+    query_id: str,
+    phase: Phase,
+    loop: asyncio.AbstractEventLoop,
+) -> None:
+    if not _is_ephemeral_terminal_phase(phase):
+        return
+    existing_task = app_state.agent_expiry_tasks.pop(query_id, None)
+    if existing_task is not None:
+        existing_task.cancel()
+    if _REJECTED_CARD_LINGER_SECONDS <= 0:
+        app_state.agents.pop(query_id, None)
+        ws_manager.schedule_broadcast(loop, {
+            "type": "query_expired",
+            "queryId": query_id,
+            "phase": phase.value,
+        })
+        return
+    app_state.agent_expiry_tasks[query_id] = asyncio.create_task(
+        _expire_terminal_agent_after_delay(
+            app_state=app_state,
+            query_id=query_id,
+            expected_phase=phase,
+            linger_seconds=_REJECTED_CARD_LINGER_SECONDS,
+        ),
+        name=f"expire-{query_id}",
+    )
+
+
 async def _run_agent_task(app_state: AppState, query_id: str) -> None:
     loop = asyncio.get_running_loop()
     agent = app_state.agents[query_id]
+    logger.info(
+        "Agent task started for %s (query=%r)",
+        query_id,
+        agent.query_text,
+    )
     # This task is isolated per query: trap all exceptions so one failed background
     # agent never becomes an unhandled task exception or impacts other queries.
     try:
@@ -201,10 +327,19 @@ async def _run_agent_task(app_state: AppState, query_id: str) -> None:
         })
     finally:
         app_state.agent_tasks.pop(query_id, None)
+        _schedule_terminal_agent_expiry(
+            app_state=app_state,
+            query_id=query_id,
+            phase=agent.current_phase,
+            loop=loop,
+        )
+        logger.info("Agent task completed for %s (phase=%s)", query_id, agent.current_phase.value)
 
 
 @asynccontextmanager
 async def lifespan(fastapi_app: FastAPI):
+    configure_logging()
+    logger.info("Starting Python Agent Orchestrator")
     copilot_client = None
     startup_error: str | None = None
     engine = None
@@ -231,11 +366,13 @@ async def lifespan(fastapi_app: FastAPI):
             db_engine=engine,
             startup_error=startup_error,
         )
+        logger.info("Application startup complete")
         yield
     finally:
         app_state = getattr(fastapi_app.state, "app_state", None)
         if app_state is not None:
             tasks = list(app_state.agent_tasks.values())
+            expiry_tasks = list(app_state.agent_expiry_tasks.values())
             # Iterate over a snapshot because tasks remove themselves from
             # app_state.agent_tasks when their finally blocks execute.
             for task in tasks:
@@ -247,10 +384,16 @@ async def lifespan(fastapi_app: FastAPI):
                 # failure from interrupting cleanup of the rest.
                 await asyncio.gather(*tasks, return_exceptions=True)
             app_state.agent_tasks.clear()
+            for task in expiry_tasks:
+                task.cancel()
+            if expiry_tasks:
+                await asyncio.gather(*expiry_tasks, return_exceptions=True)
+            app_state.agent_expiry_tasks.clear()
         if engine is not None:
             engine.dispose()
         if copilot_client is not None:
             await copilot_client.stop()
+        logger.info("Application shutdown complete")
 
 
 app = FastAPI(lifespan=lifespan)
@@ -322,6 +465,7 @@ async def submit_query(
         query_number = app_state.next_query_number
         query_id = f"q-{query_number}"
         query_text = _resolve_query_text(payload, query_number)
+        logger.info("Submitting query %s: %r", query_id, query_text)
         app_state.agents[query_id] = Agent(
             query_id=query_id,
             query_text=query_text,
@@ -361,6 +505,12 @@ async def submit_query(
                 **agent.events[-1],
                 "queryId": query_id,
             })
+            _schedule_terminal_agent_expiry(
+                app_state=app_state,
+                query_id=query_id,
+                phase=agent.current_phase,
+                loop=asyncio.get_running_loop(),
+            )
     state = _build_pipeline_state(app_state)
     return {
         "status": "queued" if app_state.copilot_client is not None else "rejected",
@@ -385,10 +535,12 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
 
 
 if __name__ == "__main__":
+    log_level_name = configure_logging()
     reload_enabled = os.getenv("UVICORN_RELOAD", "false").lower() in {"1", "true", "yes", "on"}
     uvicorn.run(
         "python_agent_orchestrator.main:app",
         host=os.getenv("HOST", "127.0.0.1"),
         port=int(os.getenv("PORT", "8000")),
         reload=reload_enabled,
+        log_level=log_level_name.lower(),
     )

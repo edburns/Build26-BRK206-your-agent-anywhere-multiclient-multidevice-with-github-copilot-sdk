@@ -284,3 +284,32 @@ That run reduced unknowns and set up the final successful batch.
 ### 8.4 Comparison to Prior Java Run
 
 The Java post-mortem (`dd-3029269-post-mortem-report.md`) showed long-lived sessions and deep review cycles (for example, 7 rounds on PR [#43](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/pull/43)). After stabilization, the Python campaign reached comparable convergence behavior (notably [#39](https://github.com/edburns/Build26-BRK206-your-agent-anywhere-multiclient-multidevice-with-github-copilot-sdk/issues/39) with 7 rounds) and delivered full merge completion for its target set.
+
+### 8.5 Customer-Acceptance Changes After Agent Handoff (2026-07-20)
+
+After the implementation was "done" by the agentic campaign, additional local hardening was required to reach customer acceptance in interactive runtime testing.
+
+1. **Canned-query `+` UX repaired (critical UI parity fix).**
+   - Implemented a real canned-query popup/toggle flow in the Python UI (matching Blazor/Java behavior).
+   - Fixed a blocking Alpine initialization bug caused by `x-data` attribute quoting; this was the root cause of the popup not rendering and multiple Alpine `... is not defined` console errors.
+   - Stabilized popup open/close behavior with container-scoped outside-click handling.
+
+2. **Runtime observability added (INFO-level diagnostics by default).**
+   - Added configurable Python logging with console output when running `python -m python_agent_orchestrator.main`.
+   - Instrumented startup/shutdown, query submission, agent lifecycle, tool start/complete, phase transitions, and search result counts.
+   - Added environment-driven controls for verbosity and session timeout.
+
+3. **Search semantics aligned with C#/Java behavior (functional parity fix).**
+   - Resolved false `NoMatches` outcomes for legitimate "Victorian fixer-upper" queries.
+   - Treated placeholder city values like `Any` as "no city filter".
+   - Added `text_contains` support to `search_properties` for description/street/city/type matching.
+   - Removed overly restrictive default search constraints (`max_price=1_000_000`, `min_bedrooms=1`, `waterfront=False`) by making them optional unless explicitly requested.
+
+4. **Pipeline end-state behavior aligned with C#/Java UX.**
+   - Added expiry/linger behavior so `Rejected` and `NoMatches` cards auto-remove after a configurable delay, while `Done` cards persist.
+   - Default linger set to 15 seconds for rejected/no-match outcomes.
+
+5. **Outcome of these acceptance-phase fixes.**
+   - Verified end-to-end: valid "Victorian" enquiry now reaches `Done` with report output.
+   - Spam/off-topic enquiry ("BUY CRYPTO NOW") now reliably reaches `Rejected`.
+   - UI behavior, runtime diagnostics, and terminal-card lifecycle now match customer expectations established by the Java/C# demos.
