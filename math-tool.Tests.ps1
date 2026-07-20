@@ -83,16 +83,12 @@ Describe 'Script execution' {
 }
 
 Describe 'Input validation' {
-    It 'rejects -N -1 with a parameter validation error' {
-        $output = pwsh -NoLogo -NoProfile -File "$PSScriptRoot/math-tool.ps1" -N -1 2>&1
-        $LASTEXITCODE | Should -Not -Be 0
-        ($output | Out-String) | Should -Match 'Cannot validate argument on parameter'
+    It 'rejects -N -1 with a ParameterArgumentValidationError' {
+        { & "$PSScriptRoot/math-tool.ps1" -N -1 } | Should -Throw -ErrorId '*ParameterArgumentValidationError*'
     }
 
-    It 'rejects -N 101 with a parameter validation error' {
-        $output = pwsh -NoLogo -NoProfile -File "$PSScriptRoot/math-tool.ps1" -N 101 2>&1
-        $LASTEXITCODE | Should -Not -Be 0
-        ($output | Out-String) | Should -Match 'Cannot validate argument on parameter'
+    It 'rejects -N 101 with a ParameterArgumentValidationError' {
+        { & "$PSScriptRoot/math-tool.ps1" -N 101 } | Should -Throw -ErrorId '*ParameterArgumentValidationError*'
     }
 }
 
