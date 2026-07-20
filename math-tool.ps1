@@ -1,4 +1,33 @@
+<#
+.SYNOPSIS
+    Computes mathematical sequences: Fibonacci numbers and factorials.
+
+.DESCRIPTION
+    Computes Fibonacci numbers or factorials for a given non-negative integer N.
+    N must be between 0 and 100 inclusive.
+
+.PARAMETER N
+    The input integer. Must be in the range 0-100.
+
+.PARAMETER Operation
+    The operation to perform. Valid values: 'fibonacci' (default), 'factorial'.
+
+.EXAMPLE
+    .\math-tool.ps1 -N 10
+    Fibonacci(10) = 55
+
+.EXAMPLE
+    .\math-tool.ps1 -N 5 -Operation factorial
+    Factorial(5) = 120
+
+.EXAMPLE
+    .\math-tool.ps1 -N 5 -Verbose
+    VERBOSE: Computing fibonacci(5) iteratively...
+    Fibonacci(5) = 5
+#>
+[CmdletBinding()]
 param(
+    [ValidateRange(0, 100)]
     [int]$N = 10,
     [ValidateSet('fibonacci','factorial')][string]$Operation = 'fibonacci'
 )
@@ -54,10 +83,12 @@ function Get-Factorial {
 if ($MyInvocation.InvocationName -ne '.') {
     switch ($Operation) {
         'fibonacci' {
+            Write-Verbose "Computing fibonacci($N) iteratively..."
             $result = Get-Fibonacci -N $N
             Write-Output "Fibonacci($N) = $result"
         }
         'factorial' {
+            Write-Verbose "Computing factorial($N) iteratively..."
             $result = Get-Factorial -N $N
             Write-Output "Factorial($N) = $result"
         }

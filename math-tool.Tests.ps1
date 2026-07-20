@@ -81,3 +81,29 @@ Describe 'Script execution' {
         $result | Should -Be 'Factorial(5) = 120'
     }
 }
+
+Describe 'Input validation' {
+    It 'exits with non-zero code when -N is -1' {
+        pwsh -NoLogo -NoProfile -File "$PSScriptRoot/math-tool.ps1" -N -1 2>&1 | Out-Null
+        $LASTEXITCODE | Should -Not -Be 0
+    }
+
+    It 'exits with non-zero code when -N is 101' {
+        pwsh -NoLogo -NoProfile -File "$PSScriptRoot/math-tool.ps1" -N 101 2>&1 | Out-Null
+        $LASTEXITCODE | Should -Not -Be 0
+    }
+}
+
+Describe 'Verbose output' {
+    It 'includes Computing in verbose stream when -Verbose -N 5 is passed' {
+        $result = & "$PSScriptRoot/math-tool.ps1" -Verbose -N 5 4>&1
+        ($result | Out-String) | Should -Match 'Computing'
+    }
+}
+
+Describe 'Help' {
+    It 'returns help text containing SYNOPSIS' {
+        $result = Get-Help "$PSScriptRoot/math-tool.ps1" | Out-String
+        $result | Should -Match 'SYNOPSIS'
+    }
+}
