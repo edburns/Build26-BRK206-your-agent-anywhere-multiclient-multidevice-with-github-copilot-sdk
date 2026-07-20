@@ -53,13 +53,16 @@ function Get-Factorial {
 
 if ($MyInvocation.InvocationName -ne '.') {
     switch ($Operation) {
+        'fibonacci' {
+            $result = Get-Fibonacci -N $N
+            Write-Output "Fibonacci($N) = $result"
+        }
         'factorial' {
             $result = Get-Factorial -N $N
             Write-Output "Factorial($N) = $result"
         }
         default {
-            $result = Get-Fibonacci -N $N
-            Write-Output "Fibonacci($N) = $result"
+            throw "Unsupported operation: $Operation"
         }
     }
 }
