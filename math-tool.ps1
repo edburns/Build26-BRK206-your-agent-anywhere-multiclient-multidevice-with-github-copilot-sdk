@@ -9,7 +9,7 @@ Runs an iterative Fibonacci or factorial calculation and prints the result.
 Selects which operation to run. Supported values are fibonacci and factorial.
 
 .PARAMETER N
-Specifies the non-negative integer input for the selected operation.
+Specifies the integer input for the selected operation (allowed range: 0 to 100).
 
 .EXAMPLE
 pwsh -File ./math-tool.ps1 -N 5
