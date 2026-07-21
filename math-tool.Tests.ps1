@@ -67,4 +67,27 @@ Describe "math-tool.ps1 script output" {
         $output = pwsh -NoProfile -NonInteractive -File "$PSScriptRoot/math-tool.ps1" -Operation fibonacci -N 10
         ($output -join [Environment]::NewLine) | Should -Match "Fibonacci\(10\) = 55"
     }
+
+    It "fails validation for -N -1" {
+        $output = pwsh -NoProfile -NonInteractive -File "$PSScriptRoot/math-tool.ps1" -N -1 2>&1
+        $LASTEXITCODE | Should -Not -Be 0
+        ($output -join [Environment]::NewLine) | Should -Match "Cannot validate argument on parameter 'N'"
+    }
+
+    It "fails validation for -N 101" {
+        $output = pwsh -NoProfile -NonInteractive -File "$PSScriptRoot/math-tool.ps1" -N 101 2>&1
+        $LASTEXITCODE | Should -Not -Be 0
+        ($output -join [Environment]::NewLine) | Should -Match "Cannot validate argument on parameter 'N'"
+    }
+
+    It "includes verbose output with -Verbose -N 5" {
+        $output = pwsh -NoProfile -NonInteractive -File "$PSScriptRoot/math-tool.ps1" -Verbose -N 5 4>&1
+        ($output -join [Environment]::NewLine) | Should -Match "Computing"
+        ($output -join [Environment]::NewLine) | Should -Match "Fibonacci\(5\) = 5"
+    }
+
+    It "shows comment-based help with SYNOPSIS" {
+        $helpText = Get-Help "$PSScriptRoot/math-tool.ps1" | Out-String -Width 200
+        $helpText | Should -Match "SYNOPSIS"
+    }
 }

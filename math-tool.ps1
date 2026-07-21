@@ -1,6 +1,27 @@
+<#
+.SYNOPSIS
+Computes Fibonacci or factorial values from the command line.
+
+.DESCRIPTION
+Runs an iterative Fibonacci or factorial calculation and prints the result.
+
+.PARAMETER Operation
+Selects which operation to run. Supported values are fibonacci and factorial.
+
+.PARAMETER N
+Specifies the non-negative integer input for the selected operation.
+
+.EXAMPLE
+pwsh -File ./math-tool.ps1 -N 5
+
+.EXAMPLE
+pwsh -File ./math-tool.ps1 -Operation factorial -N 5 -Verbose
+#>
+[CmdletBinding()]
 param(
     [ValidateSet('fibonacci', 'factorial')]
     [string]$Operation = 'fibonacci',
+    [ValidateRange(0, 100)]
     [int]$N = 10
 )
 
@@ -46,10 +67,12 @@ function Get-Factorial {
 if ($MyInvocation.InvocationName -ne '.') {
     switch ($Operation) {
         'factorial' {
+            Write-Verbose "Computing factorial($N) iteratively..."
             $result = Get-Factorial -N $N
             Write-Output "Factorial($N) = $result"
         }
         default {
+            Write-Verbose "Computing fibonacci($N) iteratively..."
             $result = Get-Fibonacci -N $N
             Write-Output "Fibonacci($N) = $result"
         }
