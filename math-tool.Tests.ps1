@@ -19,3 +19,20 @@ Describe "Get-Fibonacci" {
         Get-Fibonacci -N 20 | Should -Be 6765
     }
 }
+
+Describe "math-tool.ps1 script output" {
+    It "prints Fibonacci(10) = 55 with no arguments" {
+        $output = pwsh -NoProfile -NonInteractive -File "$PSScriptRoot/math-tool.ps1"
+        ($output -join [Environment]::NewLine) | Should -Match "Fibonacci\(10\) = 55"
+    }
+
+    It "prints Fibonacci(15) = 610 with -N 15" {
+        $output = pwsh -NoProfile -NonInteractive -File "$PSScriptRoot/math-tool.ps1" -N 15
+        ($output -join [Environment]::NewLine) | Should -Match "Fibonacci\(15\) = 610"
+    }
+
+    It "prints Fibonacci(0) = 0 with -N 0" {
+        $output = pwsh -NoProfile -NonInteractive -File "$PSScriptRoot/math-tool.ps1" -N 0
+        ($output -join [Environment]::NewLine) | Should -Match "Fibonacci\(0\) = 0"
+    }
+}
