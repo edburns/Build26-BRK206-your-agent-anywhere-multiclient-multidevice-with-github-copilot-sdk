@@ -29,6 +29,10 @@ function Get-Factorial {
         [int]$N
     )
 
+    if ($N -lt 0) {
+        throw "Factorial is undefined for negative integers: $N"
+    }
+
     if ($N -le 1) { return ([bigint]1) }
 
     [bigint]$result = 1

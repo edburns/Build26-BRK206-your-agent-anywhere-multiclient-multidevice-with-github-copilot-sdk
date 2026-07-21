@@ -21,6 +21,10 @@ Describe "Get-Fibonacci" {
 }
 
 Describe "Get-Factorial" {
+    It "throws for negative inputs" {
+        { Get-Factorial -N -1 } | Should -Throw "Factorial is undefined for negative integers: -1"
+    }
+
     It "returns 1 for N=0" {
         Get-Factorial -N 0 | Should -Be ([bigint]1)
     }
