@@ -67,4 +67,29 @@ Describe "math-tool.ps1 script output" {
         $output = pwsh -NoProfile -NonInteractive -File "$PSScriptRoot/math-tool.ps1" -Operation fibonacci -N 10
         ($output -join [Environment]::NewLine) | Should -Match "Fibonacci\(10\) = 55"
     }
+
+    It "fails validation for -N -1" {
+        $scriptPath = Join-Path $PSScriptRoot 'math-tool.ps1'
+        $output = pwsh -NoProfile -NonInteractive -Command "try { & '$scriptPath' -N -1 } catch { `$_.FullyQualifiedErrorId; exit 1 }" 2>&1
+        $LASTEXITCODE | Should -Not -Be 0
+        ($output -join [Environment]::NewLine) | Should -Match "ParameterArgumentValidationError"
+    }
+
+    It "fails validation for -N 101" {
+        $scriptPath = Join-Path $PSScriptRoot 'math-tool.ps1'
+        $output = pwsh -NoProfile -NonInteractive -Command "try { & '$scriptPath' -N 101 } catch { `$_.FullyQualifiedErrorId; exit 1 }" 2>&1
+        $LASTEXITCODE | Should -Not -Be 0
+        ($output -join [Environment]::NewLine) | Should -Match "ParameterArgumentValidationError"
+    }
+
+    It "includes verbose output with -Verbose -N 5" {
+        $output = pwsh -NoProfile -NonInteractive -File "$PSScriptRoot/math-tool.ps1" -Verbose -N 5 2>&1
+        ($output -join [Environment]::NewLine) | Should -Match "Computing"
+        ($output -join [Environment]::NewLine) | Should -Match "Fibonacci\(5\) = 5"
+    }
+
+    It "shows comment-based help with SYNOPSIS" {
+        $helpText = Get-Help "$PSScriptRoot/math-tool.ps1" | Out-String -Width 200
+        $helpText | Should -Match "SYNOPSIS"
+    }
 }
