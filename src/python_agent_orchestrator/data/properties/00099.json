@@ -1,0 +1,30 @@
+{
+  "id": 99,
+  "bathrooms": 2,
+  "lotSizeSquareFootage": null,
+  "price": 890000,
+  "status": "For Sale",
+  "keyFeatures": [
+    "Quartz countertops",
+    "Heated pool",
+    "Fitness center",
+    "Spacious balcony",
+    "Porcelain tile floors"
+  ],
+  "listedDate": "2026-05-15",
+  "bedrooms": 2,
+  "parkingSpaces": 1,
+  "address": {
+    "street": "780 Coral Way",
+    "country": "United States",
+    "postalCode": "33145",
+    "city": "Miami",
+    "province": "Florida"
+  },
+  "type": "Condo",
+  "squareFootage": 1400,
+  "yearBuilt": 2020,
+  "currency": "USD",
+  "shortDescription": "Stylish 2-bedroom condo in Coral Gables area with modern finishes and pool access.",
+  "fullDescription": "This contemporary condo features an open floor plan with porcelain tile floors, a sleek kitchen with quartz countertops, and a spacious balcony. Building amenities include a heated pool, fitness center, and secure parking."
+}

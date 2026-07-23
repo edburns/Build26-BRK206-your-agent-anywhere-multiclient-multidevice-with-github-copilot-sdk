@@ -1,0 +1,30 @@
+{
+  "id": 100,
+  "bathrooms": 4,
+  "lotSizeSquareFootage": null,
+  "price": 4200000,
+  "status": "For Sale",
+  "keyFeatures": [
+    "Private elevator",
+    "Wraparound terrace",
+    "Waterfront infinity pool",
+    "Private beach club",
+    "Panoramic ocean views"
+  ],
+  "listedDate": "2026-05-15",
+  "bedrooms": 4,
+  "parkingSpaces": 3,
+  "address": {
+    "street": "2100 Collins Avenue",
+    "country": "United States",
+    "postalCode": "33140",
+    "city": "Miami",
+    "province": "Florida"
+  },
+  "type": "Penthouse",
+  "squareFootage": 4000,
+  "yearBuilt": 2022,
+  "currency": "USD",
+  "shortDescription": "Luxurious 4-bedroom penthouse on Collins Avenue with panoramic ocean and city views.",
+  "fullDescription": "This spectacular penthouse offers unparalleled views from its wraparound terrace. Features include a private elevator, chef's kitchen with top-of-the-line appliances, a spa-like primary bath, and a waterfront infinity-edge pool. Full-service building with valet, concierge, and private beach club."
+}

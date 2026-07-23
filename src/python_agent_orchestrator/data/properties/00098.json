@@ -1,0 +1,30 @@
+{
+  "id": 98,
+  "bathrooms": 3,
+  "lotSizeSquareFootage": 3500,
+  "price": 1450000,
+  "status": "For Sale",
+  "keyFeatures": [
+    "Private courtyard",
+    "Tropical landscaping",
+    "Rooftop deck",
+    "Walking distance to bayfront",
+    "Gourmet kitchen"
+  ],
+  "listedDate": "2026-05-15",
+  "bedrooms": 3,
+  "parkingSpaces": 2,
+  "address": {
+    "street": "55 Coconut Grove Lane",
+    "country": "United States",
+    "postalCode": "33133",
+    "city": "Miami",
+    "province": "Florida"
+  },
+  "type": "Townhouse",
+  "squareFootage": 2200,
+  "yearBuilt": 2018,
+  "currency": "USD",
+  "shortDescription": "Charming 3-bedroom townhouse in Coconut Grove with lush tropical landscaping.",
+  "fullDescription": "This elegant townhouse in Coconut Grove combines tropical charm with modern luxury. Features include a gourmet kitchen, private courtyard with mature palms, and a rooftop deck with city views. Walking distance to shops, restaurants, and bayfront parks."
+}
