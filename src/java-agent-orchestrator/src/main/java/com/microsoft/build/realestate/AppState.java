@@ -6,7 +6,7 @@ import com.github.copilot.rpc.CopilotClientOptions;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import jakarta.annotation.Resource;
-import jakarta.enterprise.concurrent.ContextService;
+import jakarta.enterprise.concurrent.ManagedThreadFactory;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import java.io.File;
@@ -38,8 +38,8 @@ public class AppState {
 
     private final Map<String, Agent> agents = new ConcurrentHashMap<>();
 
-    @Resource
-    private ContextService contextService;
+    @Resource(lookup = "concurrent/virtualThreadFactory")
+    private ManagedThreadFactory virtualThreadFactory;
 
     @Inject
     private PropertyDatabase propertyDatabase;
@@ -55,18 +55,18 @@ public class AppState {
 
     @PostConstruct
     public void init() {
-        // Build a virtual-thread executor that propagates the container's context
-        // (JNDI, transactions, persistence) so SDK tool callbacks can use JPA.
-        Executor contextualVirtualThreadExecutor = runnable ->
-                Thread.ofVirtual().start(contextService.contextualRunnable(runnable));
+        // The ManagedThreadFactory (virtual=true) creates container-managed virtual
+        // threads that automatically propagate CDI, JNDI, and transaction context.
+        Executor managedVirtualExecutor = runnable ->
+                virtualThreadFactory.newThread(runnable).start();
 
         String copilotHome = Path.of(System.getProperty("user.home"), ".copilot").toString();
         CopilotClientOptions copilotClientOptions = new CopilotClientOptions()
                 .setMode(CopilotClientMode.EMPTY)
                 .setCopilotHome(copilotHome)
-                .setExecutor(contextualVirtualThreadExecutor);
+                .setExecutor(managedVirtualExecutor);
         copilotClient = new CopilotClient(copilotClientOptions);
-        LOG.info("CopilotClient initialized with context-propagating virtual-thread executor.");
+        LOG.info("CopilotClient initialized with managed virtual-thread executor.");
         try {
             String cliVersion = copilotClient.getStatus().get().getVersion();
             Path resolvedCliPath = resolveCliPath(copilotClientOptions.getCliPath());
@@ -91,7 +91,7 @@ public class AppState {
         agents.put(agentId, agent);
         uiUpdateSocket.pushPhaseChange(agentId);
 
-        Thread.ofVirtual().name("agent-" + agentId).start(contextService.contextualRunnable(() -> {
+        virtualThreadFactory.newThread(() -> {
             LOG.info("Virtual thread started for agent " + agentId);
             try {
                 agent.run(copilotClient);
@@ -100,7 +100,7 @@ public class AppState {
                     scheduleRemoval(agentId);
                 }
             }
-        }));
+        }).start();
 
         return agentId;
     }
@@ -120,7 +120,7 @@ public class AppState {
      * After removal, pushes an agent-removed event so the browser clears the card.
      */
     private void scheduleRemoval(String agentId) {
-        Thread.ofVirtual().name("removal-" + agentId).start(() -> {
+        virtualThreadFactory.newThread(() -> {
             try {
                 Thread.sleep(REJECTED_LINGER_MS);
             } catch (InterruptedException e) {
@@ -129,7 +129,7 @@ public class AppState {
             }
             agents.remove(agentId);
             uiUpdateSocket.pushAgentRemoved(agentId);
-        });
+        }).start();
     }
 
     @PreDestroy
