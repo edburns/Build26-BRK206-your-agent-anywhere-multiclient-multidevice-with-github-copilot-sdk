@@ -17,6 +17,7 @@
         <liberty.runtime.groupId>io.openliberty</liberty.runtime.groupId>
         <liberty.runtime.artifactId>openliberty-runtime</liberty.runtime.artifactId>
         <liberty.runtime.version>26.0.0.5</liberty.runtime.version>
+        <copilot.version>1.0.13-preview.1</copilot.version>
     </properties>
 
     <dependencies>
@@ -35,7 +36,18 @@
         <dependency>
             <groupId>com.github</groupId>
             <artifactId>copilot-sdk-java</artifactId>
-            <version>1.0.7-preview.1</version>
+            <version>${copilot.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github</groupId>
+            <artifactId>copilot-sdk-java-runtime</artifactId>
+            <version>${copilot.version}</version>
+            <classifier>linux-x64</classifier>
+        </dependency>
+        <dependency>
+            <groupId>net.java.dev.jna</groupId>
+            <artifactId>jna</artifactId>
+            <version>5.19.1</version>
         </dependency>
         <dependency>
             <groupId>org.primefaces</groupId>
