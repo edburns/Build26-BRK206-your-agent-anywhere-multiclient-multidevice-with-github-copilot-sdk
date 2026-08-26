@@ -18,6 +18,7 @@
         <liberty.runtime.artifactId>openliberty-runtime</liberty.runtime.artifactId>
         <liberty.runtime.version>26.0.0.5</liberty.runtime.version>
         <copilot.version>1.0.13-preview.1</copilot.version>
+        <copilot.runtime.classifier>unsupported-platform</copilot.runtime.classifier>
     </properties>
 
     <dependencies>
@@ -42,7 +43,7 @@
             <groupId>com.github</groupId>
             <artifactId>copilot-sdk-java-runtime</artifactId>
             <version>${copilot.version}</version>
-            <classifier>linux-x64</classifier>
+            <classifier>${copilot.runtime.classifier}</classifier>
         </dependency>
         <dependency>
             <groupId>net.java.dev.jna</groupId>
@@ -125,4 +126,43 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>copilot-runtime-linux-x64</id>
+            <activation>
+                <os>
+                    <name>Linux</name>
+                    <arch>amd64</arch>
+                </os>
+            </activation>
+            <properties>
+                <copilot.runtime.classifier>linux-x64</copilot.runtime.classifier>
+            </properties>
+        </profile>
+        <profile>
+            <id>copilot-runtime-windows-x64</id>
+            <activation>
+                <os>
+                    <family>Windows</family>
+                    <arch>amd64</arch>
+                </os>
+            </activation>
+            <properties>
+                <copilot.runtime.classifier>win32-x64</copilot.runtime.classifier>
+            </properties>
+        </profile>
+        <profile>
+            <id>copilot-runtime-darwin-arm64</id>
+            <activation>
+                <os>
+                    <family>mac</family>
+                    <arch>aarch64</arch>
+                </os>
+            </activation>
+            <properties>
+                <copilot.runtime.classifier>darwin-arm64</copilot.runtime.classifier>
+            </properties>
+        </profile>
+    </profiles>
 </project>
