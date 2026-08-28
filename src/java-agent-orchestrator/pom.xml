@@ -17,6 +17,8 @@
         <liberty.runtime.groupId>io.openliberty</liberty.runtime.groupId>
         <liberty.runtime.artifactId>openliberty-runtime</liberty.runtime.artifactId>
         <liberty.runtime.version>26.0.0.5</liberty.runtime.version>
+        <copilot.version>1.0.13-preview.1</copilot.version>
+        <copilot.runtime.classifier>unsupported-platform</copilot.runtime.classifier>
     </properties>
 
     <dependencies>
@@ -35,7 +37,18 @@
         <dependency>
             <groupId>com.github</groupId>
             <artifactId>copilot-sdk-java</artifactId>
-            <version>1.0.7-preview.1</version>
+            <version>${copilot.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github</groupId>
+            <artifactId>copilot-sdk-java-runtime</artifactId>
+            <version>${copilot.version}</version>
+            <classifier>${copilot.runtime.classifier}</classifier>
+        </dependency>
+        <dependency>
+            <groupId>net.java.dev.jna</groupId>
+            <artifactId>jna</artifactId>
+            <version>5.19.1</version>
         </dependency>
         <dependency>
             <groupId>org.primefaces</groupId>
@@ -113,4 +126,43 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>copilot-runtime-linux-x64</id>
+            <activation>
+                <os>
+                    <name>Linux</name>
+                    <arch>amd64</arch>
+                </os>
+            </activation>
+            <properties>
+                <copilot.runtime.classifier>linux-x64</copilot.runtime.classifier>
+            </properties>
+        </profile>
+        <profile>
+            <id>copilot-runtime-windows-x64</id>
+            <activation>
+                <os>
+                    <family>Windows</family>
+                    <arch>amd64</arch>
+                </os>
+            </activation>
+            <properties>
+                <copilot.runtime.classifier>win32-x64</copilot.runtime.classifier>
+            </properties>
+        </profile>
+        <profile>
+            <id>copilot-runtime-darwin-arm64</id>
+            <activation>
+                <os>
+                    <family>mac</family>
+                    <arch>aarch64</arch>
+                </os>
+            </activation>
+            <properties>
+                <copilot.runtime.classifier>darwin-arm64</copilot.runtime.classifier>
+            </properties>
+        </profile>
+    </profiles>
 </project>
